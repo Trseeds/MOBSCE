@@ -77,41 +77,48 @@ int handler(void* user, const char* section, const char* name, const char* value
 
 int UpdateEngineConfig(char* File, Config* Config, Engine* Engine)
 {
-    Config->Samplerate = 48000;
-    Config->Channels = 2;
-    Config->Chunksize = 1024;
-    Config->Voices = 8;
-    Config->MusicVolume = 100;
-    Config->SoundVolume = 100;
-    Config->Muted = false;
-    Config->LogicalX = 640;
-    Config->LogicalY = 480;
-    Config->WindowFlags = SDL_WINDOW_SHOWN;
-    Config->RendererFlags = SDL_RENDERER_PRESENTVSYNC;
-
-    int Result = ini_parse(File,handler,Config);
-    if(Result < 0)
+    if(Engine)
     {
-        char Traceback[ERROR_BUFFER_SIZE];
-        snprintf(Traceback,ERROR_BUFFER_SIZE,"UpdateEngineConfig(%s, 0x%X, 0x%X)",File,Config,Engine);
-        ThrowWarning("Failed to load config file.",Traceback);
-        return(1);
+        Config->Samplerate = 48000;
+        Config->Channels = 2;
+        Config->Chunksize = 1024;
+        Config->Voices = 8;
+        Config->MusicVolume = 100;
+        Config->SoundVolume = 100;
+        Config->Muted = false;
+        Config->LogicalX = 640;
+        Config->LogicalY = 480;
+        Config->WindowFlags = SDL_WINDOW_SHOWN;
+        Config->RendererFlags = SDL_RENDERER_PRESENTVSYNC;
+
+        int Result = ini_parse(File,handler,Config);
+        if(Result < 0)
+        {
+            char Traceback[ERROR_BUFFER_SIZE];
+            snprintf(Traceback,ERROR_BUFFER_SIZE,"UpdateEngineConfig(%s, 0x%X, 0x%X)",File,Config,Engine);
+            ThrowWarning("Failed to load config file.",Traceback);
+            return(1);
+        }
+        
+        return(0);
     }
-    
-    return(0);
+    return(-1);
 }
 
 void LoadEngineConfig(Engine* Engine)
 {
-    Engine->Audio.Samplerate = Engine->Config.Samplerate;
-    Engine->Audio.Channels = Engine->Config.Channels;
-    Engine->Audio.Chunksize = Engine->Config.Chunksize;
-    Engine->Audio.Voices = Engine->Config.Voices;
-    Engine->Audio.MusicVolume = Engine->Config.MusicVolume;
-    Engine->Audio.SoundVolume = Engine->Config.SoundVolume;
-    Engine->Audio.Muted = Engine->Config.Muted;
-    Engine->Video.LogicalDimensions.X = Engine->Config.LogicalX;
-    Engine->Video.LogicalDimensions.Y = Engine->Config.LogicalY;
-    Engine->Video.WindowFlags = Engine->Config.WindowFlags;
-    Engine->Video.RendererFlags = Engine->Config.RendererFlags;
+    if(Engine)
+    {
+        Engine->Audio.Samplerate = Engine->Config.Samplerate;
+        Engine->Audio.Channels = Engine->Config.Channels;
+        Engine->Audio.Chunksize = Engine->Config.Chunksize;
+        Engine->Audio.Voices = Engine->Config.Voices;
+        Engine->Audio.MusicVolume = Engine->Config.MusicVolume;
+        Engine->Audio.SoundVolume = Engine->Config.SoundVolume;
+        Engine->Audio.Muted = Engine->Config.Muted;
+        Engine->Video.LogicalDimensions.X = Engine->Config.LogicalX;
+        Engine->Video.LogicalDimensions.Y = Engine->Config.LogicalY;
+        Engine->Video.WindowFlags = Engine->Config.WindowFlags;
+        Engine->Video.RendererFlags = Engine->Config.RendererFlags;
+    }
 }

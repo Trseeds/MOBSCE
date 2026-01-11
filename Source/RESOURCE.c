@@ -1,127 +1,127 @@
 #include "MOBSCE.h"
 
-int InitSpritePool(Engine* Engine)
+int CheckAlloc(void* Item)
 {
-    Engine->Sprites = (Sprite**)calloc(MIN_ALLOCATE,sizeof(Sprite*));
-    if(!Engine->Sprites)
+    return(Item ? 1 : 0);
+}
+
+int InitResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
+{
+    if(Engine)
     {
+        if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources)
+        {
+            *(void**)ResourceInfo.Pointer = calloc(MIN_ALLOCATE,sizeof(void*));
+            if(!*(void**)ResourceInfo.Pointer)
+            {
+                char Traceback[ERROR_BUFFER_SIZE];
+                snprintf(Traceback,ERROR_BUFFER_SIZE,"InitResourcePool(0x%X, 0x%X)",&ResourceInfo,Engine);
+                ThrowError("Failed to allocate memory!",Traceback,Engine);
+                return(1);
+            }
+
+            *(int*)ResourceInfo.AllocatedResourceMemory = MIN_ALLOCATE;
+            *(int*)ResourceInfo.NumberOfResources = 0;
+            return(0);
+        }       
+    }
+    return(-1);
+}
+
+int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
+{
+    if(Engine)
+    {
+        if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources)
+        {
+            void** OldPtr = *(void**)ResourceInfo.Pointer;
+            int NewSize = *(int*)ResourceInfo.AllocatedResourceMemory+MIN_ALLOCATE;
+            *(void**)ResourceInfo.Pointer = realloc(*(void**)ResourceInfo.Pointer,NewSize*sizeof(void*));
+            if(!*(void**)ResourceInfo.Pointer)
+            {
+                *(void**)ResourceInfo.Pointer = OldPtr;
+                char Traceback[ERROR_BUFFER_SIZE];
+                snprintf(Traceback,ERROR_BUFFER_SIZE,"ExtendResourcePool(0x%X, 0x%X)",&ResourceInfo,Engine);
+                ThrowError("Failed to allocate new memory!",Traceback,Engine);
+                return(1);
+            }
+
+            *(int*)ResourceInfo.AllocatedResourceMemory += MIN_ALLOCATE;
+            void** Pool = *(void**)ResourceInfo.Pointer;
+
+            for(int i = *(int*)ResourceInfo.AllocatedResourceMemory-MIN_ALLOCATE; i < *(int*)ResourceInfo.AllocatedResourceMemory; i++)
+            {
+                Pool[i] = NULL;
+            }
+
+            return(0);
+        }
+    }
+    return(-1);
+}
+
+void CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
+{
+    if(Engine)
+    {
+        if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources && ResourceInfo.FreeFunction)
+        {
+            void** Pool = (void**)ResourceInfo.Pointer;
+
+            for(int i = 0; i < *(int*)ResourceInfo.AllocatedResourceMemory; i++)
+            {
+                if(Pool[i])
+                {
+                    ResourceInfo.FreeFunction(Pool[i]);
+                }
+            }
+            free(Pool);
+            return;
+        }
         char Traceback[ERROR_BUFFER_SIZE];
-        snprintf(Traceback,ERROR_BUFFER_SIZE,"InitSpritePool(0x%X)",Engine);
-        ThrowError("Failed to allocate memory!",Traceback,Engine);
-        return(1);
+        snprintf(Traceback,ERROR_BUFFER_SIZE,"CleanupResourcePool(0x%X, 0x%X)",&ResourceInfo,Engine);
+        ThrowWarning("Invalid Resource Info! Skipping free. (this is a memory leak, you must fix it.)",Traceback);
+        return;
     }
-    Engine->Resource.AllocatedSpriteMem = MIN_ALLOCATE;
-    Engine->Resource.NumberOfSprites = 0;
-    return(0);
 }
 
-int ExtendSpritePool(Engine* Engine)
+int CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, int Visible, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
 {
-    Sprite** OldPtr = Engine->Sprites;
-    int NewSize = Engine->Resource.AllocatedSpriteMem+MIN_ALLOCATE;
-    Engine->Resource.AllocatedSpriteMem += MIN_ALLOCATE;
-    Engine->Sprites = (Sprite**)realloc(Engine->Sprites,sizeof(Sprite*)*NewSize);
-    if(!Engine->Sprites)
+    if(Engine)
     {
-        Engine->Sprites = OldPtr;
-        char Traceback[ERROR_BUFFER_SIZE];
-        snprintf(Traceback,ERROR_BUFFER_SIZE,"ExtendSpritePool(0x%X)",Engine);
-        ThrowError("Failed to allocate extended memory!",Traceback,Engine);
-        return(1);
+        Sprite* NewSprite = (Sprite*)calloc(1,sizeof(Sprite));
+        if(!NewSprite)
+        {
+            char Traceback[ERROR_BUFFER_SIZE];
+            snprintf(Traceback,ERROR_BUFFER_SIZE,"CreateSprite(%s, 0x%X, 0x%X, 0x%X, %d, %d, 0x%X, 0x%X)",Name,Position,Origin,Dimensions,TextureID,Visible,Routine,Engine);
+            ThrowError("Failed to allocate memory!",Traceback,Engine);
+            return(1);
+        }
+
+        if(Engine->Resource.NumberOfSprites+1 >= Engine->Resource.AllocatedSpriteMemory)
+        {
+            ResourceInfo ResourceInfo;
+            ResourceInfo.Pointer = &Engine->Sprites;
+            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteMemory;
+            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSprites;
+            ExtendResourcePool(ResourceInfo,Engine);
+        }
+
+        strcpy(NewSprite->Name,Name);
+        NewSprite->Position.X = Position.X; NewSprite->Position.Y = Position.Y; NewSprite->Position.Z = Position.Z;
+        NewSprite->Origin.X = Origin.X; NewSprite->Origin.Y = Origin.Y; NewSprite->Origin.Z = Origin.Z; NewSprite->Origin.W = Origin.W; 
+        NewSprite->Dimensions.X = Dimensions.X; NewSprite->Dimensions.Y = Dimensions.Y;
+        NewSprite->TextureID = TextureID;
+        NewSprite->Texture = Engine->Resource.Textures[TextureID];
+        NewSprite->Visible = Visible;
+        NewSprite->Actor = Actor;
+        NewSprite->Routine = Routine;
+
+        Engine->Sprites[Engine->Resource.NumberOfSprites] = NewSprite;
+        Engine->Resource.NumberOfSprites++;
+        return(0);
     }
-
-    for(int i = Engine->Resource.AllocatedSpriteMem-MIN_ALLOCATE; i < Engine->Resource.AllocatedSpriteMem; i++)
-    {
-        Engine->Sprites[i] = NULL;
-    }
-
-    return(0);
-}
-
-void CleanupSpritePool(Engine* Engine)
-{
-    for(int i = 0; i < Engine->Resource.AllocatedSpriteMem; i++)
-    {
-        free(Engine->Sprites[i]);
-    }
-    free(Engine->Sprites);
-}
-
-int CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, int Visible, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
-{
-    Sprite* NewSprite = (Sprite*)calloc(1,sizeof(Sprite));
-    if(!NewSprite)
-    {
-        char Traceback[ERROR_BUFFER_SIZE];
-        snprintf(Traceback,ERROR_BUFFER_SIZE,"CreateSprite(%s, 0x%X, 0x%X, 0x%X, %d, %d, 0x%X, 0x%X)",Name,Position,Origin,Dimensions,TextureID,Visible,Routine,Engine);
-        ThrowError("Failed to allocate memory!",Traceback,Engine);
-        return(1);
-    }
-
-    if(Engine->Resource.NumberOfSprites+1 == Engine->Resource.AllocatedSpriteMem)
-    {
-        ExtendSpritePool(Engine);
-    }
-
-    strcpy(NewSprite->Name,Name);
-    NewSprite->Position.X = Position.X; NewSprite->Position.Y = Position.Y; NewSprite->Position.Z = Position.Z;
-    NewSprite->Origin.X = Origin.X; NewSprite->Origin.Y = Origin.Y; NewSprite->Origin.Z = Origin.Z; NewSprite->Origin.W = Origin.W; 
-    NewSprite->Dimensions.X = Dimensions.X; NewSprite->Dimensions.Y = Dimensions.Y;
-    NewSprite->TextureID = TextureID;
-    NewSprite->Texture = Engine->Resource.Textures[TextureID];
-    NewSprite->Visible = Visible;
-    NewSprite->Routine = Routine;
-
-    Engine->Sprites[Engine->Resource.NumberOfSprites] = NewSprite;
-    Engine->Resource.NumberOfSprites++;
-    return(0);
-}
-
-int InitActorPool(Engine* Engine)
-{
-    Engine->Actors = (Actor**)calloc(MIN_ALLOCATE,sizeof(Actor*));
-    if(!Engine->Actors)
-    {
-        char Traceback[ERROR_BUFFER_SIZE];
-        snprintf(Traceback,ERROR_BUFFER_SIZE,"InitActorPool(0x%X)",Engine);
-        ThrowError("Failed to allocate memory!",Traceback,Engine);
-        return(1);
-    }
-    Engine->Resource.AllocatedActorMem = MIN_ALLOCATE;
-    Engine->Resource.NumberOfActors = 0;
-    return(0);
-}
-
-int ExtendActorPool(Engine* Engine)
-{
-    Actor** OldPtr = Engine->Actors;
-    int NewSize = Engine->Resource.AllocatedActorMem+MIN_ALLOCATE;
-    Engine->Resource.AllocatedActorMem += MIN_ALLOCATE;
-    Engine->Actors = (Actor**)realloc(Engine->Actors,sizeof(Actor*)*NewSize);
-    if(!Engine->Actors)
-    {
-        Engine->Actors = OldPtr;
-        char Traceback[ERROR_BUFFER_SIZE];
-        snprintf(Traceback,ERROR_BUFFER_SIZE,"ExtendActorPool(0x%X)",Engine);
-        ThrowError("Failed to allocate extended memory!",Traceback,Engine);
-        return(1);
-    }
-
-    for(int i = Engine->Resource.AllocatedActorMem-MIN_ALLOCATE; i < Engine->Resource.AllocatedActorMem; i++)
-    {
-        Engine->Actors[i] = NULL;
-    }
-
-    return(0);
-}
-
-void CleanupActorPool(Engine* Engine)
-{
-    for(int i = 0; i < Engine->Resource.AllocatedActorMem; i++)
-    {
-        free(Engine->Actors[i]);
-    }
-    free(Engine->Actors);
+    return(-1);
 }
 
 int CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine)
@@ -135,9 +135,13 @@ int CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, voi
         return(1);
     }
 
-    if(Engine->Resource.NumberOfActors+1 == Engine->Resource.AllocatedActorMem)
+    if(Engine->Resource.NumberOfActors+1 >= Engine->Resource.AllocatedActorMemory)
     {
-        ExtendActorPool(Engine);
+        ResourceInfo ResourceInfo;
+        ResourceInfo.Pointer = &Engine->Actors;
+        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
+        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActors;
+        ExtendResourcePool(ResourceInfo,Engine);
     }
 
     strcpy(NewActor->Name,Name);
@@ -149,61 +153,6 @@ int CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, voi
     Engine->Actors[Engine->Resource.NumberOfActors] = NewActor;
     Engine->Resource.NumberOfActors++;
     return(0);
-}
-
-int InitSoundCache(Engine* Engine)
-{
-    Engine->Resource.Sounds = (Mix_Chunk**)calloc(MIN_ALLOCATE,sizeof(Mix_Chunk*));
-    if(!Engine->Resource.Sounds)
-    {
-        char Traceback[ERROR_BUFFER_SIZE];
-        snprintf(Traceback,ERROR_BUFFER_SIZE,"InitSoundCache(0x%X)",Engine);
-        ThrowError("Failed to allocate memory!",Traceback,Engine);
-        return(1);
-    }
-    Engine->Resource.AllocatedSoundMem = MIN_ALLOCATE;
-    Engine->Resource.NumberOfSounds = 0;
-    return(0);
-}
-
-int ExtendSoundCache(Engine* Engine)
-{
-    Mix_Chunk** OldPtr = Engine->Resource.Sounds;
-    int NewSize = Engine->Resource.AllocatedSoundMem+MIN_ALLOCATE;
-    Engine->Resource.AllocatedSoundMem += MIN_ALLOCATE;
-    Engine->Resource.Sounds = (Mix_Chunk**)realloc(Engine->Resource.Sounds,sizeof(Mix_Chunk*)*NewSize);
-    if(!Engine->Resource.Sounds)
-    {
-        Engine->Resource.Sounds = OldPtr;
-        char Traceback[ERROR_BUFFER_SIZE];
-        snprintf(Traceback,ERROR_BUFFER_SIZE,"ExtendSoundCache(0x%X)",Engine);
-        ThrowError("Failed to allocate extended memory!",Traceback,Engine);
-        return(1);
-    }
-
-    for(int i = Engine->Resource.AllocatedSoundMem-MIN_ALLOCATE; i < Engine->Resource.AllocatedSoundMem; i++)
-    {
-        Engine->Resource.Sounds[i] = NULL;
-    }
-
-    return(0);
-}
-
-void CleanupSoundCache(Engine* Engine)
-{
-    if(Engine)
-    {
-        if(Engine->Resource.Sounds)
-        {
-            for(int i = 0; i < Engine->Resource.AllocatedSoundMem; i++)
-            {
-                if(Engine->Resource.Sounds[i])
-                {
-                    Mix_FreeChunk(Engine->Resource.Sounds[i]);
-                }
-            }
-        }
-    }
 }
 
 int CacheSound(char* File, Engine* Engine)
@@ -218,69 +167,18 @@ int CacheSound(char* File, Engine* Engine)
         return(1);
     }
 
-    if(Engine->Resource.NumberOfSounds+1 == Engine->Resource.AllocatedSoundMem)
+    if(Engine->Resource.NumberOfSounds+1 >= Engine->Resource.AllocatedSoundMemory)
     {
-        ExtendSoundCache(Engine);
+        ResourceInfo ResourceInfo;
+        ResourceInfo.Pointer = &Engine->Resource.Sounds;
+        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSoundMemory;
+        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSounds;
+        ExtendResourcePool(ResourceInfo,Engine);
     }
 
     Engine->Resource.Sounds[Engine->Resource.NumberOfSounds] = NewSound;
     Engine->Resource.NumberOfSounds++;
     return(0);
-}
-
-int InitMusicCache(Engine* Engine)
-{
-    Engine->Resource.Music = (Mix_Music**)calloc(MIN_ALLOCATE,sizeof(Mix_Music*));
-    if(!Engine->Resource.Music)
-    {
-        char Traceback[ERROR_BUFFER_SIZE];
-        snprintf(Traceback,ERROR_BUFFER_SIZE,"InitMusicCache(0x%X)",Engine);
-        ThrowError("Failed to allocate memory!",Traceback,Engine);
-        return(1);
-    }
-    Engine->Resource.AllocatedMusicMem = MIN_ALLOCATE;
-    Engine->Resource.NumberOfSounds = 0;
-    return(0);
-}
-
-int ExtendMusicCache(Engine* Engine)
-{
-    Mix_Music** OldPtr = Engine->Resource.Music;
-    int NewSize = Engine->Resource.AllocatedMusicMem+MIN_ALLOCATE;
-    Engine->Resource.AllocatedMusicMem += MIN_ALLOCATE;
-    Engine->Resource.Music = (Mix_Music**)realloc(Engine->Resource.Music,sizeof(Mix_Music*)*NewSize);
-    if(!Engine->Resource.Music)
-    {
-        Engine->Resource.Music = OldPtr;
-        char Traceback[ERROR_BUFFER_SIZE];
-        snprintf(Traceback,ERROR_BUFFER_SIZE,"ExtendMusicCache(0x%X)",Engine);
-        ThrowError("Failed to allocate extended memory!",Traceback,Engine);
-        return(1);
-    }
-
-    for(int i = Engine->Resource.AllocatedMusicMem-MIN_ALLOCATE; i < Engine->Resource.AllocatedMusicMem; i++)
-    {
-        Engine->Resource.Music[i] = NULL;
-    }
-
-    return(0);
-}
-
-void CleanupMusicCache(Engine* Engine)
-{
-    if(Engine)
-    {
-        if(Engine->Resource.Music)
-        {
-            for(int i = 0; i < Engine->Resource.AllocatedMusicMem; i++)
-            {
-                if(Engine->Resource.Music[i])
-                {
-                    Mix_FreeMusic(Engine->Resource.Music[i]);
-                }
-            }
-        }
-    }
 }
 
 int CacheMusic(char* File, Engine* Engine)
@@ -295,69 +193,18 @@ int CacheMusic(char* File, Engine* Engine)
         return(1);
     }
 
-    if(Engine->Resource.NumberOfMusics+1 == Engine->Resource.AllocatedMusicMem)
+    if(Engine->Resource.NumberOfMusics+1 >= Engine->Resource.AllocatedMusicMemory)
     {
-        ExtendMusicCache(Engine);
+        ResourceInfo ResourceInfo;
+            ResourceInfo.Pointer = &Engine->Resource.Music;
+            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedMusicMemory;
+            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfMusics;
+            ExtendResourcePool(ResourceInfo,Engine);
     }
 
     Engine->Resource.Music[Engine->Resource.NumberOfMusics] = NewMusic;
     Engine->Resource.NumberOfMusics++;
     return(0);
-}
-
-int InitTextureCache(Engine* Engine)
-{
-    Engine->Resource.Textures = (SDL_Texture**)calloc(MIN_ALLOCATE,sizeof(SDL_Texture*));
-    if(!Engine->Resource.Textures)
-    {
-        char Traceback[ERROR_BUFFER_SIZE];
-        snprintf(Traceback,ERROR_BUFFER_SIZE,"InitTextureCache(0x%X)",Engine);
-        ThrowError("Failed to allocate memory!",Traceback,Engine);
-        return(1);
-    }
-    Engine->Resource.AllocatedTextureMem = MIN_ALLOCATE;
-    Engine->Resource.NumberOfTextures = 0;
-    return(0);
-}
-
-int ExtendTextureCache(Engine* Engine)
-{
-    SDL_Texture** OldPtr = Engine->Resource.Textures;
-    int NewSize = Engine->Resource.AllocatedTextureMem+MIN_ALLOCATE;
-    Engine->Resource.AllocatedTextureMem += MIN_ALLOCATE;
-    Engine->Resource.Textures = (SDL_Texture**)realloc(Engine->Resource.Textures,sizeof(SDL_Texture*)*NewSize);
-    if(!Engine->Resource.Textures)
-    {
-        Engine->Resource.Textures = OldPtr;
-        char Traceback[ERROR_BUFFER_SIZE];
-        snprintf(Traceback,ERROR_BUFFER_SIZE,"ExtendTextureCache(0x%X)",Engine);
-        ThrowError("Failed to allocate extended memory!",Traceback,Engine);
-        return(1);
-    }
-
-    for(int i = Engine->Resource.AllocatedTextureMem-MIN_ALLOCATE; i < Engine->Resource.AllocatedTextureMem; i++)
-    {
-        Engine->Resource.Textures[i] = NULL;
-    }
-
-    return(0);
-}
-
-void CleanupTextureCache(Engine* Engine)
-{
-    if(Engine)
-    {
-        if(Engine->Resource.Textures)
-        {
-            for(int i = 0; i < Engine->Resource.AllocatedTextureMem; i++)
-            {
-                if(Engine->Resource.Textures[i])
-                {
-                    SDL_DestroyTexture(Engine->Resource.Textures[i]);
-                }
-            }
-        }
-    }
 }
 
 int CacheTexture(char* File, Engine* Engine)
@@ -383,9 +230,13 @@ int CacheTexture(char* File, Engine* Engine)
             return(2);   
         }
 
-        if(Engine->Resource.NumberOfTextures+1 == Engine->Resource.AllocatedTextureMem)
+        if(Engine->Resource.NumberOfTextures+1 >= Engine->Resource.AllocatedTextureMemory)
         {
-            ExtendTextureCache(Engine);
+            ResourceInfo ResourceInfo;
+            ResourceInfo.Pointer = &Engine->Resource.Textures;
+            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTextureMemory;
+            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTextures;
+            ExtendResourcePool(ResourceInfo,Engine);
         }
 
         Engine->Resource.Textures[Engine->Resource.NumberOfTextures] = NewTexture;

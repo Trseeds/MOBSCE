@@ -1,9 +1,9 @@
 #include "MOBSCE.h"
 
-void TestActorFunction(Actor* Actor, Engine* Engine)
+void ScreenCrawl(Actor* Actor, Engine* Engine)
 {
-    Actor->Position.X += 60 * Engine->Clock.DeltaTime;
-    Actor->Position.Y += 60 * Engine->Clock.DeltaTime;
+    Actor->Position.X++;
+    Actor->Position.Y++;
     if(Actor->Position.X > Engine->Video.LogicalDimensions.X)
     {
         Actor->Position.X = 0;
@@ -14,54 +14,62 @@ void TestActorFunction(Actor* Actor, Engine* Engine)
     }
 }
 
-void SpawnTestActors(int Count, Engine* Engine)
+void AlignSpriteToActor(Sprite* Sprite, Engine* Engine)
 {
-    Vector2 Position;
-    Vector2 Dimensions;
-    Position.X = 0; Position.Y = 0;
-    Dimensions.X = 16; Dimensions.Y = 16;
-    for(int i = 0; i < Count; i++)
+    if(Sprite->Actor)
     {
-        CreateActor("Test Actor",Position,Dimensions,0,&TestActorFunction,Engine);
+        Sprite->Position.X = Sprite->Actor->Position.X;
+        Sprite->Position.Y = Sprite->Actor->Position.Y;
     }
 }
 
-void AlignSpriteToActor(Sprite* Sprite, Engine* Engine)
+void CreateTestObject(Engine* Engine)
 {
-    Sprite->Position.X = (int)Engine->Actors[0]->Position.X;
-    Sprite->Position.Y = (int)Engine->Actors[0]->Position.Y;
+    Vector3 SpritePosition;
+    Vector2 ActorPosition;
+    Vector4 Origin;
+    Vector2 Dimensions;
+    ActorPosition.X = 0; ActorPosition.Y = 0;
+    SpritePosition.X = 0; SpritePosition.Y = 0; SpritePosition.Z = 0;
+    Origin.X = 0; Origin.Y = 0; Origin.Z = 16; Origin.W = 16;
+    Dimensions.X = 16; Dimensions.Y = 16;
+    CreateActor("Test Actor",ActorPosition,Dimensions,0,&ScreenCrawl,Engine);
+    CreateSprite("Test Sprite",SpritePosition,Origin,Dimensions,1,1,Engine->Actors[Engine->Resource.NumberOfActors-1],&AlignSpriteToActor,Engine);
+}
+
+void InitGame(Engine* Engine)
+{
+    char BG[1024] = "Assets/Images/Backgrounds/TestBG.bmp";
+    char Player[1024] = "Assets/Images/Sprites/Player.bmp";
+    CacheTexture(GetAssetPath(BG,Engine),Engine);
+    CacheTexture(GetAssetPath(Player,Engine),Engine);
+
+    Vector3 SpritePosition;
+    Vector2 ActorPosition;
+    Vector4 Origin;
+    Vector2 Dimensions;
+    ActorPosition.X = 0; ActorPosition.Y = 0;
+    SpritePosition.X = 0; SpritePosition.Y = 0; SpritePosition.Z = 0;
+    Origin.X = 0; Origin.Y = 0; Origin.Z = 640; Origin.W = 480;
+    Dimensions.X = 640; Dimensions.Y = 480;
+    CreateSprite("BG",SpritePosition,Origin,Dimensions,0,1,NULL,NULL,Engine);
+    CreateTestObject(Engine);
 }
 
 int main(int argc, char* argv[])
 {
     Engine* Engine1 = InitEngine();
-    Vector3 Position;
-    Vector2 Position2;
-    Vector4 Origin;
-    Vector2 Dimensions;
-    Position.X = 0; Position.Y = 0; Position.Z = 0;
-    Position2.X = 0; Position2.Y = 0;
-    Origin.X = 0; Origin.Y = 0; Origin.Z = 500; Origin.W = 500;
-    Dimensions.X = 1000; Dimensions.Y = 1000;
-    char Asset[1024] = "Assets/Images/Backgrounds/BigTestBG.bmp";
-    CacheTexture(GetAssetPath(Asset,Engine1),Engine1);
-    strcpy(Asset,"Assets/Images/Sprites/Player.bmp");
-    CacheTexture(GetAssetPath(Asset,Engine1),Engine1);
-    CreateSprite("Checkerboard Background",Position,Origin,Dimensions,0,true,NULL,Engine1);
-    Origin.Z = 16; Origin.W = 16;
-    Dimensions.X = 16; Dimensions.Y = 16;
-    SpawnTestActors(24,Engine1);
-    CreateSprite("Test Sprite",Position,Origin,Dimensions,1,true,&AlignSpriteToActor,Engine1);
+    InitGame(Engine1);
     while(Engine1->Running)
     {
+        if(Engine1->Clock.TotalFrames % 60 == 0)
+        {
+            printf("%d, %f\n",Engine1->Resource.NumberOfActors,Engine1->Clock.FrameRate);
+        }
+        CreateTestObject(Engine1);
         RunEngine(Engine1);
         Render(Engine1);
-        if(Engine1->Input.KeysUp[SDL_SCANCODE_ESCAPE])
-        {
-            CleanupEngine(Engine1);
-            free(Engine1);
-        }
-        if(Engine1->Event->type == SDL_QUIT)
+        if(Engine1->Event->type == SDL_QUIT || Engine1->Input.KeysUp[SDL_SCANCODE_ESCAPE])
         {
             CleanupEngine(Engine1);
             free(Engine1);

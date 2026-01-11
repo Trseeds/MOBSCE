@@ -107,47 +107,55 @@ int InitSDL()
 
 int GetBasePath(Engine* Engine)
 {
-    char* Result = SDL_GetBasePath();
-    if(!Result)
+    if(Engine)
     {
-        char Traceback[ERROR_BUFFER_SIZE];
-        snprintf(Traceback,ERROR_BUFFER_SIZE,"GetBasePath(0x%X)",Engine);
-        ThrowError("Failed to get base path!",Traceback,Engine);
-        return(1);
-    }
-    strcpy(Engine->BasePath,Result);
-
-    for(int i = 0; i < 1024; i++)
-    {
-        if(Engine->BasePath[i] == '\\')
+        char* Result = SDL_GetBasePath();
+        if(!Result)
         {
-            Engine->BasePath[i] = '/';
+            char Traceback[ERROR_BUFFER_SIZE];
+            snprintf(Traceback,ERROR_BUFFER_SIZE,"GetBasePath(0x%X)",Engine);
+            ThrowError("Failed to get base path!",Traceback,Engine);
+            return(1);
         }
+        strcpy(Engine->BasePath,Result);
+
+        for(int i = 0; i < 1024; i++)
+        {
+            if(Engine->BasePath[i] == '\\')
+            {
+                Engine->BasePath[i] = '/';
+            }
+        }
+
+        return(0);
     }
-    return(0);
+    return(-1);
 }
 
 char* GetAssetPath(char* Asset, Engine* Engine)
 {
-    char Path[1024];
-    snprintf(Path,1024,"%s%s",Engine->BasePath,Asset);
-    strcpy(Asset,Path);
-    return(Asset);
+    if(Engine)
+    {
+        char Path[1024];
+        snprintf(Path,1024,"%s%s",Engine->BasePath,Asset);
+        strcpy(Asset,Path);
+        return(Asset);
+    }
+    return(NULL);
 }
 
 void KeepTime(Engine* Engine)
 {
-    Engine->Clock.PreviousTime = Engine->Clock.CurrentTime;
-    Engine->Clock.CurrentTime = SDL_GetPerformanceCounter();
-    Engine->Clock.DeltaTime = (double)((Engine->Clock.CurrentTime-Engine->Clock.PreviousTime)/(double)SDL_GetPerformanceFrequency());
-    // if(Engine->Clock.DeltaTime > 0.25)
-    // {
-    //     Engine->Clock.DeltaTime = 0.25;
-    // }
-    Engine->Clock.TotalTime = (Engine->Clock.CurrentTime-Engine->Clock.PreviousTime);
-    Engine->Clock.TotalFrames++;
-    Engine->Clock.RealTime = time(NULL);
-    Engine->Clock.FrameRate = (double)(1/Engine->Clock.DeltaTime);
+    if(Engine)
+    {
+        Engine->Clock.PreviousTime = Engine->Clock.CurrentTime;
+        Engine->Clock.CurrentTime = SDL_GetPerformanceCounter();
+        Engine->Clock.DeltaTime = (double)((Engine->Clock.CurrentTime-Engine->Clock.PreviousTime)/(double)SDL_GetPerformanceFrequency());
+        Engine->Clock.TotalTime += (Engine->Clock.CurrentTime-Engine->Clock.PreviousTime);
+        Engine->Clock.TotalFrames++;
+        Engine->Clock.RealTime = time(NULL);
+        Engine->Clock.FrameRate = (double)(1/Engine->Clock.DeltaTime);
+    }
 }
 
 Engine* InitEngine()
@@ -159,63 +167,108 @@ Engine* InitEngine()
         ThrowError("Failed to allocate memory!","InitEngine()",NewEngine);
     }
 
+    ResourceInfo NewResourceInfo;
+
     GetBasePath(NewEngine);
     char Asset[1024] = "Config.ini";
     UpdateEngineConfig(GetAssetPath(Asset,NewEngine),&NewEngine->Config,NewEngine);
     LoadEngineConfig(NewEngine);
     InitSDL();
     InitAudio(NewEngine);
-    InitSoundCache(NewEngine);
-    InitMusicCache(NewEngine);
+    //sounds
+    NewResourceInfo.Pointer = &NewEngine->Resource.Sounds;
+    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedSoundMemory;
+    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfSounds;
+    InitResourcePool(NewResourceInfo,NewEngine);
+    //music
+    NewResourceInfo.Pointer = &NewEngine->Resource.Music;
+    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedMusicMemory;
+    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfMusics;
+    InitResourcePool(NewResourceInfo,NewEngine);
     InitVideo(NewEngine);
-    InitTextureCache(NewEngine);
-    //InitInput(NewEngine);
-    InitActorPool(NewEngine);
-    InitSpritePool(NewEngine);
+    //textures
+    NewResourceInfo.Pointer = &NewEngine->Resource.Textures;
+    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedTextureMemory;
+    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfTextures;
+    InitResourcePool(NewResourceInfo, NewEngine);
+    //actors
+    NewResourceInfo.Pointer = &NewEngine->Actors;
+    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedActorMemory;
+    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfActors;
+    InitResourcePool(NewResourceInfo,NewEngine);
+    //sprites
+    NewResourceInfo.Pointer = &NewEngine->Sprites;
+    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedSpriteMemory;
+    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfSprites;
+    InitResourcePool(NewResourceInfo,NewEngine);
     NewEngine->Running = true;
     return(NewEngine);
 }
 
-int RunEngine(Engine* Engine)
+void RunEngine(Engine* Engine)
 {
-    SDL_PollEvent(Engine->Event);
-    GetInput(Engine);
-    for(int i = 0; i < Engine->Resource.NumberOfSprites; i++)
+    if(Engine)
     {
-        if(Engine->Sprites[i])
+        SDL_PollEvent(Engine->Event);
+        GetInput(Engine);
+        for(int i = 0; i < Engine->Resource.NumberOfSprites; i++)
         {
-            if(Engine->Sprites[i]->Routine)
+            if(Engine->Sprites[i])
             {
-                Engine->Sprites[i]->Routine(Engine->Sprites[i],Engine);
+                if(Engine->Sprites[i]->Routine)
+                {
+                    Engine->Sprites[i]->Routine(Engine->Sprites[i],Engine);
+                }
             }
         }
-    }
-    for(int i = 0; i < Engine->Resource.NumberOfActors; i++)
-    {
-        if(Engine->Actors[i])
+        for(int i = 0; i < Engine->Resource.NumberOfActors; i++)
         {
-            if(Engine->Actors[i]->Routine)
+            if(Engine->Actors[i])
             {
-                Engine->Actors[i]->Routine(Engine->Actors[i],Engine);
+                if(Engine->Actors[i]->Routine)
+                {
+                    Engine->Actors[i]->Routine(Engine->Actors[i],Engine);
+                }
             }
         }
+        KeepTime(Engine);
+        Clock a = Engine->Clock;
+        //printf("Current Time: %lu\nPrevious Time: %lu\nDelta Time: %f\nTotal Time: %lu\nTotal Frames: %lu\nReal Time: %lu\nFramerate: %f\033[6A\r",a.CurrentTime,a.PreviousTime,a.DeltaTime,a.TotalTime,a.TotalFrames,a.RealTime,a.FrameRate);
     }
-    KeepTime(Engine);
-    //Clock a = Engine->Clock;
-    //printf("Current Time: %lu\nPrevious Time: %lu\nDelta Time: %f\nTotal Time: %lu\nTotal Frames: %lu\nReal Time: %lu\nFramerate: %f\033[6A\r",a.CurrentTime,a.PreviousTime,a.DeltaTime,a.TotalTime,a.TotalFrames,a.RealTime,a.FrameRate);
 }
 
 void CleanupEngine(Engine* Engine)
 {
     if(Engine)
     {
+        ResourceInfo ResourceInfo;
+        
+        //sounds
+        ResourceInfo.Pointer = &Engine->Resource.Sounds;
+        ResourceInfo.FreeFunction = &Mix_FreeChunk;
+        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSoundMemory;
+        CleanupResourcePool(ResourceInfo,Engine);
+        //music
+        ResourceInfo.Pointer = &Engine->Resource.Music;
+        ResourceInfo.FreeFunction = &Mix_FreeMusic;
+        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedMusicMemory;
+        CleanupResourcePool(ResourceInfo,Engine);
         CleanupVideo(Engine);
-        CleanupTextureCache(Engine);
-        CleanupSoundCache(Engine);
-        CleanupMusicCache(Engine);
-        CleanupInput(Engine);
-        CleanupSpritePool(Engine);
-        CleanupActorPool(Engine);
+        //textures
+        ResourceInfo.Pointer = &Engine->Resource.Textures;
+        ResourceInfo.FreeFunction = &SDL_DestroyTexture;
+        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTextureMemory;
+        CleanupResourcePool(ResourceInfo,Engine);
+        //sprites
+        ResourceInfo.Pointer = &Engine->Sprites;
+        ResourceInfo.FreeFunction = &free;
+        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteMemory;
+        CleanupResourcePool(ResourceInfo,Engine);
+        //actors
+        ResourceInfo.Pointer = &Engine->Actors;
+        ResourceInfo.FreeFunction = &free;
+        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
+        CleanupResourcePool(ResourceInfo,Engine);
         if(Engine->Event)
         {
             free(Engine->Event);

@@ -95,6 +95,7 @@ typedef struct Sprite {
 	Vector4 Origin;
 	Vector2 Dimensions;
 	int Visible;
+	Actor* Actor;
 	int (*Routine)(struct Sprite*, struct Engine*);
 } Sprite;
 
@@ -161,11 +162,11 @@ typedef struct Resource {
 	int NumberOfMusics;
 	int NumberOfSprites;
 	int NumberOfActors;
-	int AllocatedTextureMem;
-	int AllocatedSoundMem;
-	int AllocatedMusicMem;
-	int AllocatedSpriteMem;
-	int AllocatedActorMem;
+	int AllocatedTextureMemory;
+	int AllocatedSoundMemory;
+	int AllocatedMusicMemory;
+	int AllocatedSpriteMemory;
+	int AllocatedActorMemory;
 } Resource;
 
 typedef struct Engine {
@@ -182,6 +183,13 @@ typedef struct Engine {
 	int Running;
 } Engine;
 
+typedef struct ResourceInfo {
+	void* Pointer;
+	void* (*FreeFunction)(void*);
+	int* AllocatedResourceMemory;
+	int* NumberOfResources;
+} ResourceInfo;
+
 //engine stuff
 void ThrowError(char* Message, char* Thrower, Engine* Engine); //done
 void ThrowWarning(char* Message, char* Thrower); //done
@@ -196,7 +204,7 @@ int InitSDL(); //done
 int GetBasePath(Engine* Engine); //done
 char* GetAssetPath(char* Asset, Engine* Engine); //done
 Engine* InitEngine(); //done
-int RunEngine(Engine* Engine); //TODO
+void RunEngine(Engine* Engine); //TODO
 void CleanupEngine(Engine* Engine); //TODO
 
 //audio
@@ -213,36 +221,22 @@ int DrawSprite(Sprite* Sprite, Engine* Engine); //done
 void Render(Engine* Engine); //TODO
 
 //input
-int InitInput(Engine* Engine); //done
 void GetInput(Engine* Engine); //TODO
-void CleanupInput(Engine* Engine); //done
 
 //clock
 void KeepTime(Engine* Engine); //done
 
 //resource
+int InitResourcePool(ResourceInfo ResourceInfo, Engine* Engine); //done
+int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine); //done
+void CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine); //done
 //audio
-int InitSoundCache(Engine* Engine); //done
-int ExtendSoundCache(Engine* Engine); //done
-int InitMusicCache(Engine* Engine); //done
-int ExtendMusicCache(Engine* Engine); //done
 int CacheSound(char* File, Engine* Engine); //done
 int CacheMusic(char* File, Engine* Engine); //done
-void CleanupSoundCache(Engine* Engine); //done
-void CleanupMusicCache(Engine* Engine); //done
 //video
-int InitTextureCache(Engine* Engine); //done
-int ExtendTextureCache(Engine* Engine); //done
 int CacheTexture(char* File, Engine* Engine); //done
-void CleanupTextureCache(Engine* Engine); //done
 //objects
-int InitSpritePool(Engine* Engine); //done
-int ExtendSpritePool(Engine* Engine); //done
-void CleanupSpritePool(Engine* Engine); //done
-int InitActorPool(Engine* Engine); //done
-int ExtendActorPool(Engine* Engine); //done
-void CleanupActorPool(Engine* Engine); //done
-int CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, int Visible, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine); //done
+int CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, int Visible, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine); //done
 int CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine); //done
 void DestroySprite(Sprite* Sprite, Engine* Engine); //TODO
 void DestroyActor(Actor* Actor, Engine* Engine); //TODO
