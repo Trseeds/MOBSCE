@@ -21,7 +21,7 @@ Engine
 #include <stdint.h>
 #include <math.h>
 #include <time.h>
-#include <GAME.h>
+#include "GAME.h"
 
 #define ERROR_BUFFER_SIZE 1024
 #define OBJECT_NAME_SIZE 64

@@ -1,11 +1,3 @@
-typedef struct CustomSpriteData {
-    unsigned char Byte;
-} CustomSpriteData;
-
-typedef struct CustomActorData {
-    unsigned char Byte;
-} CustomActorData;
-
 #include "MOBSCE.h"
 
 void ScreenCrawl(Actor* Actor, Engine* Engine)
