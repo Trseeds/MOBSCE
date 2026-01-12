@@ -51,6 +51,37 @@ int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
 
             return(0);
         }
+        char Traceback[ERROR_BUFFER_SIZE];
+        snprintf(Traceback,ERROR_BUFFER_SIZE,"CleanupResourcePool(0x%X, 0x%X)",&ResourceInfo,Engine);
+        ThrowError("Invalid Resource Info! No more memory can be allocated!",Traceback,Engine);
+        return(2);
+    }
+    return(-1);
+}
+
+int ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
+{
+    if(Engine)
+    {
+        if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources)
+        {
+            void** OldPtr = *(void**)ResourceInfo.Pointer;
+            int NewSize = *(int*)ResourceInfo.AllocatedResourceMemory-MIN_ALLOCATE;
+            *(void**)ResourceInfo.Pointer = realloc(*(void**)ResourceInfo.Pointer,NewSize*sizeof(void*));
+            if(!*(void**)ResourceInfo.Pointer)
+            {
+                *(void**)ResourceInfo.Pointer = OldPtr;
+                char Traceback[ERROR_BUFFER_SIZE];
+                snprintf(Traceback,ERROR_BUFFER_SIZE,"ShrinkResourcePool(0x%X, 0x%X)",&ResourceInfo,Engine);
+                ThrowError("Failed to allocate new memory!",Traceback,Engine);
+                return(1);
+            }
+            *(int*)ResourceInfo.AllocatedResourceMemory -= MIN_ALLOCATE;
+        }
+        char Traceback[ERROR_BUFFER_SIZE];
+        snprintf(Traceback,ERROR_BUFFER_SIZE,"ShrinkResourcePool(0x%X, 0x%X)",&ResourceInfo,Engine);
+        ThrowWarning("Invalid Resource Info! Skipping shrink. (this is a memory leak, you must fix it.)",Traceback);
+        return(2);
     }
     return(-1);
 }
@@ -135,9 +166,18 @@ void DestroySprite(Sprite* DSprite, Engine* Engine)
                     Engine->Sprites[i] = NULL;
                 }
             }
+
             free(DSprite);
             qsort(Engine->Sprites,Engine->Resource.NumberOfSprites,sizeof(Sprite*),CompactArray);
             Engine->Resource.NumberOfSprites--;
+
+            if(ArrayCanBeShrunk(Engine->Actors,Engine->Resource.AllocatedActorMemory,Engine->Resource.NumberOfActors))
+            {
+                ResourceInfo ResourceInfo;
+                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteMemory;
+                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSprites;
+                ShrinkResourcePool(ResourceInfo,Engine);
+            }
         }
     }
 }
@@ -193,9 +233,18 @@ void DestroyActor(Actor* DActor, Engine* Engine)
                     Engine->Actors[i] = NULL;
                 }
             }
+            
             free(DActor);
             qsort(Engine->Actors, Engine->Resource.NumberOfActors, sizeof(Actor*), CompactArray);
             Engine->Resource.NumberOfActors--;
+            
+            if(ArrayCanBeShrunk(Engine->Actors,Engine->Resource.AllocatedActorMemory,Engine->Resource.NumberOfActors))
+            {
+                ResourceInfo ResourceInfo;
+                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
+                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActors;
+                ShrinkResourcePool(ResourceInfo,Engine);
+            }
 
             for(int i = 0; i < Engine->Resource.NumberOfSprites; i++)
             {

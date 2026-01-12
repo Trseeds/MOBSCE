@@ -204,6 +204,7 @@ void ThrowWarning(char* Message, char* Thrower); //done
 int GetNewObjectID(Engine* Engine);
 int CompactArray(const void* X, const void* Y); //done
 int SortSpritesByZ(const void* X, const void* Y); //done
+int ArrayCanBeShrunk(void* Array, int AllocatedElements, int AllocatedSize); //done
 int LinearMap(int Number, int NumberMax, int RangeMax, int RangeMin); //done
 void SeedRNG(); //done
 int GetRandomNumber(int Max); //done
@@ -228,7 +229,7 @@ int InitVideo(Engine* Engine); //done
 void CleanupVideo(Engine* Engine); //done
 int DrawTexture(SDL_Texture* Texture, Vector2 Position, Vector2 Origin, Engine* Engine); //done
 int DrawSprite(Sprite* Sprite, Engine* Engine); //done
-void Render(Engine* Engine); //TODO
+void Render(Engine* Engine); //done
 
 //input
 void GetInput(Engine* Engine); //TODO
@@ -239,6 +240,7 @@ void KeepTime(Engine* Engine); //done
 //resource
 int InitResourcePool(ResourceInfo ResourceInfo, Engine* Engine); //done
 int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine); //done
+int ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine); //done
 void CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine); //done
 //audio
 int CacheSound(char* File, Engine* Engine); //done

@@ -70,6 +70,15 @@ int SortSpritesByZ(const void* X, const void* Y)
     }
 }
 
+int ArrayCanBeShrunk(void* Array, int AllocatedElements, int AllocatedSize)
+{
+    if((AllocatedSize - AllocatedElements) >= MIN_ALLOCATE)
+    {
+        return(1);
+    }
+    return(0);
+}
+
 int LinearMap(int Number, int NumberMax, int RangeMax, int RangeMin)
 {
     if(Number < RangeMin)
