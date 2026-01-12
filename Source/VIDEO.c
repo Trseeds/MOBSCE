@@ -152,6 +152,12 @@ void Render(Engine* Engine)
     {
         SDL_RenderClear(Engine->Video.Renderer);
 
+        if(Engine->SpriteZResortNeeded)
+        {
+            qsort(Engine->Sprites, Engine->Resource.NumberOfSprites, sizeof(Sprite*), SortSpritesByZ);
+            Engine->SpriteZResortNeeded = false;
+        }
+
         for(int i = 0; i < Engine->Resource.NumberOfSprites; i++)
         {
             if(Engine->Sprites[i])

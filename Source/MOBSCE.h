@@ -21,6 +21,7 @@ Engine
 #include <stdint.h>
 #include <math.h>
 #include <time.h>
+#include <GAME.h>
 
 #define ERROR_BUFFER_SIZE 1024
 #define OBJECT_NAME_SIZE 64
@@ -81,14 +82,17 @@ typedef struct Config {
 //objects
 typedef struct Actor {
 	char Name[OBJECT_NAME_SIZE];
+	Uint64 ID;
 	FVector2 Position;
 	Vector2 Dimensions;
 	int Voice;
 	void (*Routine)(struct Actor*, struct Engine*);
+	CustomActorData CustomActorData;
 } Actor;
 
 typedef struct Sprite {
 	char Name[OBJECT_NAME_SIZE];
+	Uint64 ID;
 	SDL_Texture* Texture;
 	int TextureID;
 	Vector3 Position;
@@ -97,6 +101,7 @@ typedef struct Sprite {
 	int Visible;
 	Actor* Actor;
 	int (*Routine)(struct Sprite*, struct Engine*);
+	CustomSpriteData CustomSpriteData;
 } Sprite;
 
 //engine
@@ -171,6 +176,7 @@ typedef struct Resource {
 
 typedef struct Engine {
 	char BasePath[1024];
+	char ConfigPath[1024];
 	Config Config;
 	Audio Audio;
 	Video Video;
@@ -180,7 +186,9 @@ typedef struct Engine {
 	Actor** Actors;
 	Sprite** Sprites;
 	SDL_Event* Event;
+	Uint64 IDCounter;
 	int Running;
+	int SpriteZResortNeeded;
 } Engine;
 
 typedef struct ResourceInfo {
@@ -193,7 +201,9 @@ typedef struct ResourceInfo {
 //engine stuff
 void ThrowError(char* Message, char* Thrower, Engine* Engine); //done
 void ThrowWarning(char* Message, char* Thrower); //done
-void CompactArray(void* Array, int ElementSize, int ArraySize); //done
+int GetNewObjectID(Engine* Engine);
+int CompactArray(const void* X, const void* Y); //done
+int SortSpritesByZ(const void* X, const void* Y); //done
 int LinearMap(int Number, int NumberMax, int RangeMax, int RangeMin); //done
 void SeedRNG(); //done
 int GetRandomNumber(int Max); //done
@@ -203,7 +213,7 @@ void LoadEngineConfig(Engine* Engine); //done
 int InitSDL(); //done
 int GetBasePath(Engine* Engine); //done
 char* GetAssetPath(char* Asset, Engine* Engine); //done
-Engine* InitEngine(); //done
+Engine* InitEngine(char* ConfigFile); //done
 void RunEngine(Engine* Engine); //TODO
 void CleanupEngine(Engine* Engine); //TODO
 
@@ -238,8 +248,8 @@ int CacheTexture(char* File, Engine* Engine); //done
 //objects
 int CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, int Visible, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine); //done
 int CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine); //done
-void DestroySprite(Sprite* Sprite, Engine* Engine); //TODO
-void DestroyActor(Actor* Actor, Engine* Engine); //TODO
+void DestroySprite(Sprite* DSprite, Engine* Engine); //done
+void DestroyActor(Actor* DActor, Engine* Engine); //done
 Sprite* GetSpriteByName(char* Name, Engine* Engine); //TODO
 Actor* GetActorByName(char* Name, Engine* Engine); //TODO
 

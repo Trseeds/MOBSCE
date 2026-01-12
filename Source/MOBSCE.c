@@ -12,50 +12,61 @@ void ThrowWarning(char* Message, char* Thrower)
     printf("\n\nWarning: %s\nThrower: %s\n\n",Message,Thrower);
 }
 
-void AlignArray(void* Array, int ElementSize, int ArraySize)
+int GetNewObjectID(Engine* Engine)
 {
-    if(Array == NULL || ElementSize <= 0 || ArraySize <= 0)
+    Engine->IDCounter++;
+    return(Engine->IDCounter-1);
+}
+
+int CompactArray(const void* X, const void* Y)
+{
+    const void* NX = *(const void**)X;
+    const void* NY = *(const void**)Y;
+    if(NX == NULL && NY == NULL)
     {
-        return;
+        return(0);
     }
-    
-    unsigned char* ArrayPointer = (unsigned char*)Array;
-    int WriteIndex = 0;
-    
-    for (int ReadIndex = 0; ReadIndex < ArraySize; ReadIndex++)
+    if(NX != NULL && NY != NULL)
     {
-        unsigned char* Element = ArrayPointer + (ReadIndex * ElementSize);
-        int IsNull = true;
-        for (int i = 0; i < ElementSize; i++)
-        {
-            if (Element[i] != 0)
-            {
-                IsNull = 0;
-                break;
-            }
-        }
-        
-        if (!IsNull)
-        {
-            if (WriteIndex != ReadIndex)
-            {
-                unsigned char* DestinationPointer = ArrayPointer + (WriteIndex * ElementSize);
-                for (int i = 0; i < ElementSize; i++)
-                {
-                    DestinationPointer[i] = Element[i];
-                }
-            }
-            WriteIndex++;
-        }
+        return(0);
     }
-    
-    for (int i = WriteIndex; i < ArraySize; i++)
+    if(NX == NULL)
     {
-        char* Element = ArrayPointer + (i * ElementSize);
-        for (int j = 0; j < ElementSize; j++)
-        {
-            Element[j] = 0;
-        }
+        return(1);
+    }
+    if(NY == NULL)
+    {
+        return(-1);
+    }
+}
+
+int SortSpritesByZ(const void* X, const void* Y)
+{
+    Sprite* Sprite1 = *(Sprite **)X;
+    Sprite* Sprite2 = *(Sprite **)Y;
+    if (Sprite1 == NULL && Sprite2 == NULL)
+    {
+        return(0);
+    } 
+    if (Sprite1 == NULL)
+    {
+        return(1);
+    }
+    if (Sprite2 == NULL)
+    {
+        return(-1);
+    }
+    if(Sprite1->Position.Z == Sprite2->Position.Z)
+    {
+        return(0);
+    }
+    if(Sprite1->Position.Z < Sprite2->Position.Z)
+    {
+        return(1);
+    }
+    if(Sprite1->Position.Z > Sprite2->Position.Z)
+    {
+        return(-1);
     }
 }
 
@@ -158,7 +169,7 @@ void KeepTime(Engine* Engine)
     }
 }
 
-Engine* InitEngine()
+Engine* InitEngine(char* ConfigFile)
 {
     Engine* NewEngine = (Engine*)calloc(1,sizeof(Engine));
     NewEngine->Event = (SDL_Event*)calloc(1,sizeof(SDL_Event));
@@ -170,8 +181,8 @@ Engine* InitEngine()
     ResourceInfo NewResourceInfo;
 
     GetBasePath(NewEngine);
-    char Asset[1024] = "Config.ini";
-    UpdateEngineConfig(GetAssetPath(Asset,NewEngine),&NewEngine->Config,NewEngine);
+    strcpy(NewEngine->ConfigPath,ConfigFile);
+    UpdateEngineConfig(GetAssetPath(NewEngine->ConfigPath,NewEngine),&NewEngine->Config,NewEngine);
     LoadEngineConfig(NewEngine);
     InitSDL();
     InitAudio(NewEngine);
@@ -215,7 +226,7 @@ void RunEngine(Engine* Engine)
         {
             if(Engine->Sprites[i])
             {
-                if(Engine->Sprites[i]->Routine)
+                if(Engine->Sprites[i]->Routine != NULL)
                 {
                     Engine->Sprites[i]->Routine(Engine->Sprites[i],Engine);
                 }
