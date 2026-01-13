@@ -47,9 +47,9 @@ void CreateTestObject(Engine* Engine)
 
 void InitGame(Engine* Engine)
 {
-    char BG[1024] = "Assets/Images/Backgrounds/TestBG.bmp";
-    char Player[1024] = "Assets/Images/Sprites/Player.bmp";
-    char Cursor[1024] = "Assets/Images/Sprites/Cursor.bmp";
+    char BG[STRING_BUFFER_SIZE] = "Assets/Images/Backgrounds/TestBG.bmp";
+    char Player[STRING_BUFFER_SIZE] = "Assets/Images/Sprites/Player.bmp";
+    char Cursor[STRING_BUFFER_SIZE] = "Assets/Images/Sprites/Cursor.bmp";
     CacheTexture(GetAssetPath(BG,Engine),Engine);
     CacheTexture(GetAssetPath(Player,Engine),Engine);
     CacheTexture(GetAssetPath(Cursor,Engine),Engine);
@@ -78,32 +78,53 @@ int main(int argc, char* argv[])
     InitGame(Engine1);
     while(Engine1->Running)
     {
-        if(Engine1->Input.MouseUp[0])
+        if(Engine1->Input.MouseUp[MB_LEFT])
         {
-            Vector4 NewOrigin = {0,64,64,64};
-            GetSpriteByName("Mouse Cursor",Engine1)->Origin = NewOrigin;
+            puts("Left Click");
         }
-        else if(Engine1->Input.MouseUp[1])
+        if(Engine1->Input.MouseUp[MB_RIGHT])
         {
-            Vector4 NewOrigin = {0,128,64,64};
-            GetSpriteByName("Mouse Cursor",Engine1)->Origin = NewOrigin;
+            puts("Right Click");
         }
-        else
+        if(Engine1->Input.MouseUp[MB_MIDDLE])
         {
-            Vector4 NewOrigin = {0,0,64,64};
-            GetSpriteByName("Mouse Cursor",Engine1)->Origin = NewOrigin;
+            puts("Scroll Click");
         }
-        if(Engine1->Input.KeysUp[SDL_SCANCODE_R])
+        if(Engine1->Input.MouseUp[MB_BACK])
+        {
+            puts("Back Click");
+        }
+        if(Engine1->Input.MouseUp[MB_FORWARD])
+        {
+            puts("Forward Click");
+        }
+        if(Engine1->Input.VerticalMouseScroll == SCROLL_UP)
+        {
+            puts("Scroll Up");
+        }
+        if(Engine1->Input.VerticalMouseScroll == SCROLL_DOWN)
+        {
+            puts("Scroll Down");
+        }
+        if(Engine1->Input.HorizontalMouseScroll == SCROLL_RIGHT)
+        {
+            puts("Scroll Right");
+        }
+        if(Engine1->Input.HorizontalMouseScroll == SCROLL_LEFT)
+        {
+            puts("Scroll Left");
+        }
+        if(Engine1->Input.KeysUp[K_R])
         {
             CleanupEngine(Engine1);
             Engine1 = InitEngine("Config.ini");
             InitGame(Engine1);
         }
-        if(Engine1->Input.KeysDown[SDL_SCANCODE_S] && !Engine1->Input.KeysDown[SDL_SCANCODE_RCTRL])
+        if(Engine1->Input.KeysDown[K_S] && !Engine1->Input.KeysDown[K_RCTRL])
         {
             CreateTestObject(Engine1);
         }
-        if(Engine1->Input.KeysDown[SDL_SCANCODE_K])
+        if(Engine1->Input.KeysDown[K_K])
         {
             if(Engine1->Sprites[1])
             {
@@ -119,7 +140,7 @@ int main(int argc, char* argv[])
                 }
             }
         }
-        if(Engine1->Input.KeysDown[SDL_SCANCODE_RCTRL] && Engine1->Input.KeysUp[SDL_SCANCODE_S])
+        if(Engine1->Input.KeysDown[K_RCTRL] && Engine1->Input.KeysUp[K_S])
         {
             for(int i = 0; i < 10000; i++)
             {
@@ -132,7 +153,7 @@ int main(int argc, char* argv[])
         }
         RunEngine(Engine1);
         Render(Engine1);
-        if(Engine1->Event->type == SDL_QUIT || Engine1->Input.KeysUp[SDL_SCANCODE_ESCAPE])
+        if(Engine1->Event->type == SDL_QUIT || Engine1->Input.KeysUp[K_ESCAPE])
         {
             CleanupEngine(Engine1);
             free(Engine1);

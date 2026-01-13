@@ -94,8 +94,8 @@ int UpdateEngineConfig(char* File, Config* Config, Engine* Engine)
         int Result = ini_parse(File,handler,Config);
         if(Result < 0)
         {
-            char Traceback[ERROR_BUFFER_SIZE];
-            snprintf(Traceback,ERROR_BUFFER_SIZE,"UpdateEngineConfig(%s, 0x%X, 0x%X)",File,Config,Engine);
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"UpdateEngineConfig(%s, 0x%X, 0x%X)",File,Config,Engine);
             ThrowWarning("Failed to load config file.",Traceback);
             return(1);
         }

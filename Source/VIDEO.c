@@ -7,8 +7,8 @@ int InitVideo(Engine* Engine)
         Engine->Video.Window = SDL_CreateWindow("MOBSCE",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,Engine->Video.LogicalDimensions.X,Engine->Video.LogicalDimensions.Y,Engine->Video.WindowFlags);
         if(!Engine->Video.Window)
         {
-            char Traceback[ERROR_BUFFER_SIZE];
-            snprintf(Traceback,ERROR_BUFFER_SIZE,"InitVideo(%X)",Engine);
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"InitVideo(%X)",Engine);
             ThrowError("Failed to create window!",Traceback,Engine);
             return(1);
         }
@@ -16,19 +16,19 @@ int InitVideo(Engine* Engine)
         Engine->Video.Renderer = SDL_CreateRenderer(Engine->Video.Window,-1,Engine->Video.RendererFlags);
         if(!Engine->Video.Renderer)
         {
-            char Traceback[ERROR_BUFFER_SIZE];
-            snprintf(Traceback,ERROR_BUFFER_SIZE,"InitVideo(0x%X)",Engine);
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"InitVideo(0x%X)",Engine);
             ThrowError("Failed to create renderer!",Traceback,Engine);
             return(2);
         }
 
-        char Path[1024];
-        snprintf(Path,1024,"%sAssets/Images/Icon.bmp",Engine->BasePath);
+        char Path[STRING_BUFFER_SIZE];
+        snprintf(Path,STRING_BUFFER_SIZE,"%sAssets/Images/Icon.bmp",Engine->BasePath);
         SDL_Surface* Icon = SDL_LoadBMP(Path);
         if(!Icon)
         {
-            char Traceback[ERROR_BUFFER_SIZE];
-            snprintf(Traceback,ERROR_BUFFER_SIZE,"InitVideo(0x%X)",Engine);
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"InitVideo(0x%X)",Engine);
             ThrowWarning("Failed to create window icon.",Traceback);
             puts(Path);
             fflush(stdout);
@@ -68,8 +68,8 @@ int DrawTexture(SDL_Texture* Texture, Vector2 Position, Vector2 Origin, Engine* 
     {
         if(!Texture)
         {
-            char Traceback[ERROR_BUFFER_SIZE];
-            snprintf(Traceback,ERROR_BUFFER_SIZE,"DrawTexture(0x%X, %d, %d, 0x%S)",Texture,Position,Origin,Engine);
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawTexture(0x%X, %d, %d, 0x%S)",Texture,Position,Origin,Engine);
             ThrowWarning("Invalid texture.",Traceback);
             return(1);
         }
@@ -78,8 +78,8 @@ int DrawTexture(SDL_Texture* Texture, Vector2 Position, Vector2 Origin, Engine* 
         int Result = SDL_QueryTexture(Texture,NULL,NULL,&Dimensions.X,&Dimensions.Y);
         if(Result != 0)
         {
-            char Traceback[ERROR_BUFFER_SIZE];
-            snprintf(Traceback,ERROR_BUFFER_SIZE,"DrawTexture(0x%X, %d, %d, 0x%S)",Texture,Position,Origin,Engine);
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawTexture(0x%X, %d, %d, 0x%S)",Texture,Position,Origin,Engine);
             ThrowWarning("Could not query texture information.",Traceback);
             return(2);
         }
@@ -98,8 +98,8 @@ int DrawTexture(SDL_Texture* Texture, Vector2 Position, Vector2 Origin, Engine* 
         Result = SDL_RenderCopy(Engine->Video.Renderer,Texture,&Source,&Destination);
         if(Result != 0)
         {
-            char Traceback[ERROR_BUFFER_SIZE];
-            snprintf(Traceback,ERROR_BUFFER_SIZE,"DrawTexture(0x%X, %d, %d, 0x%S)",Texture,Position,Origin,Engine);
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawTexture(0x%X, %d, %d, 0x%S)",Texture,Position,Origin,Engine);
             ThrowWarning("Could not draw texture.",Traceback);
             return(3);
         }
@@ -115,8 +115,8 @@ int DrawSprite(Sprite* Sprite, Engine* Engine)
     {
         if(!Sprite)
         {
-            char Traceback[ERROR_BUFFER_SIZE];
-            snprintf(Traceback,ERROR_BUFFER_SIZE,"DrawSprite(0x%X, 0x%X)",Sprite,Engine);
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawSprite(0x%X, 0x%X)",Sprite,Engine);
             ThrowWarning("Invalid sprite.",Traceback);
             return(1);
         }
@@ -135,8 +135,8 @@ int DrawSprite(Sprite* Sprite, Engine* Engine)
         int Result = SDL_RenderCopy(Engine->Video.Renderer,Sprite->Texture,&Source,&Destination);
         if(Result != 0)
         {
-            char Traceback[ERROR_BUFFER_SIZE];
-            snprintf(Traceback,ERROR_BUFFER_SIZE,"DrawSprite(0x%X, 0x%X)",Sprite,Engine);
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawSprite(0x%X, 0x%X)",Sprite,Engine);
             ThrowWarning("Could not draw sprite.",Traceback);
             return(3);
         }
@@ -169,8 +169,8 @@ void Render(Engine* Engine)
             }
             else
             {
-                char Traceback[ERROR_BUFFER_SIZE];
-                snprintf(Traceback,ERROR_BUFFER_SIZE,"Render(0x%X)",Engine);
+                char Traceback[STRING_BUFFER_SIZE];
+                snprintf(Traceback,STRING_BUFFER_SIZE,"Render(0x%X)",Engine);
                 ThrowWarning("Sprite is invalid.",Traceback);
             }
         }

@@ -6,6 +6,8 @@ void GetInput(Engine* Engine)
     {
         Engine->Input.SDL_Keystate = SDL_GetKeyboardState(NULL);
         Engine->Input.SDL_MouseState = SDL_GetMouseState(&Engine->Input.MousePosition.X,&Engine->Input.MousePosition.Y);
+        Engine->Input.VerticalMouseScroll = 0;
+        Engine->Input.HorizontalMouseScroll = 0;
         memset(Engine->Input.KeysUp,0,sizeof(Engine->Input.KeysUp));
         memset(Engine->Input.KeysDown,0,sizeof(Engine->Input.KeysDown));
         memset(Engine->Input.MouseUp,0,sizeof(Engine->Input.MouseUp));
@@ -62,6 +64,25 @@ void GetInput(Engine* Engine)
         if(!(Engine->Input.SDL_MouseState & SDL_BUTTON(SDL_BUTTON_X2)) && (Engine->Input.SDL_PreviousMouseState & SDL_BUTTON(SDL_BUTTON_X2)))
         {
             Engine->Input.MouseUp[4] = true;
+        }
+        if(Engine->Event->type == SDL_MOUSEWHEEL)
+        {
+            if(Engine->Event->wheel.y > 0)
+            {
+                Engine->Input.VerticalMouseScroll = 1; //scroll up
+            }
+            if(Engine->Event->wheel.y < 0)
+            {
+                Engine->Input.VerticalMouseScroll = -1; //scroll down
+            }
+            if(Engine->Event->wheel.x > 0)
+            {
+                Engine->Input.HorizontalMouseScroll = 1; //scroll right
+            }
+            if(Engine->Event->wheel.x < 0)
+            {
+                Engine->Input.HorizontalMouseScroll = -1; //scroll left
+            }
         }
         
         memcpy(Engine->Input.SDL_PreviousKeystate,Engine->Input.SDL_Keystate,sizeof(Engine->Input.SDL_PreviousKeystate));

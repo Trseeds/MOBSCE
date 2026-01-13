@@ -2,8 +2,8 @@
 
 void ThrowError(char* Message, char* Thrower, Engine* Engine)
 {
-    char BoxErrorMessage[ERROR_BUFFER_SIZE];
-    snprintf(BoxErrorMessage,ERROR_BUFFER_SIZE,"Error Message: %s\nThrower: %s",Message,Thrower);
+    char BoxErrorMessage[STRING_BUFFER_SIZE];
+    snprintf(BoxErrorMessage,STRING_BUFFER_SIZE,"Error Message: %s\nThrower: %s",Message,Thrower);
     CleanupEngine(Engine);
 }
 
@@ -132,14 +132,14 @@ int GetBasePath(Engine* Engine)
         char* Result = SDL_GetBasePath();
         if(!Result)
         {
-            char Traceback[ERROR_BUFFER_SIZE];
-            snprintf(Traceback,ERROR_BUFFER_SIZE,"GetBasePath(0x%X)",Engine);
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"GetBasePath(0x%X)",Engine);
             ThrowError("Failed to get base path!",Traceback,Engine);
             return(1);
         }
         strcpy(Engine->BasePath,Result);
 
-        for(int i = 0; i < 1024; i++)
+        for(int i = 0; i < STRING_BUFFER_SIZE; i++)
         {
             if(Engine->BasePath[i] == '\\')
             {
@@ -156,8 +156,8 @@ char* GetAssetPath(char* Asset, Engine* Engine)
 {
     if(Engine)
     {
-        char Path[1024];
-        snprintf(Path,1024,"%s%s",Engine->BasePath,Asset);
+        char Path[STRING_BUFFER_SIZE];
+        snprintf(Path,STRING_BUFFER_SIZE,"%s%s",Engine->BasePath,Asset);
         strcpy(Asset,Path);
         return(Asset);
     }

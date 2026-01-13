@@ -21,9 +21,10 @@ Engine
 #include <stdint.h>
 #include <math.h>
 #include <time.h>
+#include "BUTTONS.h"
 #include "GAME.h"
 
-#define ERROR_BUFFER_SIZE 1024
+#define STRING_BUFFER_SIZE 1024
 #define OBJECT_NAME_SIZE 64
 #define MIN_ALLOCATE 16
 
@@ -135,7 +136,8 @@ typedef struct Input {
 	Vector2 MousePosition;
 	int MouseDown[5];
 	int MouseUp[5];
-	Vector4 MouseScroll;
+	int VerticalMouseScroll;
+	int HorizontalMouseScroll;
 	//controller stuff
 	//implement this later
 	Vector4 GamePadFaceButtonsUp;
@@ -177,8 +179,8 @@ typedef struct Resource {
 } Resource;
 
 typedef struct Engine {
-	char BasePath[1024];
-	char ConfigPath[1024];
+	char BasePath[STRING_BUFFER_SIZE];
+	char ConfigPath[STRING_BUFFER_SIZE];
 	Config Config;
 	Audio Audio;
 	Video Video;
