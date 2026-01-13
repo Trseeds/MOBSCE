@@ -250,8 +250,8 @@ int CacheMusic(char* File, Engine* Engine); //done
 //video
 int CacheTexture(char* File, Engine* Engine); //done
 //objects
-Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, int Visible, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine); //done
-Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine); //done
+Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, int Visible, CustomSpriteData CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine); //done
+Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, CustomActorData CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine); //done
 void DestroySprite(Sprite* DSprite, Engine* Engine); //done
 void DestroyActor(Actor* DActor, Engine* Engine); //done
 Sprite* GetSpriteByName(char* Name, Engine* Engine); //done

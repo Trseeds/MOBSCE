@@ -111,7 +111,7 @@ void CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
     }
 }
 
-Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, int Visible, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
+Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, int Visible, CustomSpriteData CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
 {
     if(Engine)
     {
@@ -142,6 +142,7 @@ Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimen
         NewSprite->Texture = Engine->Resource.Textures[TextureID];
         NewSprite->Visible = Visible;
         NewSprite->Actor = Actor;
+        NewSprite->CustomData = CustomData;
         NewSprite->Routine = Routine;
 
         Engine->Sprites[Engine->Resource.NumberOfSprites] = NewSprite;
@@ -207,7 +208,7 @@ Sprite* GetSpriteByName(char* Name, Engine* Engine)
     return(NULL);
 }
 
-Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine)
+Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, CustomActorData CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine)
 {
     if(Engine)
     {
@@ -234,6 +235,7 @@ Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, 
         NewActor->Position.X = Position.X; NewActor->Position.Y = Position.Y;
         NewActor->Dimensions.X = Dimensions.X; NewActor->Dimensions.Y = Dimensions.Y;
         NewActor->Voice = Voice;
+        NewActor->CustomData = CustomData;
         NewActor->Routine = Routine;
 
         Engine->Actors[Engine->Resource.NumberOfActors] = NewActor;
