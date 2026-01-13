@@ -1,7 +1,7 @@
 /*
 IMPORTANT!!
     For a real game you're going to need more data attatched to the Actor and Sprite
-    structs than i am giving you. My solution is do include the two following structs
+    structs than i am giving you. My solution is to include the two following structs
     in Sprites and Actors. You MUST leave this delcaration in tact, even if you don't
     use it, or else compilation will fail. Fill with your own data and access via
     Sprites/Actors->CustomData.YourMemberHere.

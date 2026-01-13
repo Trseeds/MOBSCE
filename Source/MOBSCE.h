@@ -100,7 +100,7 @@ typedef struct Sprite {
 	Vector2 Dimensions;
 	int Visible;
 	Actor* Actor;
-	int (*Routine)(struct Sprite*, struct Engine*);
+	void (*Routine)(struct Sprite*, struct Engine*);
 	CustomSpriteData CustomData;
 } Sprite;
 

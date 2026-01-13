@@ -1,0 +1,11 @@
+MOBSCE (Mob-Skee)
+Modular
+Object
+Based
+SDL2
+C
+Engine
+
+A simple engine that laregely exists to abstract SDL.
+Hosts its own object system that can have custom code
+and data frankensteined into it.
