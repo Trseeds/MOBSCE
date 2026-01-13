@@ -6,6 +6,9 @@ SDL2
 C
 Engine
 
-A simple engine that laregely exists to abstract SDL.
+An engine that largely exists to abstract SDL.
 Hosts its own object system that can have custom code
-and data frankensteined into it.
+and data grafted onto it.
+
+GAME.c is placeholder code, and probably a decent reference on 
+how things work while I put off writing documentation.
