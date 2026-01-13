@@ -111,7 +111,7 @@ void CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
     }
 }
 
-int CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, int Visible, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
+Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, int Visible, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
 {
     if(Engine)
     {
@@ -121,7 +121,7 @@ int CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimension
             char Traceback[ERROR_BUFFER_SIZE];
             snprintf(Traceback,ERROR_BUFFER_SIZE,"CreateSprite(%s, 0x%X, 0x%X, 0x%X, %d, %d, 0x%X, 0x%X)",Name,Position,Origin,Dimensions,TextureID,Visible,Routine,Engine);
             ThrowError("Failed to allocate memory!",Traceback,Engine);
-            return(1);
+            return((Sprite*)1);
         }
 
         if(Engine->Resource.NumberOfSprites+1 >= Engine->Resource.AllocatedSpriteMemory)
@@ -147,9 +147,9 @@ int CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimension
         Engine->Sprites[Engine->Resource.NumberOfSprites] = NewSprite;
         Engine->Resource.NumberOfSprites++;
         Engine->SpriteZResortNeeded = true;
-        return(0);
+        return(NewSprite);
     }
-    return(-1);
+    return((Sprite*)-1);
 }
 
 void DestroySprite(Sprite* DSprite, Engine* Engine)
@@ -182,7 +182,32 @@ void DestroySprite(Sprite* DSprite, Engine* Engine)
     }
 }
 
-int CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine)
+Sprite* GetSpriteByName(char* Name, Engine* Engine)
+{
+    if(Engine)
+    {
+        if(Engine->Sprites)
+        {
+            for(int i = 0; i < Engine->Resource.NumberOfSprites; i++)
+            {
+                if(Engine->Sprites[i])
+                {
+                    if(!strcmp(Engine->Sprites[i]->Name,Name))
+                    {
+                        return(Engine->Sprites[i]);
+                    }
+                }
+            }
+            char Traceback[ERROR_BUFFER_SIZE];
+            snprintf(Traceback,ERROR_BUFFER_SIZE,"GetSpriteByName",Name,Engine);
+            ThrowWarning("Could not find sprite.",Traceback);
+            return(NULL);
+        }
+    }
+    return(NULL);
+}
+
+Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine)
 {
     if(Engine)
     {
@@ -192,7 +217,7 @@ int CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, voi
             char Traceback[ERROR_BUFFER_SIZE];
             snprintf(Traceback,ERROR_BUFFER_SIZE,"CreateActor(%s, 0x%X, 0x%X, %d, 0x%X, 0x%X)",Name,Position,Dimensions,Voice,Routine,Engine);
             ThrowError("Failed to allocate memory!",Traceback,Engine);
-            return(1);
+            return((Actor*)1);
         }
 
         if(Engine->Resource.NumberOfActors+1 >= Engine->Resource.AllocatedActorMemory)
@@ -213,9 +238,9 @@ int CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, voi
 
         Engine->Actors[Engine->Resource.NumberOfActors] = NewActor;
         Engine->Resource.NumberOfActors++;
-        return(0);
+        return(NewActor);
     }
-    return(-1);
+    return((Actor*)-1);
 }
 
 void DestroyActor(Actor* DActor, Engine* Engine)
@@ -258,6 +283,31 @@ void DestroyActor(Actor* DActor, Engine* Engine)
             }
         }
     }
+}
+
+Actor* GetActorByName(char* Name, Engine* Engine)
+{
+    if(Engine)
+    {
+        if(Engine->Actors)
+        {
+            for(int i = 0; i < Engine->Resource.NumberOfActors; i++)
+            {
+                if(Engine->Actors[i])
+                {
+                    if(!strcmp(Engine->Actors[i]->Name,Name))
+                    {
+                        return(Engine->Actors[i]);
+                    }
+                }
+            }
+            char Traceback[ERROR_BUFFER_SIZE];
+            snprintf(Traceback,ERROR_BUFFER_SIZE,"GetActorByName",Name,Engine);
+            ThrowWarning("Could not find actor.",Traceback);
+            return(NULL);
+        }
+    }
+    return(NULL);
 }
 
 int CacheSound(char* File, Engine* Engine)

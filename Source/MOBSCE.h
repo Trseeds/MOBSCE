@@ -128,12 +128,14 @@ typedef struct Video {
 typedef struct Input {
 	Uint8* SDL_Keystate;
 	Uint8 SDL_PreviousKeystate[SDL_NUM_SCANCODES];
+	Uint32 SDL_MouseState;
+	Uint32 SDL_PreviousMouseState;
 	int KeysDown[SDL_NUM_SCANCODES];
 	int KeysUp[SDL_NUM_SCANCODES];
 	Vector2 MousePosition;
-	Vector3 MouseDown;
-	Vector3 MouseUp;
-	Vector3 MouseScroll;
+	int MouseDown[5];
+	int MouseUp[5];
+	Vector4 MouseScroll;
 	//controller stuff
 	//implement this later
 	Vector4 GamePadFaceButtonsUp;
@@ -248,11 +250,11 @@ int CacheMusic(char* File, Engine* Engine); //done
 //video
 int CacheTexture(char* File, Engine* Engine); //done
 //objects
-int CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, int Visible, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine); //done
-int CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine); //done
+Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, int Visible, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine); //done
+Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine); //done
 void DestroySprite(Sprite* DSprite, Engine* Engine); //done
 void DestroyActor(Actor* DActor, Engine* Engine); //done
-Sprite* GetSpriteByName(char* Name, Engine* Engine); //TODO
-Actor* GetActorByName(char* Name, Engine* Engine); //TODO
+Sprite* GetSpriteByName(char* Name, Engine* Engine); //done
+Actor* GetActorByName(char* Name, Engine* Engine); //done
 
 #endif

@@ -50,11 +50,11 @@ int SortSpritesByZ(const void* X, const void* Y)
     } 
     if (Sprite1 == NULL)
     {
-        return(1);
+        return(-1);
     }
     if (Sprite2 == NULL)
     {
-        return(-1);
+        return(1);
     }
     if(Sprite1->Position.Z == Sprite2->Position.Z)
     {
@@ -62,11 +62,11 @@ int SortSpritesByZ(const void* X, const void* Y)
     }
     if(Sprite1->Position.Z < Sprite2->Position.Z)
     {
-        return(1);
+        return(-1);
     }
     if(Sprite1->Position.Z > Sprite2->Position.Z)
     {
-        return(-1);
+        return(1);
     }
 }
 
