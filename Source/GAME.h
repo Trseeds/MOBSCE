@@ -4,7 +4,7 @@ IMPORTANT!!
     structs than i am giving you. My solution is do include the two following structs
     in Sprites and Actors. You MUST leave this delcaration in tact, even if you don't
     use it, or else compilation will fail. Fill with your own data and access via
-    Sprites/Actors->CustomXData.YourMemberHere.
+    Sprites/Actors->CustomData.YourMemberHere.
     Really this is the only thing that needs to go in this header. You are welcome to
     use it for your game, but you can not remove these declarations unless you remove
     them from the Sprite and Actor structs too.

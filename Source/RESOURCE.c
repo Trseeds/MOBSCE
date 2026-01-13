@@ -92,7 +92,8 @@ void CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
     {
         if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources && ResourceInfo.FreeFunction)
         {
-            void** Pool = (void**)ResourceInfo.Pointer;
+            //void** Pool = (void**)ResourceInfo.Pointer;
+            void** Pool = *(void***)ResourceInfo.Pointer;
 
             for(int i = 0; i < *(int*)ResourceInfo.AllocatedResourceMemory; i++)
             {
@@ -106,8 +107,7 @@ void CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
         }
         char Traceback[ERROR_BUFFER_SIZE];
         snprintf(Traceback,ERROR_BUFFER_SIZE,"CleanupResourcePool(0x%X, 0x%X)",&ResourceInfo,Engine);
-        ThrowWarning("Invalid Resource Info! Skipping free. (this is a memory leak, you must fix it.)",Traceback);
-        return;
+        ThrowWarning("Invalid Resource Info! Skipping cleanup. (this is a memory leak, you must fix it.)",Traceback);
     }
 }
 

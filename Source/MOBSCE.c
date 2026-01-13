@@ -266,27 +266,32 @@ void CleanupEngine(Engine* Engine)
         //sounds
         ResourceInfo.Pointer = &Engine->Resource.Sounds;
         ResourceInfo.FreeFunction = &Mix_FreeChunk;
+        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSounds;
         ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSoundMemory;
         CleanupResourcePool(ResourceInfo,Engine);
         //music
         ResourceInfo.Pointer = &Engine->Resource.Music;
         ResourceInfo.FreeFunction = &Mix_FreeMusic;
+        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfMusics;
         ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedMusicMemory;
         CleanupResourcePool(ResourceInfo,Engine);
         CleanupVideo(Engine);
         //textures
         ResourceInfo.Pointer = &Engine->Resource.Textures;
         ResourceInfo.FreeFunction = &SDL_DestroyTexture;
+        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTextures;
         ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTextureMemory;
         CleanupResourcePool(ResourceInfo,Engine);
         //sprites
         ResourceInfo.Pointer = &Engine->Sprites;
         ResourceInfo.FreeFunction = &free;
+        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSprites;
         ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteMemory;
         CleanupResourcePool(ResourceInfo,Engine);
         //actors
         ResourceInfo.Pointer = &Engine->Actors;
         ResourceInfo.FreeFunction = &free;
+        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActors;
         ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
         CleanupResourcePool(ResourceInfo,Engine);
         if(Engine->Event)

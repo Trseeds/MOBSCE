@@ -87,7 +87,7 @@ typedef struct Actor {
 	Vector2 Dimensions;
 	int Voice;
 	void (*Routine)(struct Actor*, struct Engine*);
-	CustomActorData CustomActorData;
+	CustomActorData CustomData;
 } Actor;
 
 typedef struct Sprite {
@@ -101,7 +101,7 @@ typedef struct Sprite {
 	int Visible;
 	Actor* Actor;
 	int (*Routine)(struct Sprite*, struct Engine*);
-	CustomSpriteData CustomSpriteData;
+	CustomSpriteData CustomData;
 } Sprite;
 
 //engine
@@ -193,7 +193,7 @@ typedef struct Engine {
 
 typedef struct ResourceInfo {
 	void* Pointer;
-	void* (*FreeFunction)(void*);
+	void (*FreeFunction)(void*);
 	int* AllocatedResourceMemory;
 	int* NumberOfResources;
 } ResourceInfo;

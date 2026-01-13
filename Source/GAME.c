@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
     InitGame(Engine1);
     while(Engine1->Running)
     {
-        if(Engine1->Input.KeysDown[SDL_SCANCODE_S])
+        if(Engine1->Input.KeysDown[SDL_SCANCODE_S] && !Engine1->Input.KeysDown[SDL_SCANCODE_RCTRL])
         {
             CreateTestObject(Engine1);
         }
@@ -76,6 +76,17 @@ int main(int argc, char* argv[])
                     DestroyActor(ActorFriend,Engine1);
                 }
             }
+        }
+        if(Engine1->Input.KeysDown[SDL_SCANCODE_RCTRL] && Engine1->Input.KeysUp[SDL_SCANCODE_S])
+        {
+            for(int i = 0; i < 10000; i++)
+            {
+                CreateTestObject(Engine1);
+            }
+        }
+        if(!(Engine1->Clock.TotalFrames % 100))
+        {
+            printf("%d  %d %f\r",Engine1->Resource.NumberOfActors,Engine1->Resource.AllocatedActorMemory,Engine1->Clock.FrameRate);
         }
         RunEngine(Engine1);
         Render(Engine1);
