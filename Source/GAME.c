@@ -20,6 +20,49 @@ void FollowMouse(Actor* Actor, Engine* Engine)
     Actor->Position.Y = Engine->Input.MousePosition.Y;
 }
 
+void MouseDrag(Actor* Actor, Engine* Engine)
+{
+    Actor->Position.X = Engine->Input.MousePosition.X - (Actor->Dimensions.X/2);
+    Actor->Position.Y = Engine->Input.MousePosition.Y - (Actor->Dimensions.Y/2);
+}
+
+void TestActorFunction(Actor* Actor, Engine* Engine)
+{
+    if(!Actor->CustomData.Dragged)
+    {
+        Actor->CustomData.MousedOver = false;
+    }
+    if(!Engine->Input.MouseDown[MB_LEFT])
+    {
+        Actor->CustomData.Dragged = false;
+    }
+    if(Engine->Input.MousePosition.X > Actor->Position.X && Engine->Input.MousePosition.X < Actor->Position.X+Actor->Dimensions.X)
+    {
+        if(Engine->Input.MousePosition.Y > Actor->Position.Y && Engine->Input.MousePosition.Y < Actor->Position.Y+Actor->Dimensions.Y)
+        {
+            if(Engine->Input.MouseDown[MB_LEFT])
+            {
+                Actor->CustomData.Dragged = true;
+            }
+            if(Engine->Input.MouseDown[MB_RIGHT])
+            {
+                DestroySprite(Actor->CustomData.Sprite,Engine);
+                DestroyActor(Actor,Engine);
+            }
+            Actor->CustomData.MousedOver = true;
+        }
+    }
+
+    if(Actor->CustomData.Dragged)
+    {
+        MouseDrag(Actor, Engine);
+    }
+    else
+    {
+        ScreenCrawl(Actor, Engine);
+    }
+}
+
 void AlignSpriteToActor(Sprite* Sprite, Engine* Engine)
 {
     if(Sprite->Actor)
@@ -36,13 +79,15 @@ void CreateTestObject(Engine* Engine)
     Vector4 Origin;
     Vector2 Dimensions;
     CustomSpriteData Dummy;
-    CustomActorData Dummy2;
+    CustomActorData Data;
     ActorPosition.X = GetRandomNumber(Engine->Video.LogicalDimensions.X); ActorPosition.Y = GetRandomNumber(Engine->Video.LogicalDimensions.Y);
     SpritePosition.X = 0; SpritePosition.Y = 0; SpritePosition.Z = 2;
     Origin.X = 0; Origin.Y = 0; Origin.Z = 16; Origin.W = 16;
     Dimensions.X = 16; Dimensions.Y = 16;
-    Actor* TestActor = CreateActor("Test Actor",ActorPosition,Dimensions,0,Dummy2,&ScreenCrawl,Engine);
-    CreateSprite("Test Sprite",SpritePosition,Origin,Dimensions,1,true,Dummy,TestActor,&AlignSpriteToActor,Engine);
+    Actor* TestActor = CreateActor("Test Actor",ActorPosition,Dimensions,0,Data,&TestActorFunction,Engine);
+    Sprite* TestSprite = CreateSprite("Test Sprite",SpritePosition,Origin,Dimensions,1,true,Dummy,TestActor,&AlignSpriteToActor,Engine);
+    Data.Sprite = TestSprite;
+    TestActor->CustomData = Data;
 }
 
 void InitGame(Engine* Engine)
@@ -78,42 +123,6 @@ int main(int argc, char* argv[])
     InitGame(Engine1);
     while(Engine1->Running)
     {
-        if(Engine1->Input.MouseUp[MB_LEFT])
-        {
-            puts("Left Click");
-        }
-        if(Engine1->Input.MouseUp[MB_RIGHT])
-        {
-            puts("Right Click");
-        }
-        if(Engine1->Input.MouseUp[MB_MIDDLE])
-        {
-            puts("Scroll Click");
-        }
-        if(Engine1->Input.MouseUp[MB_BACK])
-        {
-            puts("Back Click");
-        }
-        if(Engine1->Input.MouseUp[MB_FORWARD])
-        {
-            puts("Forward Click");
-        }
-        if(Engine1->Input.VerticalMouseScroll == SCROLL_UP)
-        {
-            puts("Scroll Up");
-        }
-        if(Engine1->Input.VerticalMouseScroll == SCROLL_DOWN)
-        {
-            puts("Scroll Down");
-        }
-        if(Engine1->Input.HorizontalMouseScroll == SCROLL_RIGHT)
-        {
-            puts("Scroll Right");
-        }
-        if(Engine1->Input.HorizontalMouseScroll == SCROLL_LEFT)
-        {
-            puts("Scroll Left");
-        }
         if(Engine1->Input.KeysUp[K_R])
         {
             CleanupEngine(Engine1);
@@ -146,10 +155,6 @@ int main(int argc, char* argv[])
             {
                 CreateTestObject(Engine1);
             }
-        }
-        if(!(Engine1->Clock.TotalFrames % 10))
-        {
-            printf("%d  %d %f\r",Engine1->Resource.NumberOfActors,Engine1->Resource.AllocatedActorMemory,Engine1->Clock.FrameRate);
         }
         RunEngine(Engine1);
         Render(Engine1);

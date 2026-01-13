@@ -10,10 +10,15 @@ IMPORTANT!!
     them from the Sprite and Actor structs too.
 */
 
+typedef struct Actor Actor;
+typedef struct Sprite Sprite;
+
 typedef struct CustomSpriteData {
     unsigned char Byte;
 } CustomSpriteData;
 
 typedef struct CustomActorData {
-    unsigned char Byte;
+    int MousedOver;
+    int Dragged;
+    Sprite* Sprite;
 } CustomActorData;
