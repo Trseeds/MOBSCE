@@ -68,3 +68,38 @@ enum Keys {
 	K_RIGHT = SDL_SCANCODE_RIGHT,
 	//will ammend this later
 };
+
+enum GamepadButtons {
+    GP_FB_RIGHT,
+    GP_FB_BOTTOM,
+    GP_FB_LEFT,
+    GP_FB_TOP,
+    GP_DP_UP,
+    GP_DP_DOWN,
+    GP_DP_LEFT,
+    GP_DP_RIGHT,
+    GP_FB_START,
+    GP_FB_SELECT,
+    GP_FB_SUPER,
+    GP_BPR_LEFT,
+    GP_BPR_RIGHT,
+    GP_STKDWN_LEFT,
+    GP_STKDWN_RIGHT
+};
+
+enum GamepadTriggers {
+    GP_TRGR_LEFT,
+    GP_TRGR_RIGHT
+};
+
+enum GamepadStickAxis {
+    GP_STK_LEFT_X,
+    GP_STK_LEFT_Y,
+    GP_STK_RIGHT_X,
+    GP_STK_RIGHT_Y
+};
+
+enum GamepadSticks {
+    GP_STK_LEFT,
+    GP_STK_RIGHT
+};

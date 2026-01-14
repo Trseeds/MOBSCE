@@ -69,7 +69,7 @@ int DrawTexture(SDL_Texture* Texture, Vector2 Position, Vector2 Origin, Engine* 
         if(!Texture)
         {
             char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawTexture(0x%X, %d, %d, 0x%S)",Texture,Position,Origin,Engine);
+            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawTexture(0x%X, %d, %d, 0x%X)",Texture,Position,Origin,Engine);
             ThrowWarning("Invalid texture.",Traceback);
             return(1);
         }
@@ -79,7 +79,7 @@ int DrawTexture(SDL_Texture* Texture, Vector2 Position, Vector2 Origin, Engine* 
         if(Result != 0)
         {
             char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawTexture(0x%X, %d, %d, 0x%S)",Texture,Position,Origin,Engine);
+            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawTexture(0x%X, %d, %d, 0x%X)",Texture,Position,Origin,Engine);
             ThrowWarning("Could not query texture information.",Traceback);
             return(2);
         }
@@ -99,7 +99,7 @@ int DrawTexture(SDL_Texture* Texture, Vector2 Position, Vector2 Origin, Engine* 
         if(Result != 0)
         {
             char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawTexture(0x%X, %d, %d, 0x%S)",Texture,Position,Origin,Engine);
+            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawTexture(0x%X, %d, %d, 0x%X)",Texture,Position,Origin,Engine);
             ThrowWarning("Could not draw texture.",Traceback);
             return(3);
         }

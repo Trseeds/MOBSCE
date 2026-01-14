@@ -141,17 +141,13 @@ typedef struct Input {
 	int VerticalMouseScroll;
 	int HorizontalMouseScroll;
 	//controller stuff
-	//implement this later
-	Vector4 GamePadFaceButtonsUp;
-	Vector4 GamePadFaceButtonsDown;
-	Vector4 GamePadDPadUp;
-	Vector4 GamePadDPadDown;
-	Vector2 GamePadBumpersUp;
-	Vector2 GamePadBumpersDown;
-	FVector2 GamePadTriggers;
-	FVector4 GamePadSticks;
-	Vector2 GamePadSticksPressedUp;
-	Vector2 GamePadSticksPressedDown;
+	SDL_GameController* Gamepad;
+	int GamepadIsConnected;
+	int GamepadPreviousState[14];
+	int GamepadButtonsUp[14];
+	int GamepadButtonsDown[14];
+	double GamepadTriggers[2];
+	double GamepadSticks[4];
 } Input;
 
 typedef struct Clock {
@@ -239,7 +235,12 @@ int DrawSprite(Sprite* Sprite, Engine* Engine); //done
 void Render(Engine* Engine); //done
 
 //input
-void GetInput(Engine* Engine); //TODO
+void GetKeyboardInput(Engine* Engine); //done
+void GetMouseInput (Engine* Engine); //done
+void GetGamepadInput(Engine* Engine); //done
+void GetInput(Engine* Engine); //done
+void RumbleController(Engine* Engine, int Strength, int Duration); //TODO
+void SetSonyLightbar(Engine* Engine, Vector3 Color); //TODO
 
 //clock
 void KeepTime(Engine* Engine); //done

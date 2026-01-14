@@ -200,7 +200,7 @@ Sprite* GetSpriteByName(char* Name, Engine* Engine)
                 }
             }
             char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"GetSpriteByName",Name,Engine);
+            snprintf(Traceback,STRING_BUFFER_SIZE,"GetSpriteByName(%s, 0x%X)",Name,Engine);
             ThrowWarning("Could not find sprite.",Traceback);
             return(NULL);
         }
@@ -304,7 +304,7 @@ Actor* GetActorByName(char* Name, Engine* Engine)
                 }
             }
             char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"GetActorByName",Name,Engine);
+            snprintf(Traceback,STRING_BUFFER_SIZE,"GetActorByName(%s, 0x%X)",Name,Engine);
             ThrowWarning("Could not find actor.",Traceback);
             return(NULL);
         }
