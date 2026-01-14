@@ -28,6 +28,8 @@ Engine
 #define OBJECT_NAME_SIZE 64
 #define MIN_ALLOCATE 16
 
+#define INVALID_ENGINE -1
+
 //basic data types
 typedef struct Vector2 {
 	int X;
@@ -203,7 +205,7 @@ typedef struct ResourceInfo {
 //engine stuff
 void ThrowError(char* Message, char* Thrower, Engine* Engine); //done
 void ThrowWarning(char* Message, char* Thrower); //done
-Uint64 GetNewObjectID(Engine* Engine);
+Uint64 GetNewObjectID(Engine* Engine); //done
 int CompactArray(const void* X, const void* Y); //done
 int SortSpritesByZ(const void* X, const void* Y); //done
 int PoolCanBeShrunk(void* Pool, int AllocatedElements, int AllocatedSize); //done
@@ -211,7 +213,7 @@ int LinearMap(int Number, int NumberMax, int RangeMax, int RangeMin); //done
 void SeedRNG(); //done
 int GetRandomNumber(int Max); //done
 int handler(void* user, const char* section, const char* name, const char* value); //done
-int UpdateEngineConfig(char* File, Config* Config, Engine* Engine); //done
+int UpdateConfig(char* File, Config* Config); //done
 void LoadEngineConfig(Engine* Engine); //done
 int InitSDL(Engine* Engine); //done
 int GetBasePath(Engine* Engine); //done
@@ -223,9 +225,9 @@ void CleanupEngine(Engine* Engine); //done
 //audio
 int InitAudio(Engine* Engine); //done
 int* EasyPan(int Pan, int Max, int* Output); //done
-int PlaySound(Mix_Chunk* Sound, int Voice, int Volume, int Pan, Engine* Engine); //done
-void MixMusic(); //TODO
-int PlayMusic(); //TODO
+int PlaySound(int SoundID, int Voice, int Volume, int Pan, Engine* Engine); //done
+void MixMusicVolume(Engine* Engine); //done
+int PlayMusic(int MusicID, Engine* Engine); //done
 
 //video
 int InitVideo(Engine* Engine); //done
@@ -238,9 +240,9 @@ void Render(Engine* Engine); //done
 void GetKeyboardInput(Engine* Engine); //done
 void GetMouseInput (Engine* Engine); //done
 void GetGamepadInput(Engine* Engine); //done
-void GetInput(Engine* Engine); //done
-void RumbleController(Engine* Engine, int Strength, int Duration); //TODO
-void SetSonyLightbar(Engine* Engine, Vector3 Color); //TODO
+void GetInput(Engine* Engine); //done 
+void RumbleController(int Strength, int Duration, Engine* Engine); //TODO
+void SetSonyLightbar(Vector3 Color, Engine* Engine); //TODO
 
 //clock
 void KeepTime(Engine* Engine); //done

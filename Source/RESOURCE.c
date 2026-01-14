@@ -20,7 +20,7 @@ int InitResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
             return(0);
         }       
     }
-    return(-1);
+    return(INVALID_ENGINE);
 }
 
 int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
@@ -56,7 +56,7 @@ int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
         ThrowError("Invalid Resource Info! No more memory can be allocated!",Traceback,Engine);
         return(2);
     }
-    return(-1);
+    return(INVALID_ENGINE);
 }
 
 int ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
@@ -83,7 +83,7 @@ int ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
         ThrowWarning("Invalid Resource Info! Skipping shrink. (this is a memory leak, you must fix it.)",Traceback);
         return(2);
     }
-    return(-1);
+    return(INVALID_ENGINE);
 }
 
 void CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
@@ -339,7 +339,7 @@ int CacheSound(char* File, Engine* Engine)
         Engine->Resource.NumberOfSounds++;
         return(0);
     }
-    return(-1);
+    return(INVALID_ENGINE);
 }
 
 int CacheMusic(char* File, Engine* Engine)
@@ -369,7 +369,7 @@ int CacheMusic(char* File, Engine* Engine)
         Engine->Resource.NumberOfMusics++;
         return(0);
     }
-    return(-1);
+    return(INVALID_ENGINE);
 }
 
 int CacheTexture(char* File, Engine* Engine)
@@ -411,5 +411,5 @@ int CacheTexture(char* File, Engine* Engine)
             return(0);
         }
     }
-    return(-1);
+    return(INVALID_ENGINE);
 }

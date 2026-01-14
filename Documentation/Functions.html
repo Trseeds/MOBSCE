@@ -73,6 +73,97 @@
         <dd>int - 1 if the pool can be shrunk, 0 if not.</dd>
         <dt>Usage</dt>
         <dd>When removing resources from pools, reallocation to a smaller size may be needed, use this to check.</dd> 
+        
+        <h4>LinearMap</h4>
+        <dt>Parameters</dt>
+        <dd>int Number - Number to map.</dd>
+        <dd>int NumberMax - Upper limit of Number.</dd>
+        <dd>int RangeMax - Upper limit of the range.</dd>
+        <dd>int RangeMin - Lower limit of the range.</dd>
+        <dt>Description</dt>
+        <dd>Maps one number onto a range, 50 with a max of 100 in a range of 0-128 becomes 64.</dd>
+        <dt>Return</dt>
+        <dd>int - Mapped number.</dd>
+        <dt>Usage</dt>
+        <dd>Used mainly in sound functions for volume and panning.</dd>
+        
+        <h4>SeedRNG</h4>
+        <dt>Description</dt>
+        <dd>Seeds the stdlib rand function with time's time.</dd>
+        <dt>Usage</dt>
+        <dd>Called in InitEngine</dd>
+        
+        <h4>GetRandomNumber</h4>
+        <dt>Parameters</dt>
+        <dd>int Max - Ceiling for random number.</dd>
+        <dt>Description</dt>
+        <dd>Uses stdlib rand to get a random number.</dd>
+        <dt>Return</dt>
+        <dd>int - Random number % Max.</dd>
+        <dt>Usage</dt>
+        <dd>When randomness is needed.</dd>
+        
+        <h4>handler</h4>
+        <dt>Usage</dt>
+        <dd>Used for inih config file parsing.</dd>
+        
+        <h4>UpdateConfig</h4>
+        <dt>Parameters</dt>
+        <dd>char* File - Config file to be parsed.</dd>
+        <dd>Config* Config - Config struct that will be filled with parsed config file values.</dd>
+        <dt>Description</dt>
+        <dd>Sets default config values as a fallback and parses config file.</dd>
+        <dt>Return</dt>
+        <dd>int - 1 on failure, 0 on success.</dd>
+        <dt>Usage</dt>
+        <dd>Used in InitEngine to ensure a valid config is loaded.</dd>
+        
+        <h4>LoadEngineConfig</h4>
+        <dt>Parameters</dt>
+        <dd>Engine* Engine - Engine whose config will be filled.</dd>
+        <dt>Description</dt>
+        <dd>Loads the engine's config values into the relevent structs.</dd>
+        <dt>Usage</dt>
+        <dd>Used in InitEngine.</dd>
+        
+        <h4>InitSDL</h4>
+        <dt>Parameters</dt>
+        <dd>Engine* Engine - Engine whose audio codecs flag will be used.</dd>
+        <dt>Description</dt>
+        <dd>Initializes SDL with the SDL_INIT_EVERYTHING flag. Engine's audio codecs flag is used to init SDL_mixer.</dd>
+        <dt>Return</dt>
+        <dd>int - 1 if SDL fails to initialize, 2 if SDL_mix fails to load some or all codecs, 0 on success.</dd>
+        <dt>Usage</dt>
+        <dd>Used in InitEngine to prepare SDL.</dd>
+        
+        <h4>GetBasePath</h4>
+        <dt>Parameters</dt>
+        <dd>Engine* Engine - Engine whos basepath will be set.</dd>
+        <dt>Description</dt>
+        <dd>Gets the file system path to the binary and sets Engine's basepath.</dd>
+        <dt>Return</dt>
+        <dd>int - 1 if SDL_GetBasePath fails, -1 if Engine is NULL, 0 on success.</dd>
+        <dt>Usage</dt>
+        <dd>Used in InitEngine to ensure that assets can be concatenated correctly.</dd>
+        
+        <h4>GetAssetPath</h4>
+        <dt>Parameters</dt>
+        <dd>char* Asset - Path to an asset.</dd>
+        <dd>Engine* Engine - Engine whose basepath will be used.</dd>
+        <dt>Description</dt>
+        <dd>Concatanates Engine's basepath and Asset.</dd>
+        <dt>Return</dt>
+        <dd>char* - NULL if Engine is NULL, Asset on success.</dd>
+        <dt>Usage</dt>
+        <dd>Good practice to when caching assets. Using relative paths only may break if binary is not run from its directory.</dd>
+        
+        <h4>KeepTime</h4>
+        <dt>Parameters</dt>
+        <dd>Engine* Engine - Engine whos clock struct will be set.</dd>
+        <dt>Description</dt>
+        <dd>Updates the clock struct of Engine.</dd>
+        <dt>Usage</dt>
+        <dd>Used in RunEngine to keep timing information updated.</dd>
     </div>
 </body>
 </html>

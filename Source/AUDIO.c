@@ -24,7 +24,7 @@ int InitAudio(Engine* Engine)
 
         return(0);
     }
-    return(-1);
+    return(INVALID_ENGINE);
 }
 
 int* EasyPan(int Pan, int Max, int* Output)
@@ -42,14 +42,14 @@ int* EasyPan(int Pan, int Max, int* Output)
     return(Output);
 }
 
-int PlaySound(Mix_Chunk* Sound, int Voice, int Volume, int Pan, Engine* Engine)
+int PlaySound(int SoundID, int Voice, int Volume, int Pan, Engine* Engine)
 {
     if(Engine)
     {
-        if(!Sound)
+        if(!Engine->Resource.Sounds[SoundID])
         {
             char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"PlaySound(0x%X, %d, %d, %d, 0x%X)",Sound,Voice,Volume,Pan,Engine);
+            snprintf(Traceback,STRING_BUFFER_SIZE,"PlaySound(%d, %d, %d, %d, 0x%X)",SoundID,Voice,Volume,Pan,Engine);
             ThrowWarning("Sound is not valid.",Traceback);
             return(1);
         }
@@ -69,15 +69,42 @@ int PlaySound(Mix_Chunk* Sound, int Voice, int Volume, int Pan, Engine* Engine)
 
         Mix_Volume(Voice,RealVolume);
         Mix_SetPanning(Voice,PanArr[0],PanArr[1]);
-        int Result = Mix_PlayChannel(Voice, Sound, 0);
+        int Result = Mix_PlayChannel(Voice, Engine->Resource.Sounds[SoundID], 0);
         if(Result < 0)
         {
             char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"PlaySound(0x%X, %d, %d, %d, 0x%X)",Sound,Voice,Volume,Pan,Engine);
+            snprintf(Traceback,STRING_BUFFER_SIZE,"PlaySound(%d, %d, %d, %d, 0x%X)",SoundID,Voice,Volume,Pan,Engine);
             ThrowWarning("Could not play sound.",Traceback);
             return(2);
         }
         return(0);
     }
-    return(-1);
+    return(INVALID_ENGINE);
+}
+
+void MixMusicVolume(Engine* Engine)
+{
+    if(Engine)
+    {
+        Mix_VolumeMusic(Engine->Audio.MusicVolume);
+    }
+}
+
+int PlayMusic(int MusicID, Engine* Engine)
+{
+    if(Engine)
+    {
+        if(Engine->Resource.Music[MusicID])
+        {
+            if(Mix_PlayMusic(Engine->Resource.Music[MusicID],-1) < 0)
+            {
+                char Traceback[STRING_BUFFER_SIZE];
+                snprintf(Traceback,STRING_BUFFER_SIZE,"PlayMusic(%d, 0x%X)",MusicID,Engine);
+                ThrowWarning("Could not play music.",Traceback);
+                return(1);
+            }
+            return(0);
+        }
+    }
+    return(INVALID_ENGINE);
 }

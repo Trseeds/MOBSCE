@@ -44,7 +44,7 @@ int InitVideo(Engine* Engine)
 
         return(0);
     }
-    return(-1);
+    return(INVALID_ENGINE);
 }
 
 void CleanupVideo(Engine* Engine)
@@ -106,7 +106,7 @@ int DrawTexture(SDL_Texture* Texture, Vector2 Position, Vector2 Origin, Engine* 
 
         return(0);
     }
-    return(-1);
+    return(INVALID_ENGINE);
 }
 
 int DrawSprite(Sprite* Sprite, Engine* Engine)
@@ -143,7 +143,7 @@ int DrawSprite(Sprite* Sprite, Engine* Engine)
 
         return(0);
     }
-    return(-1);
+    return(INVALID_ENGINE);
 }
 
 void Render(Engine* Engine)

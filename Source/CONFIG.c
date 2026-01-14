@@ -79,36 +79,31 @@ int handler(void* user, const char* section, const char* name, const char* value
     return(0);
 }
 
-int UpdateEngineConfig(char* File, Config* Config, Engine* Engine)
+int UpdateConfig(char* File, Config* Config)
 {
-    if(Engine)
-    {
-        Config->Samplerate = 48000;
-        Config->Channels = 2;
-        Config->Chunksize = 1024;
-        Config->Voices = 8;
-        Config->MusicVolume = 100;
-        Config->SoundVolume = 100;
-        Config->Muted = false;
-        Config->LogicalX = 640;
-        Config->LogicalY = 480;
-        Config->WindowFlags = SDL_WINDOW_SHOWN;
-        Config->RendererFlags = SDL_RENDERER_PRESENTVSYNC;
-        Config->Codecs = MIX_INIT_FLAC | MIX_INIT_MP3 | MIX_INIT_WAVPACK;
-        printf("%d\n",Config->Codecs);
+    Config->Samplerate = 48000;
+    Config->Channels = 2;
+    Config->Chunksize = 1024;
+    Config->Voices = 8;
+    Config->MusicVolume = 100;
+    Config->SoundVolume = 100;
+    Config->Muted = false;
+    Config->LogicalX = 640;
+    Config->LogicalY = 480;
+    Config->WindowFlags = SDL_WINDOW_SHOWN;
+    Config->RendererFlags = SDL_RENDERER_PRESENTVSYNC;
+    Config->Codecs = MIX_INIT_FLAC | MIX_INIT_MP3 | MIX_INIT_WAVPACK;
 
-        int Result = ini_parse(File,handler,Config);
-        if(Result < 0)
-        {
-            char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"UpdateEngineConfig(%s, 0x%X, 0x%X)",File,Config,Engine);
-            ThrowWarning("Failed to load config file.",Traceback);
-            return(1);
-        }
-        
-        return(0);
+    int Result = ini_parse(File,handler,Config);
+    if(Result < 0)
+    {
+        char Traceback[STRING_BUFFER_SIZE];
+        snprintf(Traceback,STRING_BUFFER_SIZE,"UpdateConfig(%s, 0x%X)",File,Config);
+        ThrowWarning("Failed to load config file.",Traceback);
+        return(1);
     }
-    return(-1);
+    
+    return(0);
 }
 
 void LoadEngineConfig(Engine* Engine)

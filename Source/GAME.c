@@ -5,7 +5,7 @@ void CursorFunction(Actor* Actor, Engine* Engine)
     FollowMouse(Actor,Engine);
     if(Engine->Input.MouseUp[MB_LEFT])
     {
-        PlaySound(Engine->Resource.Sounds[0],Actor->Voice,100,Actor->Position.X,Engine);
+        PlaySound(0,Actor->Voice,100,Actor->Position.X,Engine);
     }
 }
 
@@ -94,7 +94,7 @@ void CreateTestObject(Engine* Engine)
     Origin.X = 0; Origin.Y = 0; Origin.Z = 16; Origin.W = 16;
     Dimensions.X = 16; Dimensions.Y = 16;
     Actor* TestActor = CreateActor("Test Actor",ActorPosition,Dimensions,0,Data,&TestActorFunction,Engine);
-    Sprite* TestSprite = CreateSprite("Test Sprite",SpritePosition,Origin,Dimensions,1,true,Dummy,TestActor,&AlignSpriteToActor,Engine);
+    Sprite* TestSprite = CreateSprite("Test Sprite",SpritePosition,Origin,Dimensions,TXTR_PLAYER,true,Dummy,TestActor,&AlignSpriteToActor,Engine);
     Data.Sprite = TestSprite;
     TestActor->CustomData = Data;
 }
@@ -120,12 +120,12 @@ void InitGame(Engine* Engine)
     SpritePosition.X = 0; SpritePosition.Y = 0; SpritePosition.Z = 0;
     Origin.X = 0; Origin.Y = 0; Origin.Z = 640; Origin.W = 480;
     Dimensions.X = 640; Dimensions.Y = 480;
-    CreateSprite("BG",SpritePosition,Origin,Dimensions,0,true,Dummy,NULL,NULL,Engine);
+    CreateSprite("BG",SpritePosition,Origin,Dimensions,TXTR_BG,true,Dummy,NULL,NULL,Engine);
     SpritePosition.Z = 1000;
     Dimensions.X = 64; Dimensions.Y = 64;
     Origin.X = 0; Origin.Y = 0; Origin.Z = 64; Origin.W = 64;
     Actor* CursorActor = CreateActor("Mouse Cursor",ActorPosition,Dimensions,0,Dummy2,&CursorFunction,Engine);
-    CreateSprite("Mouse Cursor",SpritePosition,Origin,Dimensions,2,true,Dummy,CursorActor,&AlignSpriteToActor,Engine);
+    CreateSprite("Mouse Cursor",SpritePosition,Origin,Dimensions,TXTR_CURSOR,true,Dummy,CursorActor,&AlignSpriteToActor,Engine);
 }
 
 int main(int argc, char* argv[])

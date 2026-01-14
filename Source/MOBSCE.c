@@ -121,7 +121,7 @@ int InitSDL(Engine* Engine)
         char Traceback[STRING_BUFFER_SIZE];
         snprintf(Traceback,STRING_BUFFER_SIZE,"InitSDL(0x%X)",Engine);
         ThrowWarning("Some or all of the requested audio codecs failed to initialize.",Traceback);
-        return(1);
+        return(2);
     }
 
     return(0);
@@ -151,7 +151,7 @@ int GetBasePath(Engine* Engine)
 
         return(0);
     }
-    return(-1);
+    return(INVALID_ENGINE);
 }
 
 char* GetAssetPath(char* Asset, Engine* Engine)
@@ -190,10 +190,10 @@ Engine* InitEngine(char* ConfigFile)
     }
 
     ResourceInfo NewResourceInfo;
-    
+
     GetBasePath(NewEngine);
     strcpy(NewEngine->ConfigPath,ConfigFile);
-    UpdateEngineConfig(GetAssetPath(NewEngine->ConfigPath,NewEngine),&NewEngine->Config,NewEngine);
+    UpdateConfig(GetAssetPath(NewEngine->ConfigPath,NewEngine),&NewEngine->Config);
     LoadEngineConfig(NewEngine);
     InitSDL(NewEngine);
     InitAudio(NewEngine);
@@ -254,7 +254,8 @@ void RunEngine(Engine* Engine)
             }
         }
         KeepTime(Engine);
-        Clock a = Engine->Clock;
+        MixMusicVolume(Engine);
+        //Clock a = Engine->Clock;
         //printf("Current Time: %lu\nPrevious Time: %lu\nDelta Time: %f\nTotal Time: %lu\nTotal Frames: %lu\nReal Time: %lu\nFramerate: %f\033[6A\r",a.CurrentTime,a.PreviousTime,a.DeltaTime,a.TotalTime,a.TotalFrames,a.RealTime,a.FrameRate);
     }
 }
