@@ -12,7 +12,7 @@ void ThrowWarning(char* Message, char* Thrower)
     printf("\n\nWarning: %s\nThrower: %s\n\n",Message,Thrower);
 }
 
-int GetNewObjectID(Engine* Engine)
+Uint64 GetNewObjectID(Engine* Engine)
 {
     Engine->IDCounter++;
     return(Engine->IDCounter-1);
@@ -70,7 +70,7 @@ int SortSpritesByZ(const void* X, const void* Y)
     }
 }
 
-int ArrayCanBeShrunk(void* Array, int AllocatedElements, int AllocatedSize)
+int PoolCanBeShrunk(void* Array, int AllocatedElements, int AllocatedSize)
 {
     if((AllocatedSize - AllocatedElements) >= MIN_ALLOCATE)
     {
@@ -120,8 +120,8 @@ int InitSDL(Engine* Engine)
     {
         char Traceback[STRING_BUFFER_SIZE];
         snprintf(Traceback,STRING_BUFFER_SIZE,"InitSDL(0x%X)",Engine);
+        ThrowWarning("Some or all of the requested audio codecs failed to initialize.",Traceback);
         return(1);
-        ThrowWaring("Some or all of the requested audio codecs failed to initialize.",Traceback);
     }
 
     return(0);

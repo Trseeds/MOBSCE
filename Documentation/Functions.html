@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MOBSCE Documentation | Functions</title>
+</head>
+<body>
+    <div class="container">
+        <h1>MOBSCE Documentation</h1> 
+        <a href="index.html">Home</a>
+        <h2>Functions</h2>
+        
+        <h2>Engine</h2>
+        
+        <h4>ThrowError</h4>
+        <dt>Parameters</dt>
+        <dd>char* Message - Error message to display.</dd>
+        <dd>char* Thrower - Function the error occurred in with passed parameters.</dd>
+        <dd>Engine* Engine - Engine that will be cleaned up afterwards.</dd>
+        <dt>Description</dt>
+        <dd>Creates an SDL error window and cleans up the engine.</dd>
+        <dt>Usage</dt>
+        <dd>When execution can or should not continue, such as when a segfault is likely to occur.</dd>
+        
+        <h4>ThrowWarning</h4>
+        <dt>Parameters</dt>
+        <dd>char* Message - Error message to display.</dd>
+        <dd>char* Thrower - Function the warning occurred in with passed parameters.</dd>
+        <dt>Description</dt>
+        <dd>Prints the message and the thrower to the terminal.</dd>
+        <dt>Usage</dt>
+        <dd>When something has gone wrong, or is otherwise noteworthy, but execution can continue.</dd>
+        
+        <h4>GetNewObjectID</h4>
+        <dt>Parameters</dt>
+        <dd>Engine* Engine - Engine whose ID will be accessed.</dd>
+        <dt>Description</dt>
+        <dd>Increments the engine's ID counter and returns it.</dd>
+        <dt>Return</dt>
+        <dd>Uint64 - A unique 64-bit number.</dd>
+        <dt>Usage</dt>
+        <dd>For creating objects that need unique IDs.</dd>
+        
+        <h4>CompactArray</h4>
+        <dt>Parameters</dt>
+        <dd>const void* X - Item X.</dd>
+        <dd>const void* Y - Item Y.</dd>
+        <dt>Description</dt>
+        <dd>Items that are NULL will moved to the end of the array.</dd>
+        <dt>Return</dt>
+        <dd>int - 1 to move item X forward, -1 to move item X backward, 0 to retain item X's position.</dd>
+        <dt>Usage</dt>
+        <dd>Used with qsort when modifying pools to get NULLs out of the way.</dd>
+        
+        <h4>SortSpritesByZ</h4>
+        <dt>Parameters</dt>
+        <dd>const void* X - Item X.</dd>
+        <dd>const void* Y - Item Y.</dd>
+        <dt>Description</dt>
+        <dd>Sorts sprites by their Z position so that when the are rendered the sprites with a higher Z value are drawn on top.</dd>
+        <dt>Return</dt>
+        <dd>int - 1 to move item X forward, -1 to move item X backward, 0 to retain item X's position.</dd>
+        <dt>Usage</dt>
+        <dd>Used with qsort in Render when engine's SpriteZResortNeeded is set to maintain render layering.</dd>
+        
+        <h4>PoolCanBeShrunk</h4>
+        <dt>Parameters</dt>
+        <dd>void* Pool - Pool to check.</dd>
+        <dd>int AllocatedElements - Number of valid elements in the pool.</dd>
+        <dd>int AllocatedSize - Allocated size of the pool.</dd>
+        <dt>Description</dt>
+        <dd>Checks if a pool has MIN_ALLOCATE NULLs.</dd>
+        <dt>Return</dt>
+        <dd>int - 1 if the pool can be shrunk, 0 if not.</dd>
+        <dt>Usage</dt>
+        <dd>When removing resources from pools, reallocation to a smaller size may be needed, use this to check.</dd> 
+    </div>
+</body>
+</html>
+
+<!-- 
+        <h4></h4>
+        <dt>Parameters</dt>
+        <dd></dd>
+        <dt>Description</dt>
+        <dd></dd>
+        <dt>Return</dt>
+        <dd></dd>
+        <dt>Usage</dt>
+        <dd></dd> 
+-->

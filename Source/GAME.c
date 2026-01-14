@@ -1,5 +1,14 @@
 #include "MOBSCE.h"
 
+void CursorFunction(Actor* Actor, Engine* Engine)
+{
+    FollowMouse(Actor,Engine);
+    if(Engine->Input.MouseUp[MB_LEFT])
+    {
+        PlaySound(Engine->Resource.Sounds[0],Actor->Voice,100,Actor->Position.X,Engine);
+    }
+}
+
 void ScreenCrawl(Actor* Actor, Engine* Engine)
 {
     Actor->Position.X++;
@@ -95,9 +104,11 @@ void InitGame(Engine* Engine)
     char BG[STRING_BUFFER_SIZE] = "Assets/Images/Backgrounds/TestBG.bmp";
     char Player[STRING_BUFFER_SIZE] = "Assets/Images/Sprites/Player.bmp";
     char Cursor[STRING_BUFFER_SIZE] = "Assets/Images/Sprites/Cursor.bmp";
+    char Cough[STRING_BUFFER_SIZE] = "Assets/Sounds/Cough.wav";
     CacheTexture(GetAssetPath(BG,Engine),Engine);
     CacheTexture(GetAssetPath(Player,Engine),Engine);
     CacheTexture(GetAssetPath(Cursor,Engine),Engine);
+    CacheSound(GetAssetPath(Cough,Engine),Engine);
 
     Vector3 SpritePosition;
     Vector2 ActorPosition;
@@ -113,7 +124,7 @@ void InitGame(Engine* Engine)
     SpritePosition.Z = 1000;
     Dimensions.X = 64; Dimensions.Y = 64;
     Origin.X = 0; Origin.Y = 0; Origin.Z = 64; Origin.W = 64;
-    Actor* CursorActor = CreateActor("Mouse Cursor",ActorPosition,Dimensions,0,Dummy2,&FollowMouse,Engine);
+    Actor* CursorActor = CreateActor("Mouse Cursor",ActorPosition,Dimensions,0,Dummy2,&CursorFunction,Engine);
     CreateSprite("Mouse Cursor",SpritePosition,Origin,Dimensions,2,true,Dummy,CursorActor,&AlignSpriteToActor,Engine);
 }
 

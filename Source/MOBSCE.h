@@ -207,26 +207,27 @@ typedef struct ResourceInfo {
 //engine stuff
 void ThrowError(char* Message, char* Thrower, Engine* Engine); //done
 void ThrowWarning(char* Message, char* Thrower); //done
-int GetNewObjectID(Engine* Engine);
+Uint64 GetNewObjectID(Engine* Engine);
 int CompactArray(const void* X, const void* Y); //done
 int SortSpritesByZ(const void* X, const void* Y); //done
-int ArrayCanBeShrunk(void* Array, int AllocatedElements, int AllocatedSize); //done
+int PoolCanBeShrunk(void* Pool, int AllocatedElements, int AllocatedSize); //done
 int LinearMap(int Number, int NumberMax, int RangeMax, int RangeMin); //done
 void SeedRNG(); //done
 int GetRandomNumber(int Max); //done
 int handler(void* user, const char* section, const char* name, const char* value); //done
 int UpdateEngineConfig(char* File, Config* Config, Engine* Engine); //done
 void LoadEngineConfig(Engine* Engine); //done
-int InitSDL(); //done
+int InitSDL(Engine* Engine); //done
 int GetBasePath(Engine* Engine); //done
 char* GetAssetPath(char* Asset, Engine* Engine); //done
 Engine* InitEngine(char* ConfigFile); //done
-void RunEngine(Engine* Engine); //TODO
-void CleanupEngine(Engine* Engine); //TODO
+void RunEngine(Engine* Engine); //done
+void CleanupEngine(Engine* Engine); //done
 
 //audio
 int InitAudio(Engine* Engine); //done
-int PlaySound(Mix_Chunk* Sound, int Voice, int Volume, int Pan); //TODO
+int* EasyPan(int Pan, int Max, int* Output); //done
+int PlaySound(Mix_Chunk* Sound, int Voice, int Volume, int Pan, Engine* Engine); //done
 void MixMusic(); //TODO
 int PlayMusic(); //TODO
 

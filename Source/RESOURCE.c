@@ -121,7 +121,7 @@ Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimen
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"CreateSprite(%s, 0x%X, 0x%X, 0x%X, %d, %d, 0x%X, 0x%X)",Name,Position,Origin,Dimensions,TextureID,Visible,Routine,Engine);
             ThrowError("Failed to allocate memory!",Traceback,Engine);
-            return((Sprite*)1);
+            return(NULL);
         }
 
         if(Engine->Resource.NumberOfSprites+1 >= Engine->Resource.AllocatedSpriteMemory)
@@ -150,7 +150,7 @@ Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimen
         Engine->SpriteZResortNeeded = true;
         return(NewSprite);
     }
-    return((Sprite*)-1);
+    return(NULL);
 }
 
 void DestroySprite(Sprite* DSprite, Engine* Engine)
@@ -172,7 +172,7 @@ void DestroySprite(Sprite* DSprite, Engine* Engine)
             qsort(Engine->Sprites,Engine->Resource.NumberOfSprites,sizeof(Sprite*),CompactArray);
             Engine->Resource.NumberOfSprites--;
 
-            if(ArrayCanBeShrunk(Engine->Actors,Engine->Resource.AllocatedSpriteMemory,Engine->Resource.NumberOfSprites))
+            if(PoolCanBeShrunk(Engine->Actors,Engine->Resource.AllocatedSpriteMemory,Engine->Resource.NumberOfSprites))
             {
                 ResourceInfo ResourceInfo;
                 ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteMemory;
@@ -218,7 +218,7 @@ Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, 
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"CreateActor(%s, 0x%X, 0x%X, %d, 0x%X, 0x%X)",Name,Position,Dimensions,Voice,Routine,Engine);
             ThrowError("Failed to allocate memory!",Traceback,Engine);
-            return((Actor*)1);
+            return(NULL);
         }
 
         if(Engine->Resource.NumberOfActors+1 >= Engine->Resource.AllocatedActorMemory)
@@ -242,7 +242,7 @@ Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, 
         Engine->Resource.NumberOfActors++;
         return(NewActor);
     }
-    return((Actor*)-1);
+    return(NULL);
 }
 
 void DestroyActor(Actor* DActor, Engine* Engine)
@@ -265,7 +265,7 @@ void DestroyActor(Actor* DActor, Engine* Engine)
             qsort(Engine->Actors, Engine->Resource.NumberOfActors, sizeof(Actor*), CompactArray);
             Engine->Resource.NumberOfActors--;
             
-            if(ArrayCanBeShrunk(Engine->Actors,Engine->Resource.AllocatedActorMemory,Engine->Resource.NumberOfActors))
+            if(PoolCanBeShrunk(Engine->Actors,Engine->Resource.AllocatedActorMemory,Engine->Resource.NumberOfActors))
             {
                 ResourceInfo ResourceInfo;
                 ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
