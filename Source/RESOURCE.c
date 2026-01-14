@@ -172,7 +172,7 @@ void DestroySprite(Sprite* DSprite, Engine* Engine)
             qsort(Engine->Sprites,Engine->Resource.NumberOfSprites,sizeof(Sprite*),CompactArray);
             Engine->Resource.NumberOfSprites--;
 
-            if(ArrayCanBeShrunk(Engine->Actors,Engine->Resource.AllocatedActorMemory,Engine->Resource.NumberOfActors))
+            if(ArrayCanBeShrunk(Engine->Actors,Engine->Resource.AllocatedSpriteMemory,Engine->Resource.NumberOfSprites))
             {
                 ResourceInfo ResourceInfo;
                 ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteMemory;

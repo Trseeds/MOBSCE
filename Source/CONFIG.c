@@ -40,6 +40,10 @@ int handler(void* user, const char* section, const char* name, const char* value
         {
             NewConfig->Muted = atoi(value);
         }
+        else if (strcmp(name,"Codecs") == 0)
+        {
+            NewConfig->Codecs = atoi(value);
+        }
         else
         {
             return(1);
@@ -90,6 +94,8 @@ int UpdateEngineConfig(char* File, Config* Config, Engine* Engine)
         Config->LogicalY = 480;
         Config->WindowFlags = SDL_WINDOW_SHOWN;
         Config->RendererFlags = SDL_RENDERER_PRESENTVSYNC;
+        Config->Codecs = MIX_INIT_FLAC | MIX_INIT_MP3 | MIX_INIT_WAVPACK;
+        printf("%d\n",Config->Codecs);
 
         int Result = ini_parse(File,handler,Config);
         if(Result < 0)
@@ -116,6 +122,7 @@ void LoadEngineConfig(Engine* Engine)
         Engine->Audio.MusicVolume = Engine->Config.MusicVolume;
         Engine->Audio.SoundVolume = Engine->Config.SoundVolume;
         Engine->Audio.Muted = Engine->Config.Muted;
+        Engine->Audio.Codecs = Engine->Config.Codecs;
         Engine->Video.LogicalDimensions.X = Engine->Config.LogicalX;
         Engine->Video.LogicalDimensions.Y = Engine->Config.LogicalY;
         Engine->Video.WindowFlags = Engine->Config.WindowFlags;

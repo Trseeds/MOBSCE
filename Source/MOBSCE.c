@@ -102,7 +102,7 @@ int GetRandomNumber(int Max)
     return(rand()%Max);
 }
 
-int InitSDL()
+int InitSDL(Engine* Engine)
 {
     int Result = SDL_Init(SDL_INIT_EVERYTHING);
     if(Result != 0)
@@ -111,15 +111,17 @@ int InitSDL()
         return(1);
     }
 
-    Result = Mix_Init(MIX_INIT_FLAC | MIX_INIT_OGG | MIX_INIT_WAVPACK | MIX_INIT_MP3);
-    if(Result != (MIX_INIT_FLAC | MIX_INIT_OGG | MIX_INIT_WAVPACK | MIX_INIT_MP3))
+    Result = Mix_Init(Engine->Audio.Codecs);
+    if(Result != Engine->Audio.Codecs)
     {
         ThrowWarning("Some or all of the requested audio formats failed to initialize.","InitSDL()");
     }
     if(Result == 0)
     {
-        ThrowError("Failed to initialize audio!","InitSDL()",NULL);
-        return(2);
+        char Traceback[STRING_BUFFER_SIZE];
+        snprintf(Traceback,STRING_BUFFER_SIZE,"InitSDL(0x%X)",Engine);
+        return(1);
+        ThrowWaring("Some or all of the requested audio codecs failed to initialize.",Traceback);
     }
 
     return(0);
@@ -188,12 +190,12 @@ Engine* InitEngine(char* ConfigFile)
     }
 
     ResourceInfo NewResourceInfo;
-
+    
     GetBasePath(NewEngine);
     strcpy(NewEngine->ConfigPath,ConfigFile);
     UpdateEngineConfig(GetAssetPath(NewEngine->ConfigPath,NewEngine),&NewEngine->Config,NewEngine);
     LoadEngineConfig(NewEngine);
-    InitSDL();
+    InitSDL(NewEngine);
     InitAudio(NewEngine);
     //sounds
     NewResourceInfo.Pointer = &NewEngine->Resource.Sounds;

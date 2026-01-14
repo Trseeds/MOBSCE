@@ -78,6 +78,7 @@ typedef struct Config {
 	int LogicalY;
 	int WindowFlags;
 	int RendererFlags;
+	int Codecs;
 } Config;
 
 //objects
@@ -114,6 +115,7 @@ typedef struct Audio {
 	int MusicVolume;
 	int SoundVolume;
 	int Muted;
+	int Codecs;
 } Audio;
 
 typedef struct Video {
