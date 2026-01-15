@@ -57,78 +57,92 @@ void GetMouseInput(Engine* Engine)
     {
         Engine->Input.MouseUp[4] = true;
     }
-    if(Engine->Event->type == SDL_MOUSEWHEEL)
+    for(int i = 0; i < EVENT_QUEUE_SIZE; i++)
     {
-        if(Engine->Event->wheel.y > 0)
+        if(Engine->Events[i].type == SDL_MOUSEWHEEL)
         {
-            Engine->Input.VerticalMouseScroll = 1; //scroll up
-        }
-        if(Engine->Event->wheel.y < 0)
-        {
-            Engine->Input.VerticalMouseScroll = -1; //scroll down
-        }
-        if(Engine->Event->wheel.x > 0)
-        {
-            Engine->Input.HorizontalMouseScroll = 1; //scroll right
-        }
-        if(Engine->Event->wheel.x < 0)
-        {
-            Engine->Input.HorizontalMouseScroll = -1; //scroll left
+            if(Engine->Events[i].wheel.y > 0)
+            {
+                Engine->Input.VerticalMouseScroll = 1; //scroll up
+            }
+            if(Engine->Events[i].wheel.y < 0)
+            {
+                Engine->Input.VerticalMouseScroll = -1; //scroll down
+            }
+            if(Engine->Events[i].wheel.x > 0)
+            {
+                Engine->Input.HorizontalMouseScroll = 1; //scroll right
+            }
+            if(Engine->Events[i].wheel.x < 0)
+            {
+                Engine->Input.HorizontalMouseScroll = -1; //scroll left
+            }
         }
     }
 }
 
 void GetGamepadInput(Engine* Engine)
 {
-    if(Engine->Event->type == SDL_CONTROLLERDEVICEADDED)
+    for(int i = 0; i < EVENT_QUEUE_SIZE; i++)
     {
-        Engine->Input.Gamepad = SDL_GameControllerOpen(Engine->Event->cdevice.which);
-        if(Engine->Input.Gamepad)
+        if(Engine->Events[i].type == SDL_CONTROLLERDEVICEADDED)
         {
-            Engine->Input.GamepadIsConnected = true;
-        }
-    }
-    if(Engine->Event->type == SDL_CONTROLLERDEVICEREMOVED)
-    {
-        Engine->Input.Gamepad = NULL;
-        Engine->Input.GamepadIsConnected = false;
-    }
-    if(Engine->Input.GamepadIsConnected && Engine->Input.Gamepad)
-    {
-        Engine->Input.GamepadButtonsDown[GP_FB_RIGHT] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_A);
-        Engine->Input.GamepadButtonsDown[GP_FB_BOTTOM] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_B);
-        Engine->Input.GamepadButtonsDown[GP_FB_LEFT] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_X);
-        Engine->Input.GamepadButtonsDown[GP_FB_TOP] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_Y);
-
-        Engine->Input.GamepadButtonsDown[GP_FB_START] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_START);
-        Engine->Input.GamepadButtonsDown[GP_FB_SELECT] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_BACK);
-        Engine->Input.GamepadButtonsDown[GP_FB_SUPER] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_GUIDE);
-        
-        Engine->Input.GamepadButtonsDown[GP_DP_UP] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_DPAD_UP);
-        Engine->Input.GamepadButtonsDown[GP_DP_DOWN] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_DPAD_DOWN);
-        Engine->Input.GamepadButtonsDown[GP_DP_LEFT] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_DPAD_LEFT);
-        Engine->Input.GamepadButtonsDown[GP_DP_RIGHT] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_DPAD_RIGHT);
-
-        Engine->Input.GamepadButtonsDown[GP_BPR_LEFT] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
-        Engine->Input.GamepadButtonsDown[GP_BPR_RIGHT] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
-        
-        Engine->Input.GamepadButtonsDown[GP_STKDWN_LEFT] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_LEFTSTICK);
-        Engine->Input.GamepadButtonsDown[GP_STKDWN_RIGHT] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_RIGHTSTICK);
-        
-        Engine->Input.GamepadTriggers[GP_TRGR_LEFT] = (SDL_GameControllerGetAxis(Engine->Input.Gamepad, SDL_CONTROLLER_AXIS_TRIGGERLEFT)/32768.0);
-        Engine->Input.GamepadTriggers[GP_TRGR_RIGHT] = (SDL_GameControllerGetAxis(Engine->Input.Gamepad, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)/32768.0);
-
-        Engine->Input.GamepadSticks[GP_STK_LEFT_X] = (SDL_GameControllerGetAxis(Engine->Input.Gamepad, SDL_CONTROLLER_AXIS_LEFTX)/32768.0);
-        Engine->Input.GamepadSticks[GP_STK_LEFT_Y] = (SDL_GameControllerGetAxis(Engine->Input.Gamepad, SDL_CONTROLLER_AXIS_LEFTY)/32768.0);
-        Engine->Input.GamepadSticks[GP_STK_RIGHT_X] = (SDL_GameControllerGetAxis(Engine->Input.Gamepad, SDL_CONTROLLER_AXIS_RIGHTX)/32768.0);
-        Engine->Input.GamepadSticks[GP_STK_RIGHT_Y] = (SDL_GameControllerGetAxis(Engine->Input.Gamepad, SDL_CONTROLLER_AXIS_RIGHTY)/32768.0);
-
-        for(int i = 0; i < 14; i++)
-        {
-            if(!Engine->Input.GamepadButtonsDown[i] && Engine->Input.GamepadPreviousState[i])
+            Engine->Input.Gamepad = SDL_GameControllerOpen(Engine->Events[i].cdevice.which);
+            if(Engine->Input.Gamepad)
             {
-                Engine->Input.GamepadButtonsUp[i] = true;
+                Engine->Input.GamepadIsConnected = true;
             }
+        }
+        if(Engine->Events[i].type == SDL_CONTROLLERDEVICEREMOVED)
+        {
+            Engine->Input.Gamepad = NULL;
+            Engine->Input.GamepadIsConnected = false;
+        }
+        if(Engine->Input.GamepadIsConnected && Engine->Input.Gamepad)
+        {
+            Engine->Input.GamepadButtonsDown[GP_FB_BOTTOM] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_A);
+            Engine->Input.GamepadButtonsDown[GP_FB_RIGHT] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_B);
+            Engine->Input.GamepadButtonsDown[GP_FB_LEFT] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_X);
+            Engine->Input.GamepadButtonsDown[GP_FB_TOP] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_Y);
+
+            Engine->Input.GamepadButtonsDown[GP_FB_START] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_START);
+            Engine->Input.GamepadButtonsDown[GP_FB_SELECT] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_BACK);
+            Engine->Input.GamepadButtonsDown[GP_FB_SUPER] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_GUIDE);
+            
+            Engine->Input.GamepadButtonsDown[GP_DP_UP] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_DPAD_UP);
+            Engine->Input.GamepadButtonsDown[GP_DP_DOWN] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_DPAD_DOWN);
+            Engine->Input.GamepadButtonsDown[GP_DP_LEFT] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_DPAD_LEFT);
+            Engine->Input.GamepadButtonsDown[GP_DP_RIGHT] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_DPAD_RIGHT);
+
+            Engine->Input.GamepadButtonsDown[GP_BPR_LEFT] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
+            Engine->Input.GamepadButtonsDown[GP_BPR_RIGHT] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
+            
+            Engine->Input.GamepadButtonsDown[GP_STKDWN_LEFT] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_LEFTSTICK);
+            Engine->Input.GamepadButtonsDown[GP_STKDWN_RIGHT] = SDL_GameControllerGetButton(Engine->Input.Gamepad,SDL_CONTROLLER_BUTTON_RIGHTSTICK);
+            
+            Engine->Input.GamepadTriggers[GP_TRGR_LEFT] = (SDL_GameControllerGetAxis(Engine->Input.Gamepad, SDL_CONTROLLER_AXIS_TRIGGERLEFT)/32768.0);
+            Engine->Input.GamepadTriggers[GP_TRGR_RIGHT] = (SDL_GameControllerGetAxis(Engine->Input.Gamepad, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)/32768.0);
+
+            Engine->Input.GamepadSticks[GP_STK_LEFT_X] = (SDL_GameControllerGetAxis(Engine->Input.Gamepad, SDL_CONTROLLER_AXIS_LEFTX)/32768.0);
+            Engine->Input.GamepadSticks[GP_STK_LEFT_Y] = (SDL_GameControllerGetAxis(Engine->Input.Gamepad, SDL_CONTROLLER_AXIS_LEFTY)/32768.0);
+            Engine->Input.GamepadSticks[GP_STK_RIGHT_X] = (SDL_GameControllerGetAxis(Engine->Input.Gamepad, SDL_CONTROLLER_AXIS_RIGHTX)/32768.0);
+            Engine->Input.GamepadSticks[GP_STK_RIGHT_Y] = (SDL_GameControllerGetAxis(Engine->Input.Gamepad, SDL_CONTROLLER_AXIS_RIGHTY)/32768.0);
+
+            for(int i = 0; i < 14; i++)
+            {
+                if(!Engine->Input.GamepadButtonsDown[i] && Engine->Input.GamepadPreviousState[i])
+                {
+                    Engine->Input.GamepadButtonsUp[i] = true;
+                }
+            }
+            for(int i = 0; i < 2; i++)
+            {
+                if(Engine->Input.GamepadPreviousTriggersState[i] >= 0.1 && Engine->Input.GamepadTriggers[i] <= 0.1)
+                {
+                    Engine->Input.GamepadTriggersUp[i] = true;
+                }
+            }
+
         }
     }
 }
@@ -147,14 +161,14 @@ void GetInput(Engine* Engine)
         memset(Engine->Input.MouseDown,0,sizeof(Engine->Input.MouseDown));
         memset(Engine->Input.GamepadButtonsUp,0,sizeof(Engine->Input.GamepadButtonsUp));
         memset(Engine->Input.GamepadButtonsDown,0,sizeof(Engine->Input.GamepadButtonsDown));
-        memset(Engine->Input.GamepadTriggers,0,sizeof(Engine->Input.GamepadTriggers));
-        memset(Engine->Input.GamepadSticks,0,sizeof(Engine->Input.GamepadSticks));
+        memset(Engine->Input.GamepadTriggersUp,0,sizeof(Engine->Input.GamepadTriggersUp));
 
         GetKeyboardInput(Engine);
         GetMouseInput(Engine);
         GetGamepadInput(Engine);
 
         memcpy(Engine->Input.GamepadPreviousState,Engine->Input.GamepadButtonsDown,sizeof(Engine->Input.GamepadPreviousState));
+        memcpy(Engine->Input.GamepadPreviousTriggersState,Engine->Input.GamepadTriggers,sizeof(Engine->Input.GamepadPreviousTriggersState));
         memcpy(Engine->Input.SDL_PreviousKeystate,Engine->Input.SDL_Keystate,sizeof(Engine->Input.SDL_PreviousKeystate));
         Engine->Input.SDL_PreviousMouseState = Engine->Input.SDL_MouseState;
     }

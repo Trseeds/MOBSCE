@@ -127,6 +127,29 @@ int InitSDL(Engine* Engine)
     return(0);
 }
 
+void CleanupSDL()
+{
+    SDL_Quit();
+}
+
+void GetSDLEvents(Engine* Engine)
+{
+    if(Engine)
+    {
+        memset(Engine->Events,-1,sizeof(Engine->Events));
+        int i = 0;
+        SDL_Event Event;
+        while(SDL_PollEvent(&Event))
+        {
+            if(i < EVENT_QUEUE_SIZE)
+            {
+                Engine->Events[i] = Event;
+            i++;
+            }
+        }
+    }
+}
+
 int GetBasePath(Engine* Engine)
 {
     if(Engine)
@@ -183,8 +206,7 @@ void KeepTime(Engine* Engine)
 Engine* InitEngine(char* ConfigFile)
 {
     Engine* NewEngine = (Engine*)calloc(1,sizeof(Engine));
-    NewEngine->Event = (SDL_Event*)calloc(1,sizeof(SDL_Event));
-    if(!NewEngine || !NewEngine->Event)
+    if(!NewEngine)
     {
         ThrowError("Failed to allocate memory!","InitEngine()",NewEngine);
     }
@@ -231,7 +253,7 @@ void RunEngine(Engine* Engine)
 {
     if(Engine)
     {
-        SDL_PollEvent(Engine->Event);
+        GetSDLEvents(Engine);
         GetInput(Engine);
         for(int i = 0; i < Engine->Resource.NumberOfSprites; i++)
         {
@@ -297,10 +319,7 @@ void CleanupEngine(Engine* Engine)
         ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActors;
         ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
         CleanupResourcePool(ResourceInfo,Engine);
-        if(Engine->Event)
-        {
-            free(Engine->Event);
-        }
+        CleanupSDL();
         Engine->Running = false;
     }
 }

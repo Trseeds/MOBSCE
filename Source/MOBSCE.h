@@ -27,6 +27,7 @@ Engine
 #define STRING_BUFFER_SIZE 1024
 #define OBJECT_NAME_SIZE 64
 #define MIN_ALLOCATE 16
+#define EVENT_QUEUE_SIZE 512
 
 #define INVALID_ENGINE -1
 
@@ -146,9 +147,11 @@ typedef struct Input {
 	SDL_GameController* Gamepad;
 	int GamepadIsConnected;
 	int GamepadPreviousState[14];
+	double GamepadPreviousTriggersState[2];
 	int GamepadButtonsUp[14];
 	int GamepadButtonsDown[14];
 	double GamepadTriggers[2];
+	int GamepadTriggersUp[2];
 	double GamepadSticks[4];
 } Input;
 
@@ -189,7 +192,7 @@ typedef struct Engine {
 	Resource Resource;
 	Actor** Actors;
 	Sprite** Sprites;
-	SDL_Event* Event;
+	SDL_Event Events[EVENT_QUEUE_SIZE];
 	Uint64 IDCounter;
 	int Running;
 	int SpriteZResortNeeded;
@@ -216,6 +219,8 @@ int handler(void* user, const char* section, const char* name, const char* value
 int UpdateConfig(char* File, Config* Config); //done
 void LoadEngineConfig(Engine* Engine); //done
 int InitSDL(Engine* Engine); //done
+void CleanupSDL(); //done
+void GetSDLEvents(Engine* Engine); //done
 int GetBasePath(Engine* Engine); //done
 char* GetAssetPath(char* Asset, Engine* Engine); //done
 Engine* InitEngine(char* ConfigFile); //done

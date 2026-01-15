@@ -2,8 +2,16 @@
 
 void CursorFunction(Actor* Actor, Engine* Engine)
 {
-    FollowMouse(Actor,Engine);
-    if(Engine->Input.MouseUp[MB_LEFT])
+    if(!Engine->Input.GamepadIsConnected)
+    {
+        FollowMouse(Actor,Engine);
+    }
+    else
+    {
+        Actor->Position.X += Engine->Input.GamepadSticks[GP_STK_LEFT_X] * 5;
+        Actor->Position.Y += Engine->Input.GamepadSticks[GP_STK_LEFT_Y] * 5;
+    }
+    if(Engine->Input.MouseUp[MB_LEFT] || Engine->Input.GamepadTriggersUp[GP_TRGR_RIGHT])
     {
         PlaySound(0,Actor->Voice,100,Actor->Position.X,Engine);
     }
@@ -29,46 +37,47 @@ void FollowMouse(Actor* Actor, Engine* Engine)
     Actor->Position.Y = Engine->Input.MousePosition.Y;
 }
 
-void MouseDrag(Actor* Actor, Engine* Engine)
+void MouseDrag(Actor* ActorA, Actor* Cursor, Engine* Engine)
 {
-    Actor->Position.X = Engine->Input.MousePosition.X - (Actor->Dimensions.X/2);
-    Actor->Position.Y = Engine->Input.MousePosition.Y - (Actor->Dimensions.Y/2);
+    ActorA->Position.X = Cursor->Position.X - (ActorA->Dimensions.X/2);
+    ActorA->Position.Y = Cursor->Position.Y - (ActorA->Dimensions.Y/2);
 }
 
-void TestActorFunction(Actor* Actor, Engine* Engine)
+void TestActorFunction(Actor* ActorA, Engine* Engine)
 {
-    if(!Actor->CustomData.Dragged)
+    Actor* Cursor = GetActorByName("Mouse Cursor",Engine);
+    if(!ActorA->CustomData.Dragged)
     {
-        Actor->CustomData.MousedOver = false;
+        ActorA->CustomData.MousedOver = false;
     }
     if(!Engine->Input.MouseDown[MB_LEFT])
     {
-        Actor->CustomData.Dragged = false;
+        ActorA->CustomData.Dragged = false;
     }
-    if(Engine->Input.MousePosition.X > Actor->Position.X && Engine->Input.MousePosition.X < Actor->Position.X+Actor->Dimensions.X)
+    if(Cursor->Position.X > ActorA->Position.X && Cursor->Position.X < ActorA->Position.X+ActorA->Dimensions.X)
     {
-        if(Engine->Input.MousePosition.Y > Actor->Position.Y && Engine->Input.MousePosition.Y < Actor->Position.Y+Actor->Dimensions.Y)
+        if(Cursor->Position.Y > ActorA->Position.Y && Cursor->Position.Y < ActorA->Position.Y+ActorA->Dimensions.Y)
         {
-            if(Engine->Input.MouseDown[MB_LEFT])
+            if(Engine->Input.MouseDown[MB_LEFT] || Engine->Input.GamepadTriggers[GP_TRGR_RIGHT] >= 0.9)
             {
-                Actor->CustomData.Dragged = true;
+                ActorA->CustomData.Dragged = true;
             }
-            if(Engine->Input.MouseDown[MB_RIGHT])
+            if(Engine->Input.MouseDown[MB_RIGHT] || Engine->Input.GamepadTriggers[GP_TRGR_LEFT] >= 0.9)
             {
-                DestroySprite(Actor->CustomData.Sprite,Engine);
-                DestroyActor(Actor,Engine);
+                DestroySprite(ActorA->CustomData.Sprite,Engine);
+                DestroyActor(ActorA,Engine);
             }
-            Actor->CustomData.MousedOver = true;
+            ActorA->CustomData.MousedOver = true;
         }
     }
 
-    if(Actor->CustomData.Dragged)
+    if(ActorA->CustomData.Dragged)
     {
-        MouseDrag(Actor, Engine);
+        MouseDrag(ActorA, Cursor, Engine);
     }
     else
     {
-        ScreenCrawl(Actor, Engine);
+        ScreenCrawl(ActorA, Engine);
     }
 }
 
@@ -134,17 +143,17 @@ int main(int argc, char* argv[])
     InitGame(Engine1);
     while(Engine1->Running)
     {
-        if(Engine1->Input.KeysUp[K_R])
+        if(Engine1->Input.KeysUp[K_R] || Engine1->Input.GamepadButtonsUp[GP_FB_START])
         {
             CleanupEngine(Engine1);
             Engine1 = InitEngine("Config.ini");
             InitGame(Engine1);
         }
-        if(Engine1->Input.KeysDown[K_S] && !Engine1->Input.KeysDown[K_RCTRL])
+        if((Engine1->Input.KeysDown[K_S] && !Engine1->Input.KeysDown[K_RCTRL]) || (Engine1->Input.GamepadButtonsDown[GP_FB_BOTTOM] && !Engine1->Input.GamepadButtonsDown[GP_FB_TOP]))
         {
             CreateTestObject(Engine1);
         }
-        if(Engine1->Input.KeysDown[K_K])
+        if(Engine1->Input.KeysDown[K_K] || Engine1->Input.GamepadButtonsDown[GP_FB_LEFT])
         {
             if(Engine1->Sprites[1])
             {
@@ -160,7 +169,7 @@ int main(int argc, char* argv[])
                 }
             }
         }
-        if(Engine1->Input.KeysDown[K_RCTRL] && Engine1->Input.KeysUp[K_S])
+        if((Engine1->Input.KeysDown[K_RCTRL] && Engine1->Input.KeysUp[K_S]) || (Engine1->Input.GamepadButtonsDown[GP_FB_TOP] && Engine1->Input.GamepadButtonsUp[GP_FB_BOTTOM]))
         {
             for(int i = 0; i < 10000; i++)
             {
@@ -169,11 +178,14 @@ int main(int argc, char* argv[])
         }
         RunEngine(Engine1);
         Render(Engine1);
-        if(Engine1->Event->type == SDL_QUIT || Engine1->Input.KeysUp[K_ESCAPE])
+        for(int i = 0; i < EVENT_QUEUE_SIZE; i++)
         {
-            CleanupEngine(Engine1);
-            free(Engine1);
-            return(0);
+            if(Engine1->Events[i].type == SDL_QUIT || Engine1->Input.KeysUp[K_ESCAPE] || Engine1->Input.GamepadButtonsUp[GP_FB_RIGHT])
+            {
+                CleanupEngine(Engine1);
+                free(Engine1);
+                return(0);
+            }
         }
     }
 }

@@ -136,6 +136,20 @@
         <dt>Usage</dt>
         <dd>Used in InitEngine to prepare SDL.</dd>
         
+        <h4>GetSDLEvents</h4>
+        <dt>Parameters</dt>
+        <dd>Engine* Engine - Engine whose events will be filled.</dd>
+        <dt>Description</dt>
+        <dd>Fills Engine's events array with events polled from SDL.</dd>
+        <dt>Usage</dt>
+        <dd>Used in RunEngine to keep events updated. This is a workaround for SDL's event system.</dd>
+        
+        <h4>CleanupSDL</h4>
+        <dt>Description</dt>
+        <dd>Kills SDL through SDL_Quit.</dd>
+        <dt>Usage</dt>
+        <dd>Used in CleanupEngine to ensure that residual SDL data does not interfere with future instances.</dd> 
+        
         <h4>GetBasePath</h4>
         <dt>Parameters</dt>
         <dd>Engine* Engine - Engine whos basepath will be set.</dd>
