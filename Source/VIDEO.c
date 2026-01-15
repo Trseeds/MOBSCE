@@ -30,8 +30,6 @@ int InitVideo(Engine* Engine)
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"InitVideo(0x%X)",Engine);
             ThrowWarning("Failed to create window icon.",Traceback);
-            puts(Path);
-            fflush(stdout);
         }
         if(Icon)
         {
@@ -138,7 +136,7 @@ int DrawSprite(Sprite* Sprite, Engine* Engine)
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"DrawSprite(0x%X, 0x%X)",Sprite,Engine);
             ThrowWarning("Could not draw sprite.",Traceback);
-            return(3);
+            return(2);
         }
 
         return(0);

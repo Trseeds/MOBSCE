@@ -171,13 +171,148 @@
         <dt>Usage</dt>
         <dd>Good practice to when caching assets. Using relative paths only may break if binary is not run from its directory.</dd>
         
-        <h4>KeepTime</h4>
+        <!--<h4>KeepTime</h4>
         <dt>Parameters</dt>
         <dd>Engine* Engine - Engine whos clock struct will be set.</dd>
         <dt>Description</dt>
         <dd>Updates the clock struct of Engine.</dd>
         <dt>Usage</dt>
-        <dd>Used in RunEngine to keep timing information updated.</dd>
+        <dd>Used in RunEngine to keep timing information updated.</dd>-->
+        
+        <h4>InitEngine</h4>
+        <dt>Parameters</dt>
+        <dd>char* ConfigFile - Path to the config file that will be read.</dd>
+        <dt>Description</dt>
+        <dd>Starts the engine, creates resource pools, sets up state and configuration.</dd>
+        <dt>Return</dt>
+        <dd>Engine* - The engine that is created.</dd>
+        <dt>Usage</dt>
+        <dd>Use to create an engine.</dd> 
+        
+        <h4>RunEngine</h4>
+        <dt>Parameters</dt>
+        <dd>Engine* Engine - The engine that is run.</dd>
+        <dt>Description</dt>
+        <dd>Does all the things needed to use the engine. Fills state and runs Sprite and Actor routines.</dd>
+        <dt>Usage</dt>
+        <dd>Use to advance engine by one tick/frame.</dd> 
+        
+        <h4>CleanupEngine</h4>
+        <dt>Parameters</dt>
+        <dd>Engine* Engine - The engine that will be destroyed.</dd>
+        <dt>Description</dt>
+        <dd>Destroys an engine. Frees all cached assets, actors, sprites, and resource pools. Stops SDL.</dd>
+        <dt>Usage</dt>
+        <dd>Use to destroy an engine after work is done. Best practice but memory will likely be reclaimed by OS without manual cleanup.</dd> 
+        
+        <h2>Audio</h2>
+        
+        <h4>InitAudio</h4>
+        <dt>Parameters</dt>
+        <dd>Engine* Engine - Engine whose config will be used to initialize audio.</dd>
+        <dt>Description</dt>
+        <dd>Opens audio for playback with Engine's configuration. Allocates voices according to Engine's configuration.</dd>
+        <dt>Return</dt>
+        <dd>int - 1 if Mix_OpenAudio failed, 2 if voice allocation failed, -1 if Engine is NULL, 0 on success.</dd>
+        <dt>Usage</dt>
+        <dd></dd> 
+        
+        <h4>EasyPan</h4>
+        <dt>Parameters</dt>
+        <dd>int Pan - A value that controls the pan.</dd>
+        <dd>int Max - The maximum value that Pan could be.</dd>
+        <dd>int* Output - Array that the pan result is copied to.</dd>
+        <dt>Description</dt>
+        <dd>Takes a pan value and maps it to SDL_mixer's expected pan range.</dd>
+        <dt>Return</dt>
+        <dd>int* - Integer array with two elements. Index 0 contains the left value, index 1 contains the right value.</dd>
+        <dt>Usage</dt>
+        <dd>Used in PlaySound to get a valid pan value.</dd> 
+        
+        <h4>PlaySound</h4>
+        <dt>Parameters</dt>
+        <dd>int SoundID - Used to fetch a sound by indexing into the Sounds pool.</dd>
+        <dd>int Voice - The voice (sound channel) the sound will be played on.</dd>
+        <dd>int Volume - Volume the sound will be played at. Mixes together with the engine's volume automatically.</dd>
+        <dd>int Pan - Value from 0 to the logical screen width that controls the pan of the sound.</dd>
+        <dd>Engine* Engine - Engine whose sounds and configuration will be used.</dd>
+        <dt>Description</dt>
+        <dd>Plays a sound. Uses the passed arguments to mix the sound before playing.</dd>
+        <dt>Return</dt>
+        <dd>int - 1 if SoundID yields an invalid sound, 2 if the sound fails to play, -1 if Engine is NULL, 0 on success or if muted.</dd>
+        <dt>Usage</dt>
+        <dd>Use to play sounds.</dd> 
+        
+        <h4>MixMusicVolume</h4>
+        <dt>Parameters</dt>
+        <dd>Engine* Engine - Engine whose configuration will be used.</dd>
+        <dt>Description</dt>
+        <dd>Changes the volume of the music voice.</dd>
+        <dt>Usage</dt>
+        <dd>Used in RunEngine to ensure the music volume is consisten with engine state.</dd> 
+        
+        <h4>PlayMusic</h4>
+        <dt>Parameters</dt>
+        <dd>int MusicID - Used to fetch music by indexing into the music pool.</dd>
+        <dd>Engine* Engine - Engine whose music will be used.</dd>
+        <dt>Description</dt>
+        <dd>Plays music.</dd>
+        <dt>Return</dt>
+        <dd>int - 1 if MusicID yields an invalid music, 2 if the music fails to play, -1 if Engine is NULL, 0 on success or if muted.</dd>
+        <dt>Usage</dt>
+        <dd></dd> 
+        
+        <h2>Video</h2>
+        
+        <h4>InitVideo</h4>
+        <dt>Parameters</dt>
+        <dd>Engine* Engine - Engine whose configuration will be used.</dd>
+        <dt>Description</dt>
+        <dd>Creates a window and renderer, and attatches them to Engine.</dd>
+        <dt>Return</dt>
+        <dd>int - 1 if failed to open window, 2 if failed to create renderer, -1 if Engine is NULL, 0 on success.</dd>
+        <dt>Usage</dt>
+        <dd>Used in InitEngine to create the graphical environment.</dd> 
+        
+        <h4>CleanupVideo</h4>
+        <dt>Parameters</dt>
+        <dd>Engine* Engine - Engine whose renderer and window will be destroyed.</dd>
+        <dt>Description</dt>
+        <dd>Destroys the window and renderer of Engine.</dd>
+        <dt>Usage</dt>
+        <dd>Used in CleanupEngine to ensure future instances do not have SDL conflicts.</dd> 
+        
+        <h4>DrawTexture</h4>
+        <dt>Parameters</dt>
+        <dd>SDL_Texture* Texture - The texture to be drawn, must be cached in the Textures pool or somewhere else.</dd>
+        <dd>Vector2 Position - The X and Y coordinates on the screen that the texture will be drawn to.</dd>
+        <dd>Vector2 Origin - The rectangle on the texture that will be drawn.</dd>
+        <dd>Engine* Engine - Engine whose renderer the texture will be drawn to.</dd>
+        <dt>Description</dt>
+        <dd>Draws a texture.</dd>
+        <dt>Return</dt>
+        <dd>int - 1 if Texture is invalid, 2 if texture querying fails, 3 if texture fails to draw, -1 if Engine is NULL, 0 on success.</dd>
+        <dt>Usage</dt>
+        <dd>Not recommended, use a Sprite.</dd> 
+        
+        <h4>DrawSprite</h4>
+        <dt>Parameters</dt>
+        <dd>Sprite* Sprite - Sprite to be drawn.</dd>
+        <dd>Engine* Engine - Engine whos renderer will be used.</dd>
+        <dt>Description</dt>
+        <dd>Draws a sprite.</dd>
+        <dt>Return</dt>
+        <dd>int - 1 if Sprite is invalid, 2 if drawing fails, -1 if Engine is NULL, 0 on success.</dd>
+        <dt>Usage</dt>
+        <dd></dd> 
+        
+        <h4>Render</h4>
+        <dt>Parameters</dt>
+        <dd>Engine* Engine - Engine whose renderer will be rendered.</dd>
+        <dt>Description</dt>
+        <dd>Renders all sprites in Engine's Sprite pool.</dd>
+        <dt>Usage</dt>
+        <dd>Used in RunEngine to render sprites to the screen.</dd> 
     </div>
 </body>
 </html>

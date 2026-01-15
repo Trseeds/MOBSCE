@@ -96,15 +96,23 @@ int PlayMusic(int MusicID, Engine* Engine)
     {
         if(Engine->Resource.Music[MusicID])
         {
+            if(Engine->Audio.Muted)
+            {
+                return(0);
+            }
             if(Mix_PlayMusic(Engine->Resource.Music[MusicID],-1) < 0)
             {
                 char Traceback[STRING_BUFFER_SIZE];
                 snprintf(Traceback,STRING_BUFFER_SIZE,"PlayMusic(%d, 0x%X)",MusicID,Engine);
                 ThrowWarning("Could not play music.",Traceback);
-                return(1);
+                return(2);
             }
             return(0);
         }
+        char Traceback[STRING_BUFFER_SIZE];
+        snprintf(Traceback,STRING_BUFFER_SIZE,"PlayMusic(%d, 0x%X)",MusicID,Engine);
+        ThrowWarning("Music is not valid.",Traceback);
+        return(1);
     }
     return(INVALID_ENGINE);
 }
