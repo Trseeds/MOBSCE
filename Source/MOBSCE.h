@@ -243,7 +243,7 @@ void Render(Engine* Engine); //done
 
 //input
 void GetKeyboardInput(Engine* Engine); //done
-void GetMouseInput (Engine* Engine); //done
+void GetMouseInput(Engine* Engine); //done
 void GetGamepadInput(Engine* Engine); //done
 void GetInput(Engine* Engine); //done 
 void RumbleController(int Strength, int Duration, Engine* Engine); //TODO

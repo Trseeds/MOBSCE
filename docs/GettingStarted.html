@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MOBSCE Documentation | Getting Started</title>
+</head>
+<body>
+    <div class="container" style="width: 500px">
+        <h1>MOBSCE Documentation</h1>
+        <a href="index.html">Home</a>
+        
+        <h2>Getting Started</h2>
+        
+        <p>
+        To begin, MOBSCE uses SDL for its backend. SDL expects a standard
+        main function signature to begin execution. The expected main
+        signature is <code>int main(int argc, char* argv[])</code>.
+        </p>
+        <p>
+        Creating an instance of MOBSCE is simple. Declare an <code>Engine*</code> and
+        assign <code>InitEngine("config.ini)"</code> to it. <code>InitEngine</code>
+        expects a configuration file path to be passed. While it 
+        is recommended, not passing one will simply fall back to
+        default values.
+        </p>
+        <p>
+        To advance an engine by 1 tick/frame, call <code>RunEngine(Engine)</code>, where
+        <code>Engine</code> is the name of the <code>Engine*</code> you created before.
+        </p>
+        <p>
+        To run an engine continuously, call <code>RunEngine(Engine)</code> in a <code>while</code>
+        loop. Engines have a built in flag, <code>Running</code>, that is set when the engine
+        is ready to execetute the next tick. You can use <code>Running</code> as your while
+        loop condition: <code>while(Engine-&gt;Running)</code>.
+        </p>
+        <p>
+        You are in control of when an engine stops, unless an error is thrown. To stop
+        an engine, call <code>CleanupEngine(Engine)</code> and then free your <code>Engine*</code>.
+        By default, pressing the X on the engine window, or using Alt+F4 (or a similar combo)
+        does stop an engine. To enable this behavior, check <code>Engine-&gt;Events[i].type == SDL_QUIT</code>
+        in a for loop that looks like <code>for(int i = 0; i &lt; EVENT_QUEUE_SIZE; i++)</code>.
+        If this condition is met, follow the above steps to stop the engine.
+        </p>
+        <pre>
+A main function that opens an engine and closes it when X is clicked looks like this:
+<code>
+int main(int argc, char* argv[])
+{
+    Engine* MyEngine = InitEngine("Config.ini");
+    while(MyEngine-&gt;Running)
+    {
+        RunEngine(MyEngine);
+        for(int i = 0; i &lt; EVENT_QUEUE_SIZE; i++)
+        {
+            if(MyEngine-&gt;Events[i].type == SDL_QUIT)
+            {
+                CleanupEngine(MyEngine);
+                free(MyEngine);
+                return(0);
+            }
+        }
+    }
+}
+</code>
+        </pre>
+        <p>
+        Obviously, an empty window is not of much use to you, me, or anyone. However,
+        we can populate windows with images using <code>DrawTexture</code> or
+        <code>DrawSprite</code>. I recommend using Sprites over manual texture drawing.
+        </p>
+        <p>
+        To set up a sprite, you need to define its parameters. Starting with <code>Name</code>,
+        this can be anything you want, as long as it is smaller than OBJECT_NAME_SIZE and is
+        a valid string. <code>Position</code> is of the <code>Vector3</code> type, and tells us
+        where the sprite is. The Z value is used for sprite layering. (one sprite draws over another)
+        You can define <code>Position</code> yourself or just pass an integer array like <code>{0,0,0}</code>.
+        <code>Dimensions</code> is a <code>Vector4</code>, it contains the rectangular area of the sprite's
+        texture that will be drawn. If you have a spritesheet with three frames and only want to show, for
+        example, the first frame, you can set <code>Origin</code> to <code>{0,0,64,128}</code>, where
+        <code>0,0</code> is the position on the image, and <code>64,128</code> are the width and height
+        of that frame. <code>Dimensions</code> is <code>Vector2</code> and simply controls the width and
+        height of the sprite once it is drawn. <code>TextureID</code> is an index into our engine's 
+        texture pool. Right now we have no textures cached, so we need to do that using <code>CacheTexture(GetAssetPath(MyAsset,MyEngine),MyEngine);</code>. 
+        This creates a texture from Myasset, which is just a string path to your asset, and stores it for later use. The image is now stored 
+        at index 0 in the textures pool since it was the first one cached, so when creating a sprite, 
+        you pass 0 as your index. I strongly recommend using enums for this if you have more than a 
+        handfull of textures. <code>Visible</code> tells the renderer if the sprite should be drawn, 
+        set it to 1. <code>CustomData</code> is any data you want to attatch to your sprite, for now, 
+        just declare an empty <code>CustomSpriteData</code> struct and pass it. <code>Actor</code>
+        is an actor you want to attatch to your sprite, this has no effect on the engine and is only for your
+        convenience. Pass NULL for now. <code>Routine</code> is the function that your sprite will run every
+        tick, NULL for now. Finally, pass the engine for <code>Engine</code>.
+        </p>
+        <pre>
+Here is some code that creates a window with a background sprite in it:
+    <code>
+int main(int argc, char* argv[])
+{
+    Engine* MyEngine = InitEngine("Config.ini");
+    char TestBGPath[STRING_BUFFER_SIZE] = "Assets/Images/Backgrounds/TestBG.bmp";
+    CacheTexture(GetAssetPath(TestBGPath,MyEngine),MyEngine);
+    Vector3 Position = {0,0,0};
+    Vector4 Origin = {0,0,640,480};
+    Vector2 Dimensions = {MyEngine-&gt;Video.LogicalDimensions.X,MyEngine-&gt;Video.LogicalDimensions.Y};
+    CustomSpriteData DummyData;
+    CreateSprite(
+        "Background",
+        Position,
+        Origin,
+        Dimensions,
+        0,
+        1,
+        DummyData,
+        NULL,
+        NULL,
+        MyEngine);
+    while(MyEngine-&gt;Running)
+    {
+        RunEngine(MyEngine);
+        for(int i = 0; i &lt; EVENT_QUEUE_SIZE; i++)
+        {
+            if(MyEngine-&gt;Events[i].type == SDL_QUIT)
+            {
+                CleanupEngine(MyEngine);
+                free(MyEngine);
+                return(0);
+            }
+        }
+    }
+}
+<img src="Tut_Image_1.png" alt="Screenshot of above example/">
+    </code>
+        </pre>
+    </div>
+</body>
+</html>

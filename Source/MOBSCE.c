@@ -277,6 +277,7 @@ void RunEngine(Engine* Engine)
         }
         KeepTime(Engine);
         MixMusicVolume(Engine);
+        Render(Engine);
         //Clock a = Engine->Clock;
         //printf("Current Time: %lu\nPrevious Time: %lu\nDelta Time: %f\nTotal Time: %lu\nTotal Frames: %lu\nReal Time: %lu\nFramerate: %f\033[6A\r",a.CurrentTime,a.PreviousTime,a.DeltaTime,a.TotalTime,a.TotalFrames,a.RealTime,a.FrameRate);
     }

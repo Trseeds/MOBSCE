@@ -171,14 +171,6 @@
         <dt>Usage</dt>
         <dd>Good practice to when caching assets. Using relative paths only may break if binary is not run from its directory.</dd>
         
-        <!--<h4>KeepTime</h4>
-        <dt>Parameters</dt>
-        <dd>Engine* Engine - Engine whos clock struct will be set.</dd>
-        <dt>Description</dt>
-        <dd>Updates the clock struct of Engine.</dd>
-        <dt>Usage</dt>
-        <dd>Used in RunEngine to keep timing information updated.</dd>-->
-        
         <h4>InitEngine</h4>
         <dt>Parameters</dt>
         <dd>char* ConfigFile - Path to the config file that will be read.</dd>
@@ -313,6 +305,50 @@
         <dd>Renders all sprites in Engine's Sprite pool.</dd>
         <dt>Usage</dt>
         <dd>Used in RunEngine to render sprites to the screen.</dd> 
+        
+        <h2>Input</h2>
+        
+        <h4>GetKeyboardInput</h4>
+        <dt>Parameters</dt>
+        <dd>Engine* Engine - Engine whose input state will be set</dd>
+        <dt>Description</dt>
+        <dd>Polls keyboard input and fills Engine's input state.</dd>
+        <dt>Usage</dt>
+        <dd>Used in GetInput.</dd> 
+        
+        <h4>GetMouseInput</h4>
+        <dt>Parameters</dt>
+        <dd>Engine* Engine - Engine whose input state will be set</dd>
+        <dt>Description</dt>
+        <dd>Polls mouse input and fills Engine's input state.</dd>
+        <dt>Usage</dt>
+        <dd>Used in GetInput.</dd> 
+        
+        <h4>GetGamepadInput</h4>
+        <dt>Parameters</dt>
+        <dd>Engine* Engine - Engine whose input state will be set</dd>
+        <dt>Description</dt>
+        <dd>Polls gamepad input and fills Engine's input state.</dd>
+        <dt>Usage</dt>
+        <dd>Used in GetInput.</dd> 
+        
+        <h4>GetInput</h4>
+        <dt>Parameters</dt>
+        <dd>Engine* Engine - Engine whose input state will be set</dd>
+        <dt>Description</dt>
+        <dd>Polls input of the keyboard, mouse, and gamepad and fills Engine's input state.</dd>
+        <dt>Usage</dt>
+        <dd>Used in RunEngine.</dd> 
+        
+        <h2>Clock</h2>
+        
+        <h4>KeepTime</h4>
+        <dt>Parameters</dt>
+        <dd>Engine* Engine - Engine whose clock struct will be set.</dd>
+        <dt>Description</dt>
+        <dd>Updates the clock struct of Engine.</dd>
+        <dt>Usage</dt>
+        <dd>Used in RunEngine to keep timing information updated.</dd>
     </div>
 </body>
 </html>

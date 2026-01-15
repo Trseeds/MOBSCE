@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MOBSCE Documentation | Constants</title>
+</head>
+<body>
+    <div class="container" style="width: 500px">
+        <h1>MOBSCE Documentation</h1>
+        <a href="index.html">Home</a>
+        
+        <h2>Constants</h2>
+        
+        <h2>Engine Constants</h2>
+        
+        <h4>STRING_BUFFER_SIZE</h4>
+        <dt>Value</dt>
+        <dd>int - 1024</dd>
+        <dt>Usage</dt>
+        <dd>For string operations. Use when declaring strings for GetAssetPath.</dd>
+        
+        <h4>OBJECT_NAME_SIZE</h4>
+        <dt>Value</dt>
+        <dd>int - 64</dd>
+        <dt>Usage</dt>
+        <dd>Sprite and actors need names, but should not be bloated with a 1k string.</dd>
+        
+        <h4>MIN_ALLOCATE</h4>
+        <dt>Value</dt>
+        <dd>int - 16</dd>
+        <dt>Usage</dt>
+        <dd>This many objects are allocated (or deallocated) in resource functions.</dd>
+        
+        <h4>EVENT_QUEUE_SIZE</h4>
+        <dt>Value</dt>
+        <dd>int - 512</dd>
+        <dt>Usage</dt>
+        <dd>SDL events can overflow and drop events (espescially with a gamepad connected) so we store this many events.</dd>
+        
+        <h4>INVALID_ENGINE</h4>
+        <dt>Value</dt>
+        <dd>int - -1</dd>
+        <dt>Usage</dt>
+        <dd>Return value.</dd>
+        
+    </div>
+</body>
+</html>
