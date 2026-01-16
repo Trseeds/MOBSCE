@@ -5,13 +5,20 @@
 </head>
 <body>
     <div class="container">
-        <h1>MOBSCE Documentation</h1> 
-        <a href="index.html">Home</a>
+        <!-- header -->
+        <h1>MOBSCE Documentation</h1>
         <h2>Functions</h2>
+        
+        <a href="index.html">Home</a>
+        <a href="GettingStarted.html">Getting Started</a>
+        <a href="Constants.html">Constants</a>
+        <a href="Structs.html">Structs and Data</a>
+        <a href="Functions.html">Functions</a>
         
         <h2>Engine</h2>
         
         <h4>ThrowError</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>char* Message - Error message to display.</dd>
         <dd>char* Thrower - Function the error occurred in with passed parameters.</dd>
@@ -20,8 +27,10 @@
         <dd>Creates an SDL error window and cleans up the engine.</dd>
         <dt>Usage</dt>
         <dd>When execution can or should not continue, such as when a segfault is likely to occur.</dd>
+        </dl>
         
         <h4>ThrowWarning</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>char* Message - Error message to display.</dd>
         <dd>char* Thrower - Function the warning occurred in with passed parameters.</dd>
@@ -29,8 +38,10 @@
         <dd>Prints the message and the thrower to the terminal.</dd>
         <dt>Usage</dt>
         <dd>When something has gone wrong, or is otherwise noteworthy, but execution can continue.</dd>
+        </dl>
         
         <h4>GetNewObjectID</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>Engine* Engine - Engine whose ID will be accessed.</dd>
         <dt>Description</dt>
@@ -39,8 +50,10 @@
         <dd>Uint64 - A unique 64-bit number.</dd>
         <dt>Usage</dt>
         <dd>For creating objects that need unique IDs.</dd>
+        </dl>
         
         <h4>CompactArray</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>const void* X - Item X.</dd>
         <dd>const void* Y - Item Y.</dd>
@@ -50,8 +63,10 @@
         <dd>int - 1 to move item X forward, -1 to move item X backward, 0 to retain item X's position.</dd>
         <dt>Usage</dt>
         <dd>Used with qsort when modifying pools to get NULLs out of the way.</dd>
+        </dl>
         
         <h4>SortSpritesByZ</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>const void* X - Item X.</dd>
         <dd>const void* Y - Item Y.</dd>
@@ -61,8 +76,10 @@
         <dd>int - 1 to move item X forward, -1 to move item X backward, 0 to retain item X's position.</dd>
         <dt>Usage</dt>
         <dd>Used with qsort in Render when engine's SpriteZResortNeeded is set to maintain render layering.</dd>
+        </dl>
         
         <h4>PoolCanBeShrunk</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>void* Pool - Pool to check.</dd>
         <dd>int AllocatedElements - Number of valid elements in the pool.</dd>
@@ -73,8 +90,10 @@
         <dd>int - 1 if the pool can be shrunk, 0 if not.</dd>
         <dt>Usage</dt>
         <dd>When removing resources from pools, reallocation to a smaller size may be needed, use this to check.</dd> 
+        </dl>
         
         <h4>LinearMap</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>int Number - Number to map.</dd>
         <dd>int NumberMax - Upper limit of Number.</dd>
@@ -86,14 +105,18 @@
         <dd>int - Mapped number.</dd>
         <dt>Usage</dt>
         <dd>Used mainly in sound functions for volume and panning.</dd>
+        </dl>
         
         <h4>SeedRNG</h4>
+        <dl>
         <dt>Description</dt>
         <dd>Seeds the stdlib rand function with time's time.</dd>
         <dt>Usage</dt>
         <dd>Called in InitEngine</dd>
+        </dl>
         
         <h4>GetRandomNumber</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>int Max - Ceiling for random number.</dd>
         <dt>Description</dt>
@@ -102,12 +125,16 @@
         <dd>int - Random number % Max.</dd>
         <dt>Usage</dt>
         <dd>When randomness is needed.</dd>
+        </dl>
         
         <h4>handler</h4>
+        <dl>
         <dt>Usage</dt>
         <dd>Used for inih config file parsing.</dd>
+        </dl>
         
         <h4>UpdateConfig</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>char* File - Config file to be parsed.</dd>
         <dd>Config* Config - Config struct that will be filled with parsed config file values.</dd>
@@ -117,16 +144,20 @@
         <dd>int - 1 on failure, 0 on success.</dd>
         <dt>Usage</dt>
         <dd>Used in InitEngine to ensure a valid config is loaded.</dd>
+        </dl>
         
         <h4>LoadEngineConfig</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>Engine* Engine - Engine whose config will be filled.</dd>
         <dt>Description</dt>
         <dd>Loads the engine's config values into the relevent structs.</dd>
         <dt>Usage</dt>
         <dd>Used in InitEngine.</dd>
+        </dl>
         
         <h4>InitSDL</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>Engine* Engine - Engine whose audio codecs flag will be used.</dd>
         <dt>Description</dt>
@@ -135,22 +166,28 @@
         <dd>int - 1 if SDL fails to initialize, 2 if SDL_mix fails to load some or all codecs, 0 on success.</dd>
         <dt>Usage</dt>
         <dd>Used in InitEngine to prepare SDL.</dd>
+        </dl>
         
         <h4>GetSDLEvents</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>Engine* Engine - Engine whose events will be filled.</dd>
         <dt>Description</dt>
         <dd>Fills Engine's events array with events polled from SDL.</dd>
         <dt>Usage</dt>
         <dd>Used in RunEngine to keep events updated. This is a workaround for SDL's event system.</dd>
+        </dl>
         
         <h4>CleanupSDL</h4>
+        <dl>
         <dt>Description</dt>
         <dd>Kills SDL through SDL_Quit.</dd>
         <dt>Usage</dt>
         <dd>Used in CleanupEngine to ensure that residual SDL data does not interfere with future instances.</dd> 
+        </dl>
         
         <h4>GetBasePath</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>Engine* Engine - Engine whos basepath will be set.</dd>
         <dt>Description</dt>
@@ -159,8 +196,10 @@
         <dd>int - 1 if SDL_GetBasePath fails, -1 if Engine is NULL, 0 on success.</dd>
         <dt>Usage</dt>
         <dd>Used in InitEngine to ensure that assets can be concatenated correctly.</dd>
+        </dl>
         
         <h4>GetAssetPath</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>char* Asset - Path to an asset.</dd>
         <dd>Engine* Engine - Engine whose basepath will be used.</dd>
@@ -170,8 +209,10 @@
         <dd>char* - NULL if Engine is NULL, Asset on success.</dd>
         <dt>Usage</dt>
         <dd>Good practice to when caching assets. Using relative paths only may break if binary is not run from its directory.</dd>
+        </dl>
         
         <h4>InitEngine</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>char* ConfigFile - Path to the config file that will be read.</dd>
         <dt>Description</dt>
@@ -180,26 +221,32 @@
         <dd>Engine* - The engine that is created.</dd>
         <dt>Usage</dt>
         <dd>Use to create an engine.</dd> 
+        </dl>
         
         <h4>RunEngine</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>Engine* Engine - The engine that is run.</dd>
         <dt>Description</dt>
         <dd>Does all the things needed to use the engine. Fills state and runs Sprite and Actor routines.</dd>
         <dt>Usage</dt>
-        <dd>Use to advance engine by one tick/frame.</dd> 
+        <dd>Use to advance engine by one tick/frame.</dd>
+        </dl>
         
         <h4>CleanupEngine</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>Engine* Engine - The engine that will be destroyed.</dd>
         <dt>Description</dt>
         <dd>Destroys an engine. Frees all cached assets, actors, sprites, and resource pools. Stops SDL.</dd>
         <dt>Usage</dt>
         <dd>Use to destroy an engine after work is done. Best practice but memory will likely be reclaimed by OS without manual cleanup.</dd> 
+        </dl>
         
         <h2>Audio</h2>
         
         <h4>InitAudio</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>Engine* Engine - Engine whose config will be used to initialize audio.</dd>
         <dt>Description</dt>
@@ -208,8 +255,10 @@
         <dd>int - 1 if Mix_OpenAudio failed, 2 if voice allocation failed, -1 if Engine is NULL, 0 on success.</dd>
         <dt>Usage</dt>
         <dd></dd> 
+        </dl>
         
         <h4>EasyPan</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>int Pan - A value that controls the pan.</dd>
         <dd>int Max - The maximum value that Pan could be.</dd>
@@ -220,8 +269,10 @@
         <dd>int* - Integer array with two elements. Index 0 contains the left value, index 1 contains the right value.</dd>
         <dt>Usage</dt>
         <dd>Used in PlaySound to get a valid pan value.</dd> 
+        </dl>
         
         <h4>PlaySound</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>int SoundID - Used to fetch a sound by indexing into the Sounds pool.</dd>
         <dd>int Voice - The voice (sound channel) the sound will be played on.</dd>
@@ -234,16 +285,20 @@
         <dd>int - 1 if SoundID yields an invalid sound, 2 if the sound fails to play, -1 if Engine is NULL, 0 on success or if muted.</dd>
         <dt>Usage</dt>
         <dd>Use to play sounds.</dd> 
+        </dl>
         
         <h4>MixMusicVolume</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>Engine* Engine - Engine whose configuration will be used.</dd>
         <dt>Description</dt>
         <dd>Changes the volume of the music voice.</dd>
         <dt>Usage</dt>
         <dd>Used in RunEngine to ensure the music volume is consisten with engine state.</dd> 
+        </dl>
         
         <h4>PlayMusic</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>int MusicID - Used to fetch music by indexing into the music pool.</dd>
         <dd>Engine* Engine - Engine whose music will be used.</dd>
@@ -253,10 +308,12 @@
         <dd>int - 1 if MusicID yields an invalid music, 2 if the music fails to play, -1 if Engine is NULL, 0 on success or if muted.</dd>
         <dt>Usage</dt>
         <dd></dd> 
+        </dl>
         
         <h2>Video</h2>
         
         <h4>InitVideo</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>Engine* Engine - Engine whose configuration will be used.</dd>
         <dt>Description</dt>
@@ -265,16 +322,20 @@
         <dd>int - 1 if failed to open window, 2 if failed to create renderer, -1 if Engine is NULL, 0 on success.</dd>
         <dt>Usage</dt>
         <dd>Used in InitEngine to create the graphical environment.</dd> 
+        </dl>
         
         <h4>CleanupVideo</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>Engine* Engine - Engine whose renderer and window will be destroyed.</dd>
         <dt>Description</dt>
         <dd>Destroys the window and renderer of Engine.</dd>
         <dt>Usage</dt>
         <dd>Used in CleanupEngine to ensure future instances do not have SDL conflicts.</dd> 
+        </dl>
         
         <h4>DrawTexture</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>SDL_Texture* Texture - The texture to be drawn, must be cached in the Textures pool or somewhere else.</dd>
         <dd>Vector2 Position - The X and Y coordinates on the screen that the texture will be drawn to.</dd>
@@ -286,8 +347,10 @@
         <dd>int - 1 if Texture is invalid, 2 if texture querying fails, 3 if texture fails to draw, -1 if Engine is NULL, 0 on success.</dd>
         <dt>Usage</dt>
         <dd>Not recommended, use a Sprite.</dd> 
+        </dl>
         
         <h4>DrawSprite</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>Sprite* Sprite - Sprite to be drawn.</dd>
         <dd>Engine* Engine - Engine whos renderer will be used.</dd>
@@ -297,64 +360,119 @@
         <dd>int - 1 if Sprite is invalid, 2 if drawing fails, -1 if Engine is NULL, 0 on success.</dd>
         <dt>Usage</dt>
         <dd></dd> 
+        </dl>
         
         <h4>Render</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>Engine* Engine - Engine whose renderer will be rendered.</dd>
         <dt>Description</dt>
         <dd>Renders all sprites in Engine's Sprite pool.</dd>
         <dt>Usage</dt>
         <dd>Used in RunEngine to render sprites to the screen.</dd> 
+        </dl>
         
         <h2>Input</h2>
         
         <h4>GetKeyboardInput</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>Engine* Engine - Engine whose input state will be set</dd>
         <dt>Description</dt>
         <dd>Polls keyboard input and fills Engine's input state.</dd>
         <dt>Usage</dt>
         <dd>Used in GetInput.</dd> 
+        </dl>
         
         <h4>GetMouseInput</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>Engine* Engine - Engine whose input state will be set</dd>
         <dt>Description</dt>
         <dd>Polls mouse input and fills Engine's input state.</dd>
         <dt>Usage</dt>
         <dd>Used in GetInput.</dd> 
+        </dl>
         
         <h4>GetGamepadInput</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>Engine* Engine - Engine whose input state will be set</dd>
         <dt>Description</dt>
         <dd>Polls gamepad input and fills Engine's input state.</dd>
         <dt>Usage</dt>
         <dd>Used in GetInput.</dd> 
+        </dl>
         
         <h4>GetInput</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>Engine* Engine - Engine whose input state will be set</dd>
         <dt>Description</dt>
         <dd>Polls input of the keyboard, mouse, and gamepad and fills Engine's input state.</dd>
         <dt>Usage</dt>
         <dd>Used in RunEngine.</dd> 
+        </dl>
         
         <h2>Clock</h2>
         
         <h4>KeepTime</h4>
+        <dl>
         <dt>Parameters</dt>
         <dd>Engine* Engine - Engine whose clock struct will be set.</dd>
         <dt>Description</dt>
         <dd>Updates the clock struct of Engine.</dd>
         <dt>Usage</dt>
         <dd>Used in RunEngine to keep timing information updated.</dd>
+        </dl>
+        
+        <h2>Resource</h2>
+        
+        <h4>InitResourcePool</h4>
+        <dl>
+        <dt>Parameters</dt>
+        <dd>ResourceInfo ResorceInfo - Information about the resource pool to be created.</dd>
+        <dd>Engine* Engine - Engine whose resource pool will be created.</dd>
+        <dt>Description</dt>
+        <dd>Creates a resource pool.</dd>
+        <dt>Return</dt>
+        <dd>int - 1 if memory allocation failed, -1 if Engine is NULL, 0 on success.</dd>
+        <dt>Usage</dt>
+        <dd>Used in InitEngine to create resource pools.</dd> 
+        </dl>
+        
+        <h4>ExtendResourcePoo</h4>
+        <dl>
+        <dt>Parameters</dt>
+        <dd>ResourceInfo ResourceInfo - Information about the resource pool to be extended.</dd>
+        <dd>Engine* Engine - Engine whose resource pool will be extended.</dd>
+        <dt>Description</dt>
+        <dd>Allocates an extra MIN_ALLOCATE slots in the resource pool.</dd>
+        <dt>Return</dt>
+        <dd>int - 1 if memory allocation failed, 2 if ResourceInfo is invalid, 1 if Engine is NULL, 0 on success.</dd>
+        <dt>Usage</dt>
+        <dd>Used in CreateSprite and CreateActor</dd> 
+        </dl>
+        
+        <h4>ShrinkResourcePool</h4>
+        <dl>
+        <dt>Parameters</dt>
+        <dd>ResourceInfo ResourceInfo - Information about the resource pool to be shrunk.</dd>
+        <dd>Engine* Engine - Engine whose resource pool will be shrunk.</dd>
+        <dt>Description</dt>
+        <dd>Shrinks a resource pool by MIN_ALLOCATE.</dd>
+        <dt>Return</dt>
+        <dd>int - 1 if memory allocation failed, 2 if ResourceInfo is invalid, -1 if Engine is NULL, 0 on success.</dd>
+        <dt>Usage</dt>
+        <dd>Used in DestroySprite and DestroyActor.</dd> 
+        </dl>
     </div>
 </body>
 </html>
 
 <!-- 
         <h4></h4>
+        <dl>
         <dt>Parameters</dt>
         <dd></dd>
         <dt>Description</dt>
@@ -363,4 +481,5 @@
         <dd></dd>
         <dt>Usage</dt>
         <dd></dd> 
+        </dl>
 -->

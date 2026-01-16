@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MOBSCE Documentation | Structs and Data</title>
+</head>
+<body>
+    <div class="container">
+        <!-- header -->
+        <h1>MOBSCE Documentation</h1>
+        <h2>Structs and Data</h2>
+        
+        <a href="index.html">Home</a>
+        <a href="GettingStarted.html">Getting Started</a>
+        <a href="Constants.html">Constants</a>
+        <a href="Structs.html">Structs and Data</a>
+        <a href="Functions.html">Functions</a>
+        
+        <h2>Structs</h2>
+        
+        <h4>Vector2</h4>
+        <dl>
+        <dt>Members</dt>
+        <dd>int X</dd>
+        <dd>int Y</dd>
+        <dt>Description</dt>
+        <dd>Two-Dimensional integer point.</dd>
+        </dl>
+        
+        <h4>Vector3</h4>
+        <dl>
+        <dt>Members</dt>
+        <dd>int X</dd>
+        <dd>int Y</dd>
+        <dd>int Z</dd>
+        <dt>Description</dt>
+        <dd>Three-Dimensional integer point.</dd>
+        </dl>
+        
+        <h4>Vector4</h4>
+        <dl>
+        <dt>Members</dt>
+        <dd>int X</dd>
+        <dd>int Y</dd>
+        <dd>int Z</dd>
+        <dd>int W</dd>
+        <dt>Description</dt>
+        <dd>Four-Dimensional integer point. More commonly, two opposite verticies of a rectangle.</dd>
+        </dl>
+        
+        <h4>FVector2</h4>
+        <dl>
+        <dt>Members</dt>
+        <dd>double X</dd>
+        <dd>double Y</dd>
+        <dt>Description</dt>
+        <dd>Two-Dimensional double float point.</dd>
+        </dl>
+            
+        <h4>FVector3</h4>
+        <dl>
+        <dt>Members</dt>
+        <dd>double X</dd>
+        <dd>double Y</dd>
+        <dd>double Z</dd>
+        <dt>Description</dt>
+        <dd>Three-Dimensional double float point.</dd>
+        </dl>
+        
+        <h4>FVector4</h4>
+        <dl>
+        <dt>Members</dt>
+        <dd>double X</dd>
+        <dd>double Y</dd>
+        <dd>double Z</dd>
+        <dd>double W</dd>
+        <dt>Description</dt>
+        <dd>Four-Dimensional double float point. More commonly, two opposite verticies of a rectangle</dd>
+        </dl>
+        
+        <h4>Config</h4>
+        <dl>
+        <dt>Members</dt>
+        <dd>int SampleRate</dd>
+        <dd>int Channels</dd>
+        <dd>int Chunksize</dd>
+        <dd>int Voices</dd>
+        <dd>int MusicVolume</dd>
+        <dd>int SoundVolume</dd>
+        <dd>int Muted</dd>
+        <dd>int LogicalX</dd>
+        <dd>int LogicalY</dd>
+        <dd>int WindowFlags</dd>
+        <dd>int RendererFlags</dd>
+        <dd>int Codecs</dd>
+        <dt>Description</dt>
+        <dd>Used to parse ini files and configure an engine.</dd>
+        </dl>
+        
+        <h4>Actor</h4>
+        <dl>
+        <dt>Members</dt>
+        <dd>char Name[OBJECT_NAME_SIZE]</dd>
+        <dd>Uint64 ID</dd>
+        <dd>FVector2 Position</dd>
+        <dd>Vector2 Dimensions</dd>
+        <dd>int Voice</dd>
+        <dd>void (*Routine)(struct Actor*, struct Engine*)</dd>
+        <dd>CustomActorData CustomData</dd>
+        <dt>Description</dt>
+        <dd>"Object" with a position, size, and function.</dd>
+        </dl>
+        
+    </div>
+</body>
+</html>
+
+<!--    
+        <h4></h4>
+        <dl>
+        <dt>Members</dt>
+        <dd></dd>
+        <dt>Description</dt>
+        <dd></dd>
+        </dl>
+-->

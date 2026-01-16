@@ -5,42 +5,94 @@
 </head>
 <body>
     <div class="container" style="width: 500px">
+        <!-- header -->
         <h1>MOBSCE Documentation</h1>
-        <a href="index.html">Home</a>
-        
         <h2>Constants</h2>
+        
+        <a href="index.html">Home</a>
+        <a href="GettingStarted.html">Getting Started</a>
+        <a href="Constants.html">Constants</a>
+        <a href="Structs.html">Structs and Data</a>
+        <a href="Functions.html">Functions</a>
         
         <h2>Engine Constants</h2>
         
         <h4>STRING_BUFFER_SIZE</h4>
+        <dl>
         <dt>Value</dt>
         <dd>int - 1024</dd>
         <dt>Usage</dt>
         <dd>For string operations. Use when declaring strings for GetAssetPath.</dd>
+        </dl>
         
         <h4>OBJECT_NAME_SIZE</h4>
+        <dl>
         <dt>Value</dt>
         <dd>int - 64</dd>
         <dt>Usage</dt>
         <dd>Sprite and actors need names, but should not be bloated with a 1k string.</dd>
+        </dl>
         
         <h4>MIN_ALLOCATE</h4>
+        <dl>
         <dt>Value</dt>
         <dd>int - 16</dd>
         <dt>Usage</dt>
         <dd>This many objects are allocated (or deallocated) in resource functions.</dd>
+        </dl>
         
         <h4>EVENT_QUEUE_SIZE</h4>
+        <dl>
         <dt>Value</dt>
         <dd>int - 512</dd>
         <dt>Usage</dt>
         <dd>SDL events can overflow and drop events (espescially with a gamepad connected) so we store this many events.</dd>
+        </dl>
         
         <h4>INVALID_ENGINE</h4>
+        <dl>
         <dt>Value</dt>
         <dd>int - -1</dd>
         <dt>Usage</dt>
         <dd>Return value.</dd>
+        </dl>
+        
+        <h2>Input</h2>
+        
+        <h4>MB_*</h4>
+        <dl>
+        <dt>Usage</dt>
+        <dd>Index for mouse button array.</dd>
+        </dl>
+        
+        <h4>SCROLL_*</h4>
+        <dl>
+        <dt>Usage</dt>
+        <dd>Comparison for mouse scroll checking.</dd>
+        </dl>
+        
+        <h4>K_*</h4>
+        <dl>
+        <dt>Usage</dt>
+        <dd>Index for the keyboard array.</dd>
+        </dl>
+        
+        <h4>GP_*</h4>
+        <dl>
+        <dt>Usage</dt>
+        <dd>Index for gamepad arrays.</dd>
+        <dt>Note</dt>
+        <dd>The enums are named ambiguously intentionally. The mappings to real gamempads are as follows:</dd>
+        <dd>MOBSCE - RIGHT BOTTOM LEFT TOP START SELECT SUPER</dd>
+        <dd>Nintendo (Wii Classic Controller+) - A B Y X PLUS MINUS HOME</dd>
+        <dd>Xbox (One+) - B A X Y MENU VIEW XBOX</dd>
+        <dd>Xbox/Generic - B A X Y START BACK GUIDE</dd>
+        <dd>Sony (PS4+) - CIRCLE CROSS SQUARE TRIANGLE OPTIONS SHARE PS</dd>
+        <dd>Sony (PSX-PS3) - CIRCLE CROSS SQUARE TRIANGLE START SELECT PS</dd>
+        </dl>
+        <!-- 
+        create image with mappings at some point
+        -->
         
     </div>
 </body>
