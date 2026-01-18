@@ -4,7 +4,7 @@
     <title>MOBSCE Documentation | Functions</title>
 </head>
 <body>
-    <div class="container">
+    <div class="container" style="width: 500px">
         <!-- header -->
         <h1>MOBSCE Documentation</h1>
         <h2>Functions</h2>
@@ -412,6 +412,18 @@
         <dd>Polls input of the keyboard, mouse, and gamepad and fills Engine's input state.</dd>
         <dt>Usage</dt>
         <dd>Used in RunEngine.</dd> 
+        </dl>
+        
+        <h4>RumbleGamepad</h4>
+        <dl>
+        <dt>Parameters</dt>
+        <dd>int Strength - 0-100 value that controls how hard to rumble the motors.</dd>
+        <dd>int Duration - Millisecond value that controls how long to rumble the motors for.</dd>
+        <dd>Engine* Engine - Engine whose gamepad will be rumbled.</dd>
+        <dt>Description</dt>
+        <dd>Rumbles Engine's gamepad.</dd>
+        <dt>Usage</dt>
+        <dd>Used to rumble the gamepad.</dd> 
         </dl>
         
         <h2>Clock</h2>

@@ -246,8 +246,7 @@ void GetKeyboardInput(Engine* Engine); //done
 void GetMouseInput(Engine* Engine); //done
 void GetGamepadInput(Engine* Engine); //done
 void GetInput(Engine* Engine); //done 
-void RumbleController(int Strength, int Duration, Engine* Engine); //TODO
-void SetSonyLightbar(Vector3 Color, Engine* Engine); //TODO
+void RumbleGamepad(int Strength, int Duration, Engine* Engine); //done
 
 //clock
 void KeepTime(Engine* Engine); //done

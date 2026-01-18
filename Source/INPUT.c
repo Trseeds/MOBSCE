@@ -173,3 +173,31 @@ void GetInput(Engine* Engine)
         Engine->Input.SDL_PreviousMouseState = Engine->Input.SDL_MouseState;
     }
 }
+
+void RumbleGamepad(int Strength, int Duration, Engine* Engine)
+{
+    if(Engine)
+    {
+        if(Engine->Input.GamepadIsConnected && Engine->Input.Gamepad)
+        {
+            if(Strength < 0)
+            {
+                Strength = 0;
+            }
+            if(Strength > 100)
+            {
+                Strength = 100;
+            }
+
+            Uint16 RealStrength = (Uint16)LinearMap(Strength,100,0xFFFF,0);
+
+            int Result = SDL_GameControllerRumble(Engine->Input.Gamepad,RealStrength,RealStrength,Duration);
+            if(Result < 0)
+            {
+                char Traceback[STRING_BUFFER_SIZE];
+                snprintf(Traceback,STRING_BUFFER_SIZE,"RumbleGamepad(%d, %d, 0x%X)",Strength,Duration,Engine);
+                ThrowWarning("Controller does not support rumble.",Traceback);
+            }
+        }
+    }
+}
