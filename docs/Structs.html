@@ -96,6 +96,22 @@
         <dd>Used to parse ini files and configure an engine.</dd>
         </dl>
         
+        <h4>SpriteRenderParameters</h4>
+        <dl>
+        <dt>Members</dt>
+        <dd>SDL_Texture* Texture - Texture that will be rendered, set automatically.</dd>
+        <dd>Vector3 Position - Position the sprite will be rendered at.</dd>
+        <dd>Vector4 Origin - The rectangular area within the source texture that will be visivble when rendered.</dd>
+        <dd>Vector2 Dimensions - The dimensions of the texture when rendered.</dd>
+        <dd>int Transparency - 0-100 value that controls how see-through the texture will be when rendered.</dd>
+        <dd>double Angle - 0-360 value that controls the rotation in degrees of the texture will be when rendered.</dd>
+        <dd>int Flip - Controls if the texture will be mirrored when rendered. Use enums FLIP_*.</dd>
+        <dd>Vector3 Tint - Color tint applied to texture when rendered. X RED, Y GREEN, Z BLUE.</dd>
+        <dd>int Visible - The sprite will skip rendering if this flag is not set.</dd>
+        <dt>Description</dt>
+        <dd>This struct is used during rendering only, and controls various effects and parameters relating to rendering.</dd>
+        </dl>
+        
         <h4>Actor</h4>
         <dl>
         <dt>Members</dt>

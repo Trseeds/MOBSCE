@@ -67,6 +67,7 @@ enum Keys {
 	K_LEFT = SDL_SCANCODE_LEFT,
 	K_RIGHT = SDL_SCANCODE_RIGHT,
 	//will ammend this later
+	//any day now...
 };
 
 enum GamepadButtons {

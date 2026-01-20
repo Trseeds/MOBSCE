@@ -118,11 +118,12 @@
         <h4>GetRandomNumber</h4>
         <dl>
         <dt>Parameters</dt>
+        <dd>int Min - Floor for random number.</dd>
         <dd>int Max - Ceiling for random number.</dd>
         <dt>Description</dt>
         <dd>Uses stdlib rand to get a random number.</dd>
         <dt>Return</dt>
-        <dd>int - Random number % Max.</dd>
+        <dd>int - Min+(RandomNumber%(Max-Min));</dd>
         <dt>Usage</dt>
         <dd>When randomness is needed.</dd>
         </dl>
@@ -357,7 +358,7 @@
         <dt>Description</dt>
         <dd>Draws a sprite.</dd>
         <dt>Return</dt>
-        <dd>int - 1 if Sprite is invalid, 2 if drawing fails, -1 if Engine is NULL, 0 on success.</dd>
+        <dd>int - 1 if Sprite is invalid, 2 if drawing fails, 3 if alpha or tinting effects fail, -1 if Engine is NULL, 0 on success.</dd>
         <dt>Usage</dt>
         <dd></dd> 
         </dl>

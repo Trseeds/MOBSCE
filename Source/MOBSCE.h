@@ -28,8 +28,14 @@ Engine
 #define OBJECT_NAME_SIZE 64
 #define MIN_ALLOCATE 16
 #define EVENT_QUEUE_SIZE 512
-
 #define INVALID_ENGINE -1
+#define TINT_NOCHANGE 255
+
+enum Flip {
+	FLIP_H = SDL_FLIP_HORIZONTAL,
+	FLIP_V = SDL_FLIP_VERTICAL,
+	FLIP_NONE = SDL_FLIP_NONE
+};
 
 //basic data types
 typedef struct Vector2 {
@@ -84,6 +90,18 @@ typedef struct Config {
 	int Codecs;
 } Config;
 
+typedef struct SpriteRenderParameters {
+	SDL_Texture* Texture;
+	Vector3 Position;
+	Vector4 Origin;
+	Vector2 Dimensions;
+	int Transparency;
+	double Angle;
+	int Flip;
+	Vector3 Tint;
+	int Visible;
+} SpriteRenderParameters;
+
 //objects
 typedef struct Actor {
 	char Name[OBJECT_NAME_SIZE];
@@ -98,12 +116,8 @@ typedef struct Actor {
 typedef struct Sprite {
 	char Name[OBJECT_NAME_SIZE];
 	Uint64 ID;
-	SDL_Texture* Texture;
 	int TextureID;
-	Vector3 Position;
-	Vector4 Origin;
-	Vector2 Dimensions;
-	int Visible;
+	SpriteRenderParameters RenderParameters;
 	Actor* Actor;
 	void (*Routine)(struct Sprite*, struct Engine*);
 	CustomSpriteData CustomData;
@@ -214,7 +228,7 @@ int SortSpritesByZ(const void* X, const void* Y); //done
 int PoolCanBeShrunk(void* Pool, int AllocatedElements, int AllocatedSize); //done
 int LinearMap(int Number, int NumberMax, int RangeMax, int RangeMin); //done
 void SeedRNG(); //done
-int GetRandomNumber(int Max); //done
+int GetRandomNumber(int Min, int Max); //done
 int handler(void* user, const char* section, const char* name, const char* value); //done
 int UpdateConfig(char* File, Config* Config); //done
 void LoadEngineConfig(Engine* Engine); //done
@@ -262,7 +276,7 @@ int CacheMusic(char* File, Engine* Engine); //done
 //video
 int CacheTexture(char* File, Engine* Engine); //done
 //objects
-Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, int Visible, CustomSpriteData CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine); //done
+Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, CustomSpriteData CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine); //done
 Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, CustomActorData CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine); //done
 void DestroySprite(Sprite* DSprite, Engine* Engine); //done
 void DestroyActor(Actor* DActor, Engine* Engine); //done

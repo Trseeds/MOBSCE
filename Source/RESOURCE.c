@@ -111,7 +111,7 @@ void CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
     }
 }
 
-Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, int Visible, CustomSpriteData CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
+Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, CustomSpriteData CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
 {
     if(Engine)
     {
@@ -119,7 +119,7 @@ Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimen
         if(!NewSprite)
         {
             char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"CreateSprite(%s, 0x%X, 0x%X, 0x%X, %d, %d, 0x%X, 0x%X)",Name,Position,Origin,Dimensions,TextureID,Visible,Routine,Engine);
+            snprintf(Traceback,STRING_BUFFER_SIZE,"CreateSprite(%s, 0x%X, 0x%X, 0x%X, %d, 0x%X, 0x%X)",Name,Position,Origin,Dimensions,TextureID,Routine,Engine);
             ThrowError("Failed to allocate memory!",Traceback,Engine);
             return(NULL);
         }
@@ -135,12 +135,17 @@ Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimen
 
         strcpy(NewSprite->Name,Name);
         NewSprite->ID = GetNewObjectID(Engine);
-        NewSprite->Position.X = Position.X; NewSprite->Position.Y = Position.Y; NewSprite->Position.Z = Position.Z;
-        NewSprite->Origin.X = Origin.X; NewSprite->Origin.Y = Origin.Y; NewSprite->Origin.Z = Origin.Z; NewSprite->Origin.W = Origin.W; 
-        NewSprite->Dimensions.X = Dimensions.X; NewSprite->Dimensions.Y = Dimensions.Y;
+        NewSprite->RenderParameters.Position.X = Position.X; NewSprite->RenderParameters.Position.Y = Position.Y; NewSprite->RenderParameters.Position.Z = Position.Z;
+        NewSprite->RenderParameters.Origin.X = Origin.X; NewSprite->RenderParameters.Origin.Y = Origin.Y; NewSprite->RenderParameters.Origin.Z = Origin.Z; NewSprite->RenderParameters.Origin.W = Origin.W; 
+        NewSprite->RenderParameters.Dimensions.X = Dimensions.X; NewSprite->RenderParameters.Dimensions.Y = Dimensions.Y;
         NewSprite->TextureID = TextureID;
-        NewSprite->Texture = Engine->Resource.Textures[TextureID];
-        NewSprite->Visible = Visible;
+        NewSprite->RenderParameters.Texture = Engine->Resource.Textures[TextureID];
+        NewSprite->RenderParameters.Visible = true;
+        NewSprite->RenderParameters.Angle = 0;
+        NewSprite->RenderParameters.Flip = FLIP_NONE;
+        NewSprite->RenderParameters.Transparency = 100;
+        Vector3 Tint = {TINT_NOCHANGE,TINT_NOCHANGE,TINT_NOCHANGE};
+        NewSprite->RenderParameters.Tint = Tint;
         NewSprite->Actor = Actor;
         NewSprite->CustomData = CustomData;
         NewSprite->Routine = Routine;

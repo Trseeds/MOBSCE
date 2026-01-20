@@ -87,8 +87,8 @@ void AlignSpriteToActor(Sprite* Sprite, Engine* Engine)
 {
     if(Sprite->Actor)
     {
-        Sprite->Position.X = Sprite->Actor->Position.X;
-        Sprite->Position.Y = Sprite->Actor->Position.Y;
+        Sprite->RenderParameters.Position.X = Sprite->Actor->Position.X;
+        Sprite->RenderParameters.Position.Y = Sprite->Actor->Position.Y;
     }
 }
 
@@ -100,14 +100,19 @@ void CreateTestObject(Engine* Engine)
     Vector2 Dimensions;
     CustomSpriteData Dummy;
     CustomActorData Data;
-    ActorPosition.X = GetRandomNumber(Engine->Video.LogicalDimensions.X); ActorPosition.Y = GetRandomNumber(Engine->Video.LogicalDimensions.Y);
+    ActorPosition.X = GetRandomNumber(0,Engine->Video.LogicalDimensions.X); ActorPosition.Y = GetRandomNumber(0,Engine->Video.LogicalDimensions.Y);
     SpritePosition.X = 0; SpritePosition.Y = 0; SpritePosition.Z = 2;
     Origin.X = 0; Origin.Y = 0; Origin.Z = 16; Origin.W = 16;
-    Dimensions.X = 16; Dimensions.Y = 16;
+    Dimensions.X = GetRandomNumber(8,32); Dimensions.Y = GetRandomNumber(8,32);
     Actor* TestActor = CreateActor("Test Actor",ActorPosition,Dimensions,0,Data,&TestActorFunction,Engine);
-    Sprite* TestSprite = CreateSprite("Test Sprite",SpritePosition,Origin,Dimensions,TXTR_PLAYER,true,Dummy,TestActor,&AlignSpriteToActor,Engine);
+    Sprite* TestSprite = CreateSprite("Test Sprite",SpritePosition,Origin,Dimensions,TXTR_PLAYER,Dummy,TestActor,&AlignSpriteToActor,Engine);
     Data.Sprite = TestSprite;
     TestActor->CustomData = Data;
+    TestSprite->RenderParameters.Angle = GetRandomNumber(0,360);
+    TestSprite->RenderParameters.Flip = GetRandomNumber(0,2);
+    TestSprite->RenderParameters.Tint.X = GetRandomNumber(0,255);
+    TestSprite->RenderParameters.Tint.Y = GetRandomNumber(0,255);
+    TestSprite->RenderParameters.Tint.Z = GetRandomNumber(0,255);
 }
 
 void InitGame(Engine* Engine)
@@ -131,12 +136,12 @@ void InitGame(Engine* Engine)
     SpritePosition.X = 0; SpritePosition.Y = 0; SpritePosition.Z = 0;
     Origin.X = 0; Origin.Y = 0; Origin.Z = 640; Origin.W = 480;
     Dimensions.X = 640; Dimensions.Y = 480;
-    CreateSprite("BG",SpritePosition,Origin,Dimensions,TXTR_BG,true,Dummy,NULL,NULL,Engine);
+    CreateSprite("BG",SpritePosition,Origin,Dimensions,TXTR_BG,Dummy,NULL,NULL,Engine);
     SpritePosition.Z = 1000;
     Dimensions.X = 64; Dimensions.Y = 64;
     Origin.X = 0; Origin.Y = 0; Origin.Z = 64; Origin.W = 64;
     Actor* CursorActor = CreateActor("Mouse Cursor",ActorPosition,Dimensions,0,Dummy2,&CursorFunction,Engine);
-    CreateSprite("Mouse Cursor",SpritePosition,Origin,Dimensions,TXTR_CURSOR,true,Dummy,CursorActor,&AlignSpriteToActor,Engine);
+    CreateSprite("Mouse Cursor",SpritePosition,Origin,Dimensions,TXTR_CURSOR,Dummy,CursorActor,&AlignSpriteToActor,Engine);
 }
 
 int main(int argc, char* argv[])

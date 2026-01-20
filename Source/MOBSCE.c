@@ -56,15 +56,15 @@ int SortSpritesByZ(const void* X, const void* Y)
     {
         return(1);
     }
-    if(Sprite1->Position.Z == Sprite2->Position.Z)
+    if(Sprite1->RenderParameters.Position.Z == Sprite2->RenderParameters.Position.Z)
     {
         return(0);
     }
-    if(Sprite1->Position.Z < Sprite2->Position.Z)
+    if(Sprite1->RenderParameters.Position.Z < Sprite2->RenderParameters.Position.Z)
     {
         return(-1);
     }
-    if(Sprite1->Position.Z > Sprite2->Position.Z)
+    if(Sprite1->RenderParameters.Position.Z > Sprite2->RenderParameters.Position.Z)
     {
         return(1);
     }
@@ -97,9 +97,9 @@ void SeedRNG()
     srand(time(NULL));
 }
 
-int GetRandomNumber(int Max)
+int GetRandomNumber(int Min, int Max)
 {
-    return(rand()%Max);
+    return(Min+(rand()%(Max-Min)));
 }
 
 int InitSDL(Engine* Engine)

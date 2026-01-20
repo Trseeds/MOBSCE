@@ -121,24 +121,43 @@ int DrawSprite(Sprite* Sprite, Engine* Engine)
 
         SDL_Rect Source;
         SDL_Rect Destination;
-        Source.x = Sprite->Origin.X;
-        Source.y = Sprite->Origin.Y;
-        Source.w = Sprite->Origin.Z;
-        Source.h = Sprite->Origin.W;
-        Destination.x = Sprite->Position.X;
-        Destination.y = Sprite->Position.Y;
-        Destination.w = Sprite->Dimensions.X;
-        Destination.h = Sprite->Dimensions.Y;
+        Source.x = Sprite->RenderParameters.Origin.X;
+        Source.y = Sprite->RenderParameters.Origin.Y;
+        Source.w = Sprite->RenderParameters.Origin.Z;
+        Source.h = Sprite->RenderParameters.Origin.W;
+        Destination.x = Sprite->RenderParameters.Position.X;
+        Destination.y = Sprite->RenderParameters.Position.Y;
+        Destination.w = Sprite->RenderParameters.Dimensions.X;
+        Destination.h = Sprite->RenderParameters.Dimensions.Y;
         
-        int Result = SDL_RenderCopy(Engine->Video.Renderer,Sprite->Texture,&Source,&Destination);
-        if(Result != 0)
+        Uint8 RealAlpha = LinearMap(Sprite->RenderParameters.Transparency,100,255,0);
+        int ResultA = SDL_SetTextureAlphaMod(Sprite->RenderParameters.Texture,RealAlpha);
+        int ResultC = SDL_SetTextureColorMod(Sprite->RenderParameters.Texture,Sprite->RenderParameters.Tint.X,Sprite->RenderParameters.Tint.Y,Sprite->RenderParameters.Tint.Z);
+
+        int ResultR = SDL_RenderCopyEx(
+            Engine->Video.Renderer,Sprite->RenderParameters.Texture,
+            &Source,
+            &Destination,
+            Sprite->RenderParameters.Angle,
+            NULL,
+            Sprite->RenderParameters.Flip);
+        //int ResultR = SDL_RenderCopy(Engine->Video.Renderer,Sprite->RenderParameters.Texture,&Source,&Destination);
+        if(ResultR != 0)
         {
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"DrawSprite(0x%X, 0x%X)",Sprite,Engine);
             ThrowWarning("Could not draw sprite.",Traceback);
             return(2);
         }
+        if(ResultA != 0 || ResultC != 0)
+        {
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawSprite(0x%X, 0x%X)",Sprite,Engine);
+            ThrowWarning("Special sprite effects failed to render.",Traceback);
+            return(3);
+        }
 
+        //puts("i was drawn!");
         return(0);
     }
     return(INVALID_ENGINE);
@@ -160,7 +179,7 @@ void Render(Engine* Engine)
         {
             if(Engine->Sprites[i])
             {
-                if(Engine->Sprites[i]->Visible)
+                if(Engine->Sprites[i]->RenderParameters.Visible)
                 {
                     DrawSprite(Engine->Sprites[i],Engine);
                 }
