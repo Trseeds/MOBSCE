@@ -56,6 +56,7 @@ enum Keys {
 	//next time won't you
 	//sing with me
     K_ESCAPE = SDL_SCANCODE_ESCAPE,
+	K_RETURN = SDL_SCANCODE_RETURN,
 	K_RCTRL = SDL_SCANCODE_RCTRL,
 	K_LCTRL = SDL_SCANCODE_LCTRL,
 	K_RALT = SDL_SCANCODE_RALT,
@@ -68,6 +69,7 @@ enum Keys {
 	K_RIGHT = SDL_SCANCODE_RIGHT,
 	//will ammend this later
 	//any day now...
+	//its now... or never!
 };
 
 enum GamepadButtons {

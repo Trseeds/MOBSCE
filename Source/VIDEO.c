@@ -4,7 +4,7 @@ int InitVideo(Engine* Engine)
 {
     if(Engine)
     {
-        Engine->Video.Window = SDL_CreateWindow("MOBSCE",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,Engine->Video.LogicalDimensions.X,Engine->Video.LogicalDimensions.Y,Engine->Video.WindowFlags);
+        Engine->Video.Window = SDL_CreateWindow(Engine->Video.WindowTitle,SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,Engine->Video.LogicalDimensions.X,Engine->Video.LogicalDimensions.Y,Engine->Video.WindowFlags);
         if(!Engine->Video.Window)
         {
             char Traceback[STRING_BUFFER_SIZE];
@@ -22,9 +22,7 @@ int InitVideo(Engine* Engine)
             return(2);
         }
 
-        char Path[STRING_BUFFER_SIZE];
-        snprintf(Path,STRING_BUFFER_SIZE,"%sAssets/Images/Icon.bmp",Engine->BasePath);
-        SDL_Surface* Icon = SDL_LoadBMP(Path);
+        SDL_Surface* Icon = IMG_Load(Engine->Video.WindowIconPath);
         if(!Icon)
         {
             char Traceback[STRING_BUFFER_SIZE];
@@ -43,6 +41,22 @@ int InitVideo(Engine* Engine)
         return(0);
     }
     return(INVALID_ENGINE);
+}
+
+void RestartVideo(Engine* Engine)
+{
+    if(Engine)
+    {
+        ResourceInfo ResourceInfo;
+        ResourceInfo.Pointer = &Engine->Resource.Textures;
+        ResourceInfo.FreeFunction = &SDL_DestroyTexture;
+        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTextures;
+        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTextureMemory;
+        CleanupResourcePool(ResourceInfo,Engine);
+        InitResourcePool(ResourceInfo,Engine);
+        CleanupVideo(Engine);
+        InitVideo(Engine);
+    }
 }
 
 void CleanupVideo(Engine* Engine)
@@ -191,7 +205,6 @@ void Render(Engine* Engine)
                 ThrowWarning("Sprite is invalid.",Traceback);
             }
         }
-        
         SDL_RenderPresent(Engine->Video.Renderer);
     }
 }

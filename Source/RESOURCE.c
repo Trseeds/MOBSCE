@@ -383,7 +383,7 @@ int CacheTexture(char* File, Engine* Engine)
     {
         if(Engine->Resource.Textures)
         {
-            SDL_Surface* Surface = SDL_LoadBMP(File);
+            SDL_Surface* Surface = IMG_Load(File);
             if(!Surface)
             {
                 char Traceback[STRING_BUFFER_SIZE];

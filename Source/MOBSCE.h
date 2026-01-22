@@ -12,7 +12,8 @@ Engine
 
 #include "SDL.h"
 #include "SDL_mixer.h"
-//include sdl image at some point
+#include "SDL_image.h"
+//ok
 #include "ini.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -143,6 +144,8 @@ typedef struct Video {
 	int WindowFocused;
 	int WindowFlags;
 	int RendererFlags;
+	char WindowTitle[STRING_BUFFER_SIZE];
+	char WindowIconPath[STRING_BUFFER_SIZE];
 } Video;
 
 typedef struct Input {
@@ -220,67 +223,68 @@ typedef struct ResourceInfo {
 } ResourceInfo;
 
 //engine stuff
-void ThrowError(char* Message, char* Thrower, Engine* Engine); //done
-void ThrowWarning(char* Message, char* Thrower); //done
-Uint64 GetNewObjectID(Engine* Engine); //done
-int CompactArray(const void* X, const void* Y); //done
-int SortSpritesByZ(const void* X, const void* Y); //done
-int PoolCanBeShrunk(void* Pool, int AllocatedElements, int AllocatedSize); //done
-int LinearMap(int Number, int NumberMax, int RangeMax, int RangeMin); //done
-void SeedRNG(); //done
-int GetRandomNumber(int Min, int Max); //done
-int handler(void* user, const char* section, const char* name, const char* value); //done
-int UpdateConfig(char* File, Config* Config); //done
-void LoadEngineConfig(Engine* Engine); //done
-int InitSDL(Engine* Engine); //done
-void CleanupSDL(); //done
-void GetSDLEvents(Engine* Engine); //done
-int GetBasePath(Engine* Engine); //done
-char* GetAssetPath(char* Asset, Engine* Engine); //done
-Engine* InitEngine(char* ConfigFile); //done
-void RunEngine(Engine* Engine); //done
-void CleanupEngine(Engine* Engine); //done
+void ThrowError(char* Message, char* Thrower, Engine* Engine);
+void ThrowWarning(char* Message, char* Thrower);
+Uint64 GetNewObjectID(Engine* Engine);
+int CompactArray(const void* X, const void* Y);
+int SortSpritesByZ(const void* X, const void* Y);
+int PoolCanBeShrunk(void* Pool, int AllocatedElements, int AllocatedSize);
+int LinearMap(int Number, int NumberMax, int RangeMax, int RangeMin);
+void SeedRNG();
+int GetRandomNumber(int Min, int Max);
+int handler(void* user, const char* section, const char* name, const char* value);
+int UpdateConfig(char* File, Config* Config);
+void LoadEngineConfig(Engine* Engine);
+int InitSDL(Engine* Engine);
+void CleanupSDL();
+void GetSDLEvents(Engine* Engine);
+int GetBasePath(Engine* Engine);
+char* GetAssetPath(char* Asset, Engine* Engine);
+Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath);
+void RunEngine(Engine* Engine);
+void CleanupEngine(Engine* Engine);
 
 //audio
-int InitAudio(Engine* Engine); //done
-int* EasyPan(int Pan, int Max, int* Output); //done
-int PlaySound(int SoundID, int Voice, int Volume, int Pan, Engine* Engine); //done
-void MixMusicVolume(Engine* Engine); //done
-int PlayMusic(int MusicID, Engine* Engine); //done
+int InitAudio(Engine* Engine);
+int* EasyPan(int Pan, int Max, int* Output);
+int PlaySound(int SoundID, int Voice, int Volume, int Pan, Engine* Engine);
+void MixMusicVolume(Engine* Engine);
+int PlayMusic(int MusicID, Engine* Engine);
 
 //video
-int InitVideo(Engine* Engine); //done
-void CleanupVideo(Engine* Engine); //done
-int DrawTexture(SDL_Texture* Texture, Vector2 Position, Vector2 Origin, Engine* Engine); //done
-int DrawSprite(Sprite* Sprite, Engine* Engine); //done
-void Render(Engine* Engine); //done
+int InitVideo(Engine* Engine);
+void RestartVideo(Engine* Engine);
+void CleanupVideo(Engine* Engine);
+int DrawTexture(SDL_Texture* Texture, Vector2 Position, Vector2 Origin, Engine* Engine);
+int DrawSprite(Sprite* Sprite, Engine* Engine);
+void Render(Engine* Engine);
 
 //input
-void GetKeyboardInput(Engine* Engine); //done
-void GetMouseInput(Engine* Engine); //done
-void GetGamepadInput(Engine* Engine); //done
-void GetInput(Engine* Engine); //done 
-void RumbleGamepad(int Strength, int Duration, Engine* Engine); //done
+void GetKeyboardInput(Engine* Engine);
+void GetMouseInput(Engine* Engine);
+void GetGamepadInput(Engine* Engine);
+void GetInput(Engine* Engine); 
+void RumbleGamepad(int Strength, int Duration, Engine* Engine);
 
 //clock
-void KeepTime(Engine* Engine); //done
+void KeepTime(Engine* Engine);
 
 //resource
-int InitResourcePool(ResourceInfo ResourceInfo, Engine* Engine); //done
-int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine); //done
-int ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine); //done
-void CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine); //done
+int InitResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
+int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
+int ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
+void CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
 //audio
-int CacheSound(char* File, Engine* Engine); //done
-int CacheMusic(char* File, Engine* Engine); //done
+int CacheSound(char* File, Engine* Engine);
+int CacheMusic(char* File, Engine* Engine);
 //video
-int CacheTexture(char* File, Engine* Engine); //done
+int CacheTexture(char* File, Engine* Engine);
 //objects
-Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, CustomSpriteData CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine); //done
-Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, CustomActorData CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine); //done
-void DestroySprite(Sprite* DSprite, Engine* Engine); //done
-void DestroyActor(Actor* DActor, Engine* Engine); //done
-Sprite* GetSpriteByName(char* Name, Engine* Engine); //done
-Actor* GetActorByName(char* Name, Engine* Engine); //done
+Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, CustomSpriteData CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine);
+Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, CustomActorData CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine);
+void DestroySprite(Sprite* DSprite, Engine* Engine);
+void DestroyActor(Actor* DActor, Engine* Engine);
+Sprite* GetSpriteByName(char* Name, Engine* Engine);
+Actor* GetActorByName(char* Name, Engine* Engine);
 
 #endif

@@ -124,6 +124,8 @@ int InitSDL(Engine* Engine)
         return(2);
     }
 
+    //add sdlimg flags here
+
     return(0);
 }
 
@@ -203,7 +205,7 @@ void KeepTime(Engine* Engine)
     }
 }
 
-Engine* InitEngine(char* ConfigFile)
+Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath)
 {
     Engine* NewEngine = (Engine*)calloc(1,sizeof(Engine));
     if(!NewEngine)
@@ -214,8 +216,18 @@ Engine* InitEngine(char* ConfigFile)
     ResourceInfo NewResourceInfo;
 
     GetBasePath(NewEngine);
-    strcpy(NewEngine->ConfigPath,ConfigFile);
-    UpdateConfig(GetAssetPath(NewEngine->ConfigPath,NewEngine),&NewEngine->Config);
+
+    char Config[STRING_BUFFER_SIZE];
+    strcpy(Config,ConfigFile);
+    strcpy(NewEngine->ConfigPath,GetAssetPath(Config,NewEngine));
+    char Icon[STRING_BUFFER_SIZE];
+    strcpy(Icon,WindowIconPath);
+    strcpy(NewEngine->Video.WindowIconPath,GetAssetPath(Icon,NewEngine));
+    char Title[STRING_BUFFER_SIZE];
+    strcpy(Title,WindowTitle);
+    strcpy(NewEngine->Video.WindowTitle,Title);
+
+    UpdateConfig(Config,&NewEngine->Config);
     LoadEngineConfig(NewEngine);
     InitSDL(NewEngine);
     InitAudio(NewEngine);

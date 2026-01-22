@@ -1,5 +1,5 @@
 Compiler = gcc
-LinkerFlags = -I Libraries/SDL2/Include -I Libraries/INIH -L Libraries/SDL2/lib/x64 -L Libraries/INIH -lSDL2main -lSDL2 -lSDL2_mixer -lINIH
+LinkerFlags = -I Libraries/SDL2/Include -I Libraries/INIH -L Libraries/SDL2/lib/x64 -L Libraries/INIH -lSDL2main -lSDL2 -lSDL2_mixer -lSDL2_image -lINIH
 TestFlags = -o0
 DebugFlags = -g3 -o0
 ReleaseFlags = -g0 -o3 -s -flto -std=c11

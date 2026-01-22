@@ -1,0 +1,7 @@
+major changes & refactors:
+    change array of pointer pools to array of structs. cut malloc/free spam and fill in allocated memory as needed. (make actual pools not just pointers)
+minor changes:
+    make hardcoded things configurable.
+    change audio panning from a fixed range to a configurable one.
+additional changes:
+    compile sdl and all of its satellites statically to avoid this ridiculous library mess
