@@ -164,7 +164,6 @@ void DestroySprite(Sprite* DSprite, Engine* Engine)
     {
         if(DSprite)
         {
-            int Index;
             for(int i = 0; i < Engine->Resource.NumberOfSprites; i++)
             {
                 if(Engine->Sprites[i]->ID == DSprite->ID)
@@ -177,11 +176,91 @@ void DestroySprite(Sprite* DSprite, Engine* Engine)
             qsort(Engine->Sprites,Engine->Resource.NumberOfSprites,sizeof(Sprite*),CompactArray);
             Engine->Resource.NumberOfSprites--;
 
-            if(PoolCanBeShrunk(Engine->Actors,Engine->Resource.AllocatedSpriteMemory,Engine->Resource.NumberOfSprites))
+            if(PoolCanBeShrunk(Engine->Sprites,Engine->Resource.AllocatedSpriteMemory,Engine->Resource.NumberOfSprites))
             {
                 ResourceInfo ResourceInfo;
                 ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteMemory;
                 ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSprites;
+                ShrinkResourcePool(ResourceInfo,Engine);
+            }
+        }
+    }
+}
+
+Wiregon* CreateWiregon(Vector2* Verticies, Vector3 Position, int NumberOfVerticies, Vector3 Color, int Alpha, Engine* Engine)
+{
+    if(Engine)
+    {
+        Wiregon* NewWiregon = (Wiregon*)calloc(1,sizeof(Wiregon));
+        if(!NewWiregon)
+        {
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"CreateWiregon(0x%X, 0x%X, %d, 0x%X, %d, 0x%X)",Verticies,Position,NumberOfVerticies,Color,Alpha,Engine);
+            ThrowError("Failed to allocate memory!",Traceback,Engine);
+            return(NULL);
+        }
+
+        if(Engine->Resource.NumberOfWiregons+1 >= Engine->Resource.AllocatedWiregonMemory)
+        {
+            ResourceInfo ResourceInfo;
+            ResourceInfo.Pointer = &Engine->Wiregons;
+            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedWiregonMemory;
+            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfWiregons;
+            ExtendResourcePool(ResourceInfo,Engine);
+        }
+
+        NewWiregon->Verticies = (Vector2*)calloc(NumberOfVerticies,sizeof(Vector2));
+        if(!NewWiregon->Verticies)
+        {
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"CreateWiregon(0x%X, 0x%X, %d, 0x%X, %d, 0x%X)",Verticies,Position,NumberOfVerticies,Color,Alpha,Engine);
+            ThrowError("Failed to allocate memory!",Traceback,Engine);
+            return(NULL);
+        }
+
+        NewWiregon->ID = GetNewObjectID(Engine);
+        memcpy(NewWiregon->Verticies,Verticies,sizeof(Vector2)*NumberOfVerticies);
+        NewWiregon->Position = Position;
+        NewWiregon->NumberOfVerticies = NumberOfVerticies;
+        NewWiregon->Color = Color;
+        NewWiregon->Alpha = Alpha;
+
+        Engine->Wiregons[Engine->Resource.NumberOfWiregons] = NewWiregon;
+        Engine->Resource.NumberOfWiregons++;
+        Engine->WiregonZResortNeeded = true;
+
+        return(NewWiregon);
+    }
+    return(NULL);
+}
+
+void DestroyWiregon(Wiregon* DWiregon, Engine* Engine)
+{
+    if(Engine)
+    {
+        if(DWiregon)
+        {
+            for(int i = 0; i < Engine->Resource.NumberOfWiregons; i++)
+            {
+                if(Engine->Wiregons[i]->ID == DWiregon->ID)
+                {
+                    Engine->Wiregons[i] = NULL;
+                }
+            }
+            
+            if(DWiregon->Verticies)
+            {
+                free(DWiregon->Verticies);
+            }
+            free(DWiregon);
+            qsort(Engine->Wiregons,Engine->Resource.NumberOfWiregons,sizeof(Wiregon*),CompactArray);
+            Engine->Resource.NumberOfWiregons--;
+
+            if(PoolCanBeShrunk(Engine->Wiregons,Engine->Resource.AllocatedWiregonMemory,Engine->Resource.NumberOfWiregons))
+            {
+                ResourceInfo ResourceInfo;
+                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedWiregonMemory;
+                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfWiregons;
                 ShrinkResourcePool(ResourceInfo,Engine);
             }
         }

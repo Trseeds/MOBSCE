@@ -155,7 +155,6 @@ int DrawSprite(Sprite* Sprite, Engine* Engine)
             Sprite->RenderParameters.Angle,
             NULL,
             Sprite->RenderParameters.Flip);
-        //int ResultR = SDL_RenderCopy(Engine->Video.Renderer,Sprite->RenderParameters.Texture,&Source,&Destination);
         if(ResultR != 0)
         {
             char Traceback[STRING_BUFFER_SIZE];
@@ -170,9 +169,47 @@ int DrawSprite(Sprite* Sprite, Engine* Engine)
             ThrowWarning("Special sprite effects failed to render.",Traceback);
             return(3);
         }
-
-        //puts("i was drawn!");
         return(0);
+    }
+    return(INVALID_ENGINE);
+}
+
+int DrawWiregon(Wiregon* Wiregon, Engine* Engine)
+{
+    if(Engine)
+    {
+        if(!Wiregon)
+        {
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawWiregon(0x%X, 0x%X)",Wiregon,Engine);
+            ThrowWarning("Invalid wiregon.",Traceback);
+            return(1);
+        }
+
+        SDL_Point RealVerticies[Wiregon->NumberOfVerticies];
+        for(int i = 0; i < Wiregon->NumberOfVerticies; i++)
+        {
+            RealVerticies[i].x = Wiregon->Verticies[i].X + Wiregon->Position.X;
+            RealVerticies[i].y = Wiregon->Verticies[i].Y + Wiregon->Position.Y;
+        }
+
+        int Result = SDL_SetRenderDrawColor(Engine->Video.Renderer,Wiregon->Color.X,Wiregon->Color.Y,Wiregon->Color.Z,Wiregon->Alpha);
+        if(Result != 0)
+        {
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawWiregon(0x%X, 0x%X)",Wiregon,Engine);
+            ThrowWarning("Could not set drawing color.",Traceback);
+            return(2);
+        }
+
+        Result = SDL_RenderDrawLines(Engine->Video.Renderer,&RealVerticies,Wiregon->NumberOfVerticies);
+        if(Result != 0)
+        {
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawWiregon(0x%X, 0x%X)",Wiregon,Engine);
+            ThrowWarning("Could not draw wiregon.",Traceback);
+            return(3);
+        }
     }
     return(INVALID_ENGINE);
 }
@@ -181,28 +218,49 @@ void Render(Engine* Engine)
 {
     if(Engine)
     {
-        SDL_RenderClear(Engine->Video.Renderer);
-
         if(Engine->SpriteZResortNeeded)
         {
             qsort(Engine->Sprites, Engine->Resource.NumberOfSprites, sizeof(Sprite*), SortSpritesByZ);
             Engine->SpriteZResortNeeded = false;
         }
-
-        for(int i = 0; i < Engine->Resource.NumberOfSprites; i++)
+        if(Engine->WiregonZResortNeeded)
         {
-            if(Engine->Sprites[i])
+            qsort(Engine->Wiregons, Engine->Resource.NumberOfWiregons, sizeof(Wiregon*), SortWiregonsByZ);
+            Engine->WiregonZResortNeeded = false;
+        }
+
+        int GFXOBJS = Engine->Resource.NumberOfWiregons > Engine->Resource.NumberOfSprites ? Engine->Resource.NumberOfWiregons : Engine->Resource.NumberOfSprites;
+        for(int i = 0; i < GFXOBJS; i++)
+        {
+            if(i < Engine->Resource.NumberOfSprites)
             {
-                if(Engine->Sprites[i]->RenderParameters.Visible)
+                if(Engine->Sprites[i])
                 {
-                    DrawSprite(Engine->Sprites[i],Engine);
+                    if(Engine->Sprites[i]->RenderParameters.Visible)
+                    {
+                        DrawSprite(Engine->Sprites[i],Engine);
+                    }
+                }
+                else
+                {
+                    char Traceback[STRING_BUFFER_SIZE];
+                    snprintf(Traceback,STRING_BUFFER_SIZE,"Render(0x%X)",Engine);
+                    ThrowWarning("Sprite is invalid.",Traceback);
                 }
             }
-            else
+            if(i < Engine->Resource.NumberOfWiregons)
             {
-                char Traceback[STRING_BUFFER_SIZE];
-                snprintf(Traceback,STRING_BUFFER_SIZE,"Render(0x%X)",Engine);
-                ThrowWarning("Sprite is invalid.",Traceback);
+                if(Engine->Wiregons[i])
+                {
+                    DrawWiregon(Engine->Wiregons[i],Engine);
+                    DestroyWiregon(Engine->Wiregons[i],Engine);
+                }
+                else
+                {
+                    char Traceback[STRING_BUFFER_SIZE];
+                    snprintf(Traceback,STRING_BUFFER_SIZE,"Render(0x%X)",Engine);
+                    ThrowWarning("Wiregon is invalid.",Traceback);
+                }
             }
         }
         SDL_RenderPresent(Engine->Video.Renderer);

@@ -42,8 +42,8 @@ int CompactArray(const void* X, const void* Y)
 
 int SortSpritesByZ(const void* X, const void* Y)
 {
-    Sprite* Sprite1 = *(Sprite **)X;
-    Sprite* Sprite2 = *(Sprite **)Y;
+    Sprite* Sprite1 = *(Sprite**)X;
+    Sprite* Sprite2 = *(Sprite**)Y;
     if (Sprite1 == NULL && Sprite2 == NULL)
     {
         return(0);
@@ -65,6 +65,36 @@ int SortSpritesByZ(const void* X, const void* Y)
         return(-1);
     }
     if(Sprite1->RenderParameters.Position.Z > Sprite2->RenderParameters.Position.Z)
+    {
+        return(1);
+    }
+}
+
+int SortWiregonsByZ(const void* X, const void* Y)
+{
+    Wiregon* Wiregon1 = *(Wiregon**)X;
+    Wiregon* Wiregon2 = *(Wiregon**)Y;
+    if (Wiregon1 == NULL && Wiregon2 == NULL)
+    {
+        return(0);
+    } 
+    if (Wiregon1 == NULL)
+    {
+        return(-1);
+    }
+    if (Wiregon2 == NULL)
+    {
+        return(1);
+    }
+    if(Wiregon1->Position.Z == Wiregon2->Position.Z)
+    {
+        return(0);
+    }
+    if(Wiregon1->Position.Z < Wiregon2->Position.Z)
+    {
+        return(-1);
+    }
+    if(Wiregon1->Position.Z > Wiregon2->Position.Z)
     {
         return(1);
     }
@@ -257,6 +287,11 @@ Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath)
     NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedSpriteMemory;
     NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfSprites;
     InitResourcePool(NewResourceInfo,NewEngine);
+    //Wiregons
+    NewResourceInfo.Pointer = &NewEngine->Wiregons;
+    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedWiregonMemory;
+    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfWiregons;
+    InitResourcePool(NewResourceInfo,NewEngine);
     NewEngine->Running = true;
     return(NewEngine);
 }
@@ -331,6 +366,12 @@ void CleanupEngine(Engine* Engine)
         ResourceInfo.FreeFunction = &free;
         ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActors;
         ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
+        CleanupResourcePool(ResourceInfo,Engine);
+        //Wiregons
+        ResourceInfo.Pointer = &Engine->Wiregons;
+        ResourceInfo.FreeFunction = &free;
+        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfWiregons;
+        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedWiregonMemory;
         CleanupResourcePool(ResourceInfo,Engine);
         CleanupSDL();
         Engine->Running = false;

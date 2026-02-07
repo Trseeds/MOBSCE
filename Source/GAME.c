@@ -132,6 +132,13 @@ void TestSpriteFunction(Sprite* Sprite, Engine* Engine)
 {
     CrazyColors(Sprite,Engine);
     AlignSpriteToActor(Sprite,Engine);
+
+    //wg test
+    Vector2 Verticies[4] = {{0,0},{25,25},{25,50},{0,75}};
+    Vector3 Position = {Sprite->RenderParameters.Position.X,Sprite->RenderParameters.Position.Y,Sprite->RenderParameters.Position.Z};
+    Vector3 Color = {255,255,255};
+    int NumberOfVerticies = 4;
+    CreateWiregon(&Verticies,Position,NumberOfVerticies,Color,255,Engine);
 }
 
 void CreateTestObject(Engine* Engine)

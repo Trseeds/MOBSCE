@@ -13,7 +13,6 @@ Engine
 #include "SDL.h"
 #include "SDL_mixer.h"
 #include "SDL_image.h"
-//ok
 #include "ini.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -124,6 +123,15 @@ typedef struct Sprite {
 	CustomSpriteData CustomData;
 } Sprite;
 
+typedef struct Wiregon {
+	int ID;
+	Vector2* Verticies;
+	Vector3 Position;
+	Vector3 Color;
+	int Alpha;
+	int NumberOfVerticies;
+} Wiregon;
+
 //engine
 typedef struct Audio {
 	int Samplerate;
@@ -191,11 +199,13 @@ typedef struct Resource {
 	int NumberOfMusics;
 	int NumberOfSprites;
 	int NumberOfActors;
+	int NumberOfWiregons;
 	int AllocatedTextureMemory;
 	int AllocatedSoundMemory;
 	int AllocatedMusicMemory;
 	int AllocatedSpriteMemory;
 	int AllocatedActorMemory;
+	int AllocatedWiregonMemory;
 } Resource;
 
 typedef struct Engine {
@@ -209,10 +219,12 @@ typedef struct Engine {
 	Resource Resource;
 	Actor** Actors;
 	Sprite** Sprites;
+	Wiregon** Wiregons;
 	SDL_Event Events[EVENT_QUEUE_SIZE];
 	Uint64 IDCounter;
 	int Running;
 	int SpriteZResortNeeded;
+	int WiregonZResortNeeded;
 } Engine;
 
 typedef struct ResourceInfo {
@@ -228,6 +240,7 @@ void ThrowWarning(char* Message, char* Thrower);
 Uint64 GetNewObjectID(Engine* Engine);
 int CompactArray(const void* X, const void* Y);
 int SortSpritesByZ(const void* X, const void* Y);
+int SortWiregonsByZ(const void* X, const void* Y);
 int PoolCanBeShrunk(void* Pool, int AllocatedElements, int AllocatedSize);
 int LinearMap(int Number, int NumberMax, int RangeMax, int RangeMin);
 void SeedRNG();
@@ -257,6 +270,7 @@ void RestartVideo(Engine* Engine);
 void CleanupVideo(Engine* Engine);
 int DrawTexture(SDL_Texture* Texture, Vector2 Position, Vector2 Origin, Engine* Engine);
 int DrawSprite(Sprite* Sprite, Engine* Engine);
+int DrawWiregon(Wiregon* Wiregon, Engine* Engine);
 void Render(Engine* Engine);
 
 //input
@@ -282,8 +296,10 @@ int CacheTexture(char* File, Engine* Engine);
 //objects
 Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, CustomSpriteData CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine);
 Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, CustomActorData CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine);
+Wiregon* CreateWiregon(Vector2* Verticies, Vector3 Position, int NumberOfVerticies, Vector3 Color, int Alpha, Engine* Engine);
 void DestroySprite(Sprite* DSprite, Engine* Engine);
 void DestroyActor(Actor* DActor, Engine* Engine);
+void DestroyWiregon(Wiregon* DWiregon, Engine* Engine);
 Sprite* GetSpriteByName(char* Name, Engine* Engine);
 Actor* GetActorByName(char* Name, Engine* Engine);
 
