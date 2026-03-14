@@ -52,7 +52,7 @@ int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
             return(0);
         }
         char Traceback[STRING_BUFFER_SIZE];
-        snprintf(Traceback,STRING_BUFFER_SIZE,"CleanupResourcePool(0x%X, 0x%X)",&ResourceInfo,Engine);
+        snprintf(Traceback,STRING_BUFFER_SIZE,"ExtendResourcePool(0x%X, 0x%X)",&ResourceInfo,Engine);
         ThrowError("Invalid Resource Info! No more memory can be allocated!",Traceback,Engine);
         return(2);
     }

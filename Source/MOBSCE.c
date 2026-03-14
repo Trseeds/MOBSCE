@@ -4,6 +4,9 @@ void ThrowError(char* Message, char* Thrower, Engine* Engine)
 {
     char BoxErrorMessage[STRING_BUFFER_SIZE];
     snprintf(BoxErrorMessage,STRING_BUFFER_SIZE,"Error Message: %s\nThrower: %s",Message,Thrower);
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,"Fatal Error!",BoxErrorMessage,NULL);
+    //why didnt i include this before?? 
+    //i couldve sworn i had this line from day one!
     CleanupEngine(Engine);
 }
 
