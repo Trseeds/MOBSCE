@@ -253,7 +253,8 @@ void Render(Engine* Engine)
                 if(Engine->Wiregons[i])
                 {
                     DrawWiregon(Engine->Wiregons[i],Engine);
-                    DestroyWiregon(Engine->Wiregons[i],Engine);
+                    //DestroyWiregon(Engine->Wiregons[i],Engine);
+                    //in retrospect, what the fuck was i thinking??
                 }
                 else
                 {

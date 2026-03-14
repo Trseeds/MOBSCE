@@ -12,6 +12,7 @@ IMPORTANT!!
 
 typedef struct Actor Actor;
 typedef struct Sprite Sprite;
+typedef struct Wiregon Wiregon;
 
 typedef struct CustomSpriteData {
     unsigned char Byte;
@@ -21,6 +22,7 @@ typedef struct CustomActorData {
     int MousedOver;
     int Dragged;
     Sprite* Sprite;
+    Wiregon* Wiregon;
 } CustomActorData;
 
 enum Textures {

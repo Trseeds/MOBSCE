@@ -79,8 +79,27 @@ void MouseDrag(Actor* ActorA, Actor* Cursor, Engine* Engine)
     ActorA->Position.Y = Cursor->Position.Y - (ActorA->Dimensions.Y/2);
 }
 
+void AlignSpriteToActor(Sprite* Sprite, Engine* Engine)
+{
+    if(Sprite->Actor)
+    {
+        Sprite->RenderParameters.Position.X = Sprite->Actor->Position.X;
+        Sprite->RenderParameters.Position.Y = Sprite->Actor->Position.Y;
+    }
+}
+
+void AlignWiregonToActor(Actor* Actor, Engine* Engine)
+{
+    if(Actor->CustomData.Wiregon)
+    {
+        Vector3 Position = {Actor->Position.X-25,Actor->Position.Y+25,Actor->CustomData.Wiregon->Position.Z};
+        Actor->CustomData.Wiregon->Position = Position;
+    }
+}
+
 void TestActorFunction(Actor* ActorA, Engine* Engine)
 {
+    AlignWiregonToActor(ActorA, Engine);
     Actor* Cursor = GetActorByName("Mouse Cursor",Engine);
     if(!ActorA->CustomData.Dragged)
     {
@@ -101,6 +120,7 @@ void TestActorFunction(Actor* ActorA, Engine* Engine)
             if(Engine->Input.MouseUp[MB_RIGHT] || Engine->Input.GamepadTriggersUp[GP_TRGR_LEFT])
             {
                 DestroySprite(ActorA->CustomData.Sprite,Engine);
+                DestroyWiregon(ActorA->CustomData.Wiregon,Engine);
                 DestroyActor(ActorA,Engine);
                 PlaySound(0,ActorA->Voice,100,ActorA->Position.X,Engine);
                 RumbleGamepad(100,250,Engine);
@@ -119,26 +139,10 @@ void TestActorFunction(Actor* ActorA, Engine* Engine)
     }
 }
 
-void AlignSpriteToActor(Sprite* Sprite, Engine* Engine)
-{
-    if(Sprite->Actor)
-    {
-        Sprite->RenderParameters.Position.X = Sprite->Actor->Position.X;
-        Sprite->RenderParameters.Position.Y = Sprite->Actor->Position.Y;
-    }
-}
-
 void TestSpriteFunction(Sprite* Sprite, Engine* Engine)
 {
     CrazyColors(Sprite,Engine);
     AlignSpriteToActor(Sprite,Engine);
-
-    //wg test
-    Vector2 Verticies[4] = {{0,0},{25,25},{25,50},{0,75}};
-    Vector3 Position = {Sprite->RenderParameters.Position.X,Sprite->RenderParameters.Position.Y,Sprite->RenderParameters.Position.Z};
-    Vector3 Color = {255,255,255};
-    int NumberOfVerticies = 4;
-    CreateWiregon(&Verticies,Position,NumberOfVerticies,Color,255,Engine);
 }
 
 void CreateTestObject(Engine* Engine)
@@ -156,12 +160,31 @@ void CreateTestObject(Engine* Engine)
     Actor* TestActor = CreateActor("Test Actor",ActorPosition,Dimensions,0,Data,&TestActorFunction,Engine);
     Sprite* TestSprite = CreateSprite("Test Sprite",SpritePosition,Origin,Dimensions,TXTR_PLAYER,Dummy,TestActor,&TestSpriteFunction,Engine);
     Data.Sprite = TestSprite;
+
+    //wiregons
+    Vector2 Verticies[9] = {
+    {0,0},
+    {25,25},
+    {50,25},
+    {75,0},
+    {75,-25},
+    {50,-50},
+    {25,-50},
+    {0,-25},
+    {0,0}};
+    Vector3 Position = {TestSprite->RenderParameters.Position.X,TestSprite->RenderParameters.Position.Y,TestSprite->RenderParameters.Position.Z};
+    Vector3 Color = {255,255,255};
+    int NumberOfVerticies = 9;
+    Data.Wiregon = CreateWiregon(&Verticies,Position,NumberOfVerticies,Color,255,Engine);
+
     TestActor->CustomData = Data;
     TestSprite->RenderParameters.Angle = GetRandomNumber(0,360);
     TestSprite->RenderParameters.Flip = GetRandomNumber(0,2);
     TestSprite->RenderParameters.Tint.X = GetRandomNumber(0,255);
     TestSprite->RenderParameters.Tint.Y = GetRandomNumber(0,255);
     TestSprite->RenderParameters.Tint.Z = GetRandomNumber(0,255);
+
+    
 }
 
 void CacheTextures(Engine* Engine)
@@ -286,42 +309,3 @@ int main(int argc, char* argv[])
         }
     }
 }
-
-
-//docs example code
-// #include "MOBSCE.h"
-
-// int main(int argc, char* argv[])
-// {
-//     Engine* MyEngine = InitEngine("Config.ini");
-//     char TestBGPath[STRING_BUFFER_SIZE] = "Assets/Images/Backgrounds/TestBG.bmp";
-//     CacheTexture(GetAssetPath(TestBGPath,MyEngine),MyEngine);
-//     Vector3 Position = {0,0,0};
-//     Vector4 Origin = {0,0,640,480};
-//     Vector2 Dimensions = {MyEngine->Video.LogicalDimensions.X,MyEngine->Video.LogicalDimensions.Y};
-//     CustomSpriteData DummyData;
-//     CreateSprite(
-//         "Background",
-//         Position,
-//         Origin,
-//         Dimensions,
-//         0,
-//         1,
-//         DummyData,
-//         NULL,
-//         NULL,
-//         MyEngine);
-//     while(MyEngine->Running)
-//     {
-//         RunEngine(MyEngine);
-//         for(int i = 0; i < EVENT_QUEUE_SIZE; i++)
-//         {
-//             if(MyEngine->Events[i].type == SDL_QUIT)
-//             {
-//                 CleanupEngine(MyEngine);
-//                 free(MyEngine);
-//                 return(0);
-//             }
-//         }
-//     }
-// }
