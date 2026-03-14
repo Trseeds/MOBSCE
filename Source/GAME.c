@@ -265,6 +265,7 @@ int main(int argc, char* argv[])
                     if(ActorFriend)
                     {
                         DestroyActor(ActorFriend,Engine1);
+                        DestroyWiregon(ActorFriend->CustomData.Wiregon,Engine1);
                     }
                 }
             }
