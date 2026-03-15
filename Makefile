@@ -21,7 +21,7 @@ Debug:
 Release:
 	cls
 	windres resources.rc -O coff -o resources.res
-	$(Compiler) $(ReleaseFlags) resources.res Source/*.c -o Binaries/$(Target).exe $(IncludeFlags)s $(LinkerFlags) 
+	$(Compiler) $(ReleaseFlags) resources.res Source/*.c -o Binaries/$(Target).exe $(IncludeFlags) $(LinkerFlags) 
 
 $(OBJECTS): Binaries/%.o: Source/%.c
 	$(Compiler) $(ReleaseFlags) $(IncludeFlags) -c $< -o $@

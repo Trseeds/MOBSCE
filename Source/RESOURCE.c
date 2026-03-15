@@ -160,7 +160,7 @@ Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimen
     return((Sprite*)ERROR_INVALID_ENGINE);
 }
 
-int DestroySprite(Sprite* DSprite, Engine* Engine)
+int DestroySprite(Sprite* DSprite, void (*FreeFunction)(struct CustomSpriteData*, struct Engine*), Engine* Engine)
 {
     if(Engine)
     {
@@ -176,7 +176,14 @@ int DestroySprite(Sprite* DSprite, Engine* Engine)
 
             if(DSprite->CustomData)
             {
-                free(DSprite->CustomData); //do freefuncs
+                FreeFunction(DSprite->CustomData,Engine);
+            }
+            else
+            {
+                char Traceback[STRING_BUFFER_SIZE];
+                snprintf(Traceback,STRING_BUFFER_SIZE,"DestroySprite(0x%X, 0x%X, 0x%X)",DSprite,FreeFunction,Engine);
+                ThrowWarning("Invalid custom data.",Traceback,Engine);
+                return(WARNING_INVALID_PARAMETER); 
             }
             free(DSprite);
             qsort(Engine->Sprites,Engine->Resource.NumberOfSprites,sizeof(Sprite*),CompactArray);
@@ -192,11 +199,157 @@ int DestroySprite(Sprite* DSprite, Engine* Engine)
             return(RETURN_SUCCESS);
         }
         char Traceback[STRING_BUFFER_SIZE];
-        snprintf(Traceback,STRING_BUFFER_SIZE,"DestroySprite(0x%X, 0x%X)",DSprite,Engine);
+        snprintf(Traceback,STRING_BUFFER_SIZE,"DestroySprite(0x%X, 0x%X, 0x%X)",DSprite,FreeFunction,Engine);
         ThrowWarning("Invalid sprite passed.",Traceback,Engine);
         return(WARNING_INVALID_PARAMETER);
     }
     return(ERROR_INVALID_ENGINE);
+}
+
+Sprite* GetSpriteByName(char* Name, Engine* Engine)
+{
+    if(Engine)
+    {
+        if(Engine->Sprites)
+        {
+            for(int i = 0; i < Engine->Resource.NumberOfSprites; i++)
+            {
+                if(Engine->Sprites[i])
+                {
+                    if(!strcmp(Engine->Sprites[i]->Name,Name))
+                    {
+                        return(Engine->Sprites[i]);
+                    }
+                }
+            }
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"GetSpriteByName(%s, 0x%X)",Name,Engine);
+            ThrowWarning("Could not find sprite.",Traceback,Engine);
+            return((Sprite*)WARNING_IGNORABLE_FAILURE);
+        }
+    }
+    return((Sprite*)ERROR_INVALID_ENGINE);
+}
+
+Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, CustomActorData* CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine)
+{
+    if(Engine)
+    {
+        Actor* NewActor = (Actor*)calloc(1,sizeof(Actor));
+        if(!NewActor)
+        {
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"CreateActor(%s, 0x%X, 0x%X, %d, 0x%X, 0x%X)",Name,Position,Dimensions,Voice,Routine,Engine);
+            ThrowError("Failed to allocate memory!",Traceback,Engine);
+            return((Actor*)ERROR_MEMORY);
+        }
+
+        if(Engine->Resource.NumberOfActors+1 >= Engine->Resource.AllocatedActorMemory)
+        {
+            ResourceInfo ResourceInfo;
+            ResourceInfo.Pointer = &Engine->Actors;
+            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
+            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActors;
+            ExtendResourcePool(ResourceInfo,Engine);
+        }
+
+        strcpy(NewActor->Name,Name);
+        NewActor->ID = GetNewObjectID(Engine);
+        NewActor->Position.X = Position.X; NewActor->Position.Y = Position.Y;
+        NewActor->Dimensions.X = Dimensions.X; NewActor->Dimensions.Y = Dimensions.Y;
+        NewActor->Voice = Voice;
+        NewActor->CustomData = CustomData;
+        NewActor->Routine = Routine;
+
+        Engine->Actors[Engine->Resource.NumberOfActors] = NewActor;
+        Engine->Resource.NumberOfActors++;
+        return(NewActor);
+    }
+    return((Actor*)ERROR_INVALID_ENGINE);
+}
+
+int DestroyActor(Actor* DActor, void (*FreeFunction)(struct CustomActorData*, struct Engine*), Engine* Engine)
+{
+    if(Engine)
+    {
+        if(DActor)
+        {
+            Actor* OldPtr = DActor;
+            int Index;
+            for(int i = 0; i < Engine->Resource.NumberOfActors; i++)
+            {
+                if(Engine->Actors[i]->ID == DActor->ID)
+                {
+                    Engine->Actors[i] = NULL;
+                }
+            }
+
+            if(DActor->CustomData)
+            {
+                FreeFunction(DActor->CustomData,Engine);
+            }
+            else
+            {
+                char Traceback[STRING_BUFFER_SIZE];
+                snprintf(Traceback,STRING_BUFFER_SIZE,"DestroyActor(0x%X, 0x%X, 0x%X)",DActor,FreeFunction,Engine);
+                ThrowWarning("Invalid custom data.",Traceback,Engine);
+                return(WARNING_INVALID_PARAMETER); 
+            }
+            free(DActor);
+            qsort(Engine->Actors, Engine->Resource.NumberOfActors, sizeof(Actor*), CompactArray);
+            Engine->Resource.NumberOfActors--;
+            
+            if(PoolCanBeShrunk(Engine->Actors,Engine->Resource.AllocatedActorMemory,Engine->Resource.NumberOfActors))
+            {
+                ResourceInfo ResourceInfo;
+                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
+                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActors;
+                ShrinkResourcePool(ResourceInfo,Engine);
+            }
+
+            for(int i = 0; i < Engine->Resource.NumberOfSprites; i++)
+            {
+                if(Engine->Sprites[i])
+                {
+                    if(Engine->Sprites[i]->Actor == OldPtr)
+                    {
+                        Engine->Sprites[i]->Actor = NULL;
+                    }
+                }
+            }
+            return(RETURN_SUCCESS);
+        }
+        char Traceback[STRING_BUFFER_SIZE];
+        snprintf(Traceback,STRING_BUFFER_SIZE,"DestroyActor(0x%X, 0x%X, 0x%X)",DActor,FreeFunction,Engine);
+        ThrowWarning("Invalid actor passed.",Traceback,Engine);
+        return(WARNING_INVALID_PARAMETER);
+    }
+    return(ERROR_INVALID_ENGINE);
+}
+
+Actor* GetActorByName(char* Name, Engine* Engine)
+{
+    if(Engine)
+    {
+        if(Engine->Actors)
+        {
+            for(int i = 0; i < Engine->Resource.NumberOfActors; i++)
+            {
+                if(Engine->Actors[i])
+                {
+                    if(!strcmp(Engine->Actors[i]->Name,Name))
+                    {
+                        return(Engine->Actors[i]);
+                    }
+                }
+            }
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"GetActorByName(%s, 0x%X)",Name,Engine);
+            ThrowWarning("Could not find actor.",Traceback,Engine);
+            return((Actor*)WARNING_IGNORABLE_FAILURE);
+        }
+    }
+    return((Actor*)ERROR_INVALID_ENGINE);
 }
 
 Wiregon* CreateWiregon(Vector2* Verticies, Vector3 Position, int NumberOfVerticies, Vector3 Color, int Alpha, Engine* Engine)
@@ -283,145 +436,6 @@ int DestroyWiregon(Wiregon* DWiregon, Engine* Engine)
         return(WARNING_INVALID_PARAMETER);
     }
     return(ERROR_INVALID_ENGINE);
-}
-
-Sprite* GetSpriteByName(char* Name, Engine* Engine)
-{
-    if(Engine)
-    {
-        if(Engine->Sprites)
-        {
-            for(int i = 0; i < Engine->Resource.NumberOfSprites; i++)
-            {
-                if(Engine->Sprites[i])
-                {
-                    if(!strcmp(Engine->Sprites[i]->Name,Name))
-                    {
-                        return(Engine->Sprites[i]);
-                    }
-                }
-            }
-            char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"GetSpriteByName(%s, 0x%X)",Name,Engine);
-            ThrowWarning("Could not find sprite.",Traceback,Engine);
-            return((Sprite*)WARNING_IGNORABLE_FAILURE);
-        }
-    }
-    return((Sprite*)ERROR_INVALID_ENGINE);
-}
-
-Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, CustomActorData* CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine)
-{
-    if(Engine)
-    {
-        Actor* NewActor = (Actor*)calloc(1,sizeof(Actor));
-        if(!NewActor)
-        {
-            char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"CreateActor(%s, 0x%X, 0x%X, %d, 0x%X, 0x%X)",Name,Position,Dimensions,Voice,Routine,Engine);
-            ThrowError("Failed to allocate memory!",Traceback,Engine);
-            return((Actor*)ERROR_MEMORY);
-        }
-
-        if(Engine->Resource.NumberOfActors+1 >= Engine->Resource.AllocatedActorMemory)
-        {
-            ResourceInfo ResourceInfo;
-            ResourceInfo.Pointer = &Engine->Actors;
-            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
-            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActors;
-            ExtendResourcePool(ResourceInfo,Engine);
-        }
-
-        strcpy(NewActor->Name,Name);
-        NewActor->ID = GetNewObjectID(Engine);
-        NewActor->Position.X = Position.X; NewActor->Position.Y = Position.Y;
-        NewActor->Dimensions.X = Dimensions.X; NewActor->Dimensions.Y = Dimensions.Y;
-        NewActor->Voice = Voice;
-        NewActor->CustomData = CustomData;
-        NewActor->Routine = Routine;
-
-        Engine->Actors[Engine->Resource.NumberOfActors] = NewActor;
-        Engine->Resource.NumberOfActors++;
-        return(NewActor);
-    }
-    return((Actor*)ERROR_INVALID_ENGINE);
-}
-
-int DestroyActor(Actor* DActor, Engine* Engine)
-{
-    if(Engine)
-    {
-        if(DActor)
-        {
-            Actor* OldPtr = DActor;
-            int Index;
-            for(int i = 0; i < Engine->Resource.NumberOfActors; i++)
-            {
-                if(Engine->Actors[i]->ID == DActor->ID)
-                {
-                    Engine->Actors[i] = NULL;
-                }
-            }
-
-            if(DActor->CustomData)
-            {
-                free(DActor->CustomData);
-            }
-            free(DActor);
-            qsort(Engine->Actors, Engine->Resource.NumberOfActors, sizeof(Actor*), CompactArray);
-            Engine->Resource.NumberOfActors--;
-            
-            if(PoolCanBeShrunk(Engine->Actors,Engine->Resource.AllocatedActorMemory,Engine->Resource.NumberOfActors))
-            {
-                ResourceInfo ResourceInfo;
-                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
-                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActors;
-                ShrinkResourcePool(ResourceInfo,Engine);
-            }
-
-            for(int i = 0; i < Engine->Resource.NumberOfSprites; i++)
-            {
-                if(Engine->Sprites[i])
-                {
-                    if(Engine->Sprites[i]->Actor == OldPtr)
-                    {
-                        Engine->Sprites[i]->Actor = NULL;
-                    }
-                }
-            }
-            return(RETURN_SUCCESS);
-        }
-        char Traceback[STRING_BUFFER_SIZE];
-        snprintf(Traceback,STRING_BUFFER_SIZE,"DestroyActor(0x%X, 0x%X)",DActor,Engine);
-        ThrowWarning("Invalid actor passed.",Traceback,Engine);
-        return(WARNING_INVALID_PARAMETER);
-    }
-    return(ERROR_INVALID_ENGINE);
-}
-
-Actor* GetActorByName(char* Name, Engine* Engine)
-{
-    if(Engine)
-    {
-        if(Engine->Actors)
-        {
-            for(int i = 0; i < Engine->Resource.NumberOfActors; i++)
-            {
-                if(Engine->Actors[i])
-                {
-                    if(!strcmp(Engine->Actors[i]->Name,Name))
-                    {
-                        return(Engine->Actors[i]);
-                    }
-                }
-            }
-            char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"GetActorByName(%s, 0x%X)",Name,Engine);
-            ThrowWarning("Could not find actor.",Traceback,Engine);
-            return((Actor*)WARNING_IGNORABLE_FAILURE);
-        }
-    }
-    return((Actor*)ERROR_INVALID_ENGINE);
 }
 
 int CacheSound(char* File, Engine* Engine)

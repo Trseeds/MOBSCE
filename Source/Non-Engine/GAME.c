@@ -16,6 +16,16 @@ typedef struct CustomActorData {
     Sprite* Sprite;
     Wiregon* Wiregon;
 } CustomActorData;
+
+void CustomSpriteDataFreeFunction(CustomSpriteData* CustomSpriteData, Engine* Engine)
+{
+    __asm__("nop");
+}
+
+void CustomActorDataFreeFunction(CustomActorData* CustomActorData, Engine* Engine)
+{
+    __asm__("nop");
+}
 /***************************************************************************************/
 void CrazyColors(Sprite* Sprite, Engine* Engine)
 {
@@ -136,9 +146,9 @@ void TestActorFunction(Actor* ActorA, Engine* Engine)
             }
             if(Engine->Input.MouseUp[MB_RIGHT] || Engine->Input.GamepadTriggersUp[GP_TRGR_LEFT])
             {
-                DestroySprite(ActorA->CustomData->Sprite,Engine);
+                DestroySprite(ActorA->CustomData->Sprite,&CustomSpriteDataFreeFunction,Engine);
                 DestroyWiregon(ActorA->CustomData->Wiregon,Engine);
-                DestroyActor(ActorA,Engine);
+                DestroyActor(ActorA,&CustomActorDataFreeFunction,Engine);
                 PlaySound(0,ActorA->Voice,100,ActorA->Position.X,Engine);
                 RumbleGamepad(100,250,Engine);
             }
@@ -277,10 +287,10 @@ int main(int argc, char* argv[])
                 if(SpriteFriend)
                 {
                     Actor* ActorFriend = SpriteFriend->Actor;
-                    DestroySprite(SpriteFriend,Engine1);
+                    DestroySprite(SpriteFriend,&CustomSpriteDataFreeFunction,Engine1);
                     if(ActorFriend)
                     {
-                        DestroyActor(ActorFriend,Engine1);
+                        DestroyActor(ActorFriend,&CustomActorDataFreeFunction,Engine1);
                         DestroyWiregon(ActorFriend->CustomData->Wiregon,Engine1);
                     }
                 }
