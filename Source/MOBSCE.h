@@ -27,8 +27,25 @@ Engine
 #define OBJECT_NAME_SIZE 64
 #define MIN_ALLOCATE 16
 #define EVENT_QUEUE_SIZE 512
-#define INVALID_ENGINE -1
 #define TINT_NOCHANGE 255
+
+#define ERROR_SHOW_ALL 2
+#define ERROR_SHOW_MESSAGE 1
+#define ERROR_SHOW 0
+#define ERROR_DISABLE -1
+#define WARNING_SHOW_ALL 2
+#define WARNING_SHOW_MESSAGE 1
+#define WARNING_DISABLE 0
+
+#define ERROR_INVALID_ENGINE -1
+#define ERROR_SDL_FAILURE 11
+#define ERROR_MEMORY 12
+#define ERROR_INVALID_PARAMETER 13
+#define WARNING_SDL_FAILURE 21
+#define WARNING_INVALID_PARAMETER 22
+#define WARNING_INIH_FAILURE 23
+#define WARNING_IGNORABLE_FAILURE 24
+#define RETURN_SUCCESS 0
 
 enum Flip {
 	FLIP_H = SDL_FLIP_HORIZONTAL,
@@ -76,6 +93,8 @@ typedef struct FVector4 {
 typedef struct CustomSpriteData CustomSpriteData;
 typedef struct CustomActorData CustomActorData;
 
+typedef struct Engine Engine;
+
 //config struct used for parsing the config file
 typedef struct Config {
 	int Samplerate;
@@ -111,7 +130,7 @@ typedef struct Actor {
 	FVector2 Position;
 	Vector2 Dimensions;
 	int Voice;
-	void (*Routine)(struct Actor*, struct Engine*);
+	void (*Routine)(struct Actor*, Engine*);
 	CustomActorData* CustomData;
 } Actor;
 
@@ -121,7 +140,7 @@ typedef struct Sprite {
 	int TextureID;
 	SpriteRenderParameters RenderParameters;
 	Actor* Actor;
-	void (*Routine)(struct Sprite*, struct Engine*);
+	void (*Routine)(struct Sprite*, Engine*);
 	CustomSpriteData* CustomData;
 } Sprite;
 
@@ -227,6 +246,8 @@ typedef struct Engine {
 	int Running;
 	int SpriteZResortNeeded;
 	int WiregonZResortNeeded;
+	int ERROR_LEVEL;
+	int WARNING_LEVEL;
 } Engine;
 
 typedef struct ResourceInfo {
@@ -238,7 +259,7 @@ typedef struct ResourceInfo {
 
 //engine stuff
 void ThrowError(char* Message, char* Thrower, Engine* Engine);
-void ThrowWarning(char* Message, char* Thrower);
+void ThrowWarning(char* Message, char* Thrower, Engine* Engine);
 Uint64 GetNewObjectID(Engine* Engine);
 int CompactArray(const void* X, const void* Y);
 int SortSpritesByZ(const void* X, const void* Y);
@@ -248,48 +269,48 @@ int LinearMap(int Number, int NumberMax, int RangeMax, int RangeMin);
 void SeedRNG();
 int GetRandomNumber(int Min, int Max);
 int handler(void* user, const char* section, const char* name, const char* value);
-int UpdateConfig(char* File, Config* Config);
-void LoadEngineConfig(Engine* Engine);
+int UpdateConfig(char* File, Config* Config, Engine* Engine);
+int LoadEngineConfig(Engine* Engine);
 int InitSDL(Engine* Engine);
 void CleanupSDL();
-void GetSDLEvents(Engine* Engine);
+int GetSDLEvents(Engine* Engine);
 int GetBasePath(Engine* Engine);
-char* GetAssetPath(char* Asset, Engine* Engine);
-Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath);
-void RunEngine(Engine* Engine);
-void CleanupEngine(Engine* Engine);
+char* GetAssetPath(char* Asset, char* Output, Engine* Engine);
+Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, int ERROR_LEVEL, int WARNING_LEVEL);
+int RunEngine(Engine* Engine);
+int CleanupEngine(Engine* Engine);
 
 //audio
 int InitAudio(Engine* Engine);
 int* EasyPan(int Pan, int Max, int* Output);
 int PlaySound(int SoundID, int Voice, int Volume, int Pan, Engine* Engine);
-void MixMusicVolume(Engine* Engine);
+int MixMusicVolume(Engine* Engine);
 int PlayMusic(int MusicID, Engine* Engine);
 
 //video
 int InitVideo(Engine* Engine);
-void RestartVideo(Engine* Engine);
-void CleanupVideo(Engine* Engine);
+int RestartVideo(Engine* Engine);
+int CleanupVideo(Engine* Engine);
 int DrawTexture(SDL_Texture* Texture, Vector2 Position, Vector2 Origin, Engine* Engine);
 int DrawSprite(Sprite* Sprite, Engine* Engine);
 int DrawWiregon(Wiregon* Wiregon, Engine* Engine);
-void Render(Engine* Engine);
+int Render(Engine* Engine);
 
 //input
-void GetKeyboardInput(Engine* Engine);
-void GetMouseInput(Engine* Engine);
-void GetGamepadInput(Engine* Engine);
-void GetInput(Engine* Engine); 
-void RumbleGamepad(int Strength, int Duration, Engine* Engine);
+int GetKeyboardInput(Engine* Engine);
+int GetMouseInput(Engine* Engine);
+int GetGamepadInput(Engine* Engine);
+int GetInput(Engine* Engine); 
+int RumbleGamepad(int Strength, int Duration, Engine* Engine);
 
 //clock
-void KeepTime(Engine* Engine);
+int KeepTime(Engine* Engine);
 
 //resource
 int InitResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
 int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
 int ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
-void CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
+int CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
 //audio
 int CacheSound(char* File, Engine* Engine);
 int CacheMusic(char* File, Engine* Engine);
@@ -299,9 +320,9 @@ int CacheTexture(char* File, Engine* Engine);
 Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, CustomSpriteData* CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine);
 Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, CustomActorData* CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine);
 Wiregon* CreateWiregon(Vector2* Verticies, Vector3 Position, int NumberOfVerticies, Vector3 Color, int Alpha, Engine* Engine);
-void DestroySprite(Sprite* DSprite, Engine* Engine);
-void DestroyActor(Actor* DActor, Engine* Engine);
-void DestroyWiregon(Wiregon* DWiregon, Engine* Engine);
+int DestroySprite(Sprite* DSprite, Engine* Engine);
+int DestroyActor(Actor* DActor, Engine* Engine);
+int DestroyWiregon(Wiregon* DWiregon, Engine* Engine);
 Sprite* GetSpriteByName(char* Name, Engine* Engine);
 Actor* GetActorByName(char* Name, Engine* Engine);
 

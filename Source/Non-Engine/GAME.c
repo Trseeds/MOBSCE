@@ -198,6 +198,7 @@ void CreateTestObject(Engine* Engine)
     TestSprite->RenderParameters.Tint.Y = GetRandomNumber(0,255);
     TestSprite->RenderParameters.Tint.Z = GetRandomNumber(0,255);
 
+    Data->Sprite = TestSprite;
     Actor* TestActor = CreateActor("Test Actor",ActorPosition,Dimensions,0,Data,&TestActorFunction,Engine);
     TestSprite->Actor = TestActor;
 
@@ -206,12 +207,10 @@ void CreateTestObject(Engine* Engine)
 
 void CacheTextures(Engine* Engine)
 {
-    char BG[STRING_BUFFER_SIZE] = "Assets/Images/Backgrounds/TestBG.png";
-    char Player[STRING_BUFFER_SIZE] = "Assets/Images/Sprites/Player.png";
-    char Cursor[STRING_BUFFER_SIZE] = "Assets/Images/Sprites/Cursor.png";
-    CacheTexture(GetAssetPath(BG,Engine),Engine);
-    CacheTexture(GetAssetPath(Player,Engine),Engine);
-    CacheTexture(GetAssetPath(Cursor,Engine),Engine);
+    char Buffer[STRING_BUFFER_SIZE];
+    CacheTexture(GetAssetPath("Assets/Images/Backgrounds/TestBG.png",Buffer,Engine),Engine);
+    CacheTexture(GetAssetPath("Assets/Images/Sprites/Player.png",Buffer,Engine),Engine);
+    CacheTexture(GetAssetPath("Assets/Images/Sprites/Cursor.png",Buffer,Engine),Engine);
 }
 
 void ReassignSpriteTextures(Engine* Engine)
@@ -225,8 +224,8 @@ void ReassignSpriteTextures(Engine* Engine)
 void InitGame(Engine* Engine)
 {
     CacheTextures(Engine);
-    char Cough[STRING_BUFFER_SIZE] = "Assets/Sounds/Cough.wav";
-    CacheSound(GetAssetPath(Cough,Engine),Engine);
+    char Buffer[STRING_BUFFER_SIZE];
+    CacheSound(GetAssetPath("Assets/Sounds/Cough.wav",Buffer,Engine),Engine);
 
     Vector3 SpritePosition;
     Vector2 ActorPosition;
@@ -256,17 +255,17 @@ void InitGame(Engine* Engine)
 
 int main(int argc, char* argv[])
 {
-    Engine* Engine1 = InitEngine("Config.ini","MOBSCE Example","Assets/Images/Icon.png");
+    Engine* Engine1 = InitEngine("Config.ini","MOBSCE Example","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL);
     InitGame(Engine1);
     while(Engine1->Running)
     {
         if(Engine1->Input.KeysUp[K_R] || Engine1->Input.GamepadButtonsUp[GP_FB_START])
         {
             CleanupEngine(Engine1);
-            Engine1 = InitEngine("Config.ini","MOBSCE Example","Assets/Images/Icon.png");
+            Engine1 = InitEngine("Config.ini","MOBSCE Example","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL);
             InitGame(Engine1);
         }
-        if((Engine1->Input.KeysDown[K_S] && !Engine1->Input.KeysDown[K_RCTRL]) || (Engine1->Input.GamepadButtonsDown[GP_FB_BOTTOM] && !Engine1->Input.GamepadButtonsDown[GP_FB_TOP]))
+        if((Engine1->Input.KeysDown[K_S] && !Engine1->Input.KeysDown[K_RIGHTCONTROL]) || (Engine1->Input.GamepadButtonsDown[GP_FB_BOTTOM] && !Engine1->Input.GamepadButtonsDown[GP_FB_TOP]))
         {
             CreateTestObject(Engine1);
         }
@@ -287,14 +286,14 @@ int main(int argc, char* argv[])
                 }
             }
         }
-        if((Engine1->Input.KeysDown[K_RCTRL] && Engine1->Input.KeysUp[K_S]) || (Engine1->Input.GamepadButtonsDown[GP_FB_TOP] && Engine1->Input.GamepadButtonsUp[GP_FB_BOTTOM]))
+        if((Engine1->Input.KeysDown[K_RIGHTCONTROL] && Engine1->Input.KeysUp[K_S]) || (Engine1->Input.GamepadButtonsDown[GP_FB_TOP] && Engine1->Input.GamepadButtonsUp[GP_FB_BOTTOM]))
         {
             for(int i = 0; i < 10000; i++)
             {
                 CreateTestObject(Engine1);
             }
         }
-        if((Engine1->Input.KeysDown[K_LALT] || Engine1->Input.KeysDown[K_RALT]) && Engine1->Input.KeysUp[K_RETURN])
+        if((Engine1->Input.KeysDown[K_LEFTALT] || Engine1->Input.KeysDown[K_RIGHTALT]) && Engine1->Input.KeysUp[K_RETURN])
         {
             if(Engine1->Video.WindowFlags == SDL_WINDOW_SHOWN)
             {
@@ -315,6 +314,16 @@ int main(int argc, char* argv[])
                 ReassignSpriteTextures(Engine1);
             }
         }
+
+        if(Engine1->Input.KeysUp[K_E])
+        {
+            ThrowError("Test Error","You",Engine1);
+        }
+        if(Engine1->Input.KeysUp[K_W])
+        {
+            ThrowWarning("Test Warning","You",Engine1);
+        }
+
         RunEngine(Engine1);
         for(int i = 0; i < EVENT_QUEUE_SIZE; i++)
         {

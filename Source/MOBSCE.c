@@ -3,16 +3,38 @@
 void ThrowError(char* Message, char* Thrower, Engine* Engine)
 {
     char BoxErrorMessage[STRING_BUFFER_SIZE];
-    snprintf(BoxErrorMessage,STRING_BUFFER_SIZE,"Error Message: %s\nThrower: %s",Message,Thrower);
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,"Fatal Error!",BoxErrorMessage,NULL);
-    //why didnt i include this before?? 
-    //i couldve sworn i had this line from day one!
+    if(Engine->ERROR_LEVEL != -1)
+    {
+        if(Engine->ERROR_LEVEL == 0)
+        {
+            snprintf(BoxErrorMessage,STRING_BUFFER_SIZE,"An error has occurred.");
+        }
+        if(Engine->ERROR_LEVEL == 1)
+        {
+            snprintf(BoxErrorMessage,STRING_BUFFER_SIZE,"Error Message: %s",Message);
+        }
+        if(Engine->ERROR_LEVEL == 2)
+        {
+            snprintf(BoxErrorMessage,STRING_BUFFER_SIZE,"Error Message: %s\nThrower: %s",Message,Thrower);
+        }
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,"Fatal Error!",BoxErrorMessage,NULL);
+    }
     CleanupEngine(Engine);
 }
 
-void ThrowWarning(char* Message, char* Thrower)
+void ThrowWarning(char* Message, char* Thrower, Engine* Engine)
 {
-    printf("\n\nWarning: %s\nThrower: %s\n\n",Message,Thrower);
+    if(Engine->WARNING_LEVEL > 0)
+    {
+        if(Engine->WARNING_LEVEL == 1)
+        {
+            printf("\n\nWarning: %s\n\n",Message);
+        }
+        if(Engine->WARNING_LEVEL == 2)
+        {
+            printf("\n\nWarning: %s\nThrower: %s\n\n",Message,Thrower);
+        }
+    }
 }
 
 Uint64 GetNewObjectID(Engine* Engine)
@@ -41,6 +63,7 @@ int CompactArray(const void* X, const void* Y)
     {
         return(-1);
     }
+    return(0);
 }
 
 int SortSpritesByZ(const void* X, const void* Y)
@@ -71,6 +94,7 @@ int SortSpritesByZ(const void* X, const void* Y)
     {
         return(1);
     }
+    return(0);
 }
 
 int SortWiregonsByZ(const void* X, const void* Y)
@@ -101,15 +125,16 @@ int SortWiregonsByZ(const void* X, const void* Y)
     {
         return(1);
     }
+    return(0);
 }
 
 int PoolCanBeShrunk(void* Array, int AllocatedElements, int AllocatedSize)
 {
     if((AllocatedSize - AllocatedElements) >= MIN_ALLOCATE)
     {
-        return(1);
+        return(true);
     }
-    return(0);
+    return(false);
 }
 
 int LinearMap(int Number, int NumberMax, int RangeMax, int RangeMin)
@@ -140,26 +165,23 @@ int InitSDL(Engine* Engine)
     int Result = SDL_Init(SDL_INIT_EVERYTHING);
     if(Result != 0)
     {
-        ThrowError("Failed to start SDL!","InitSDL()",NULL);
-        return(1);
+        char Traceback[STRING_BUFFER_SIZE];
+        snprintf(Traceback,STRING_BUFFER_SIZE,"InitSDL(0x%X)",Engine);
+        ThrowError("Failed to start SDL!",Traceback,NULL);
+        return(ERROR_SDL_FAILURE);
     }
 
     Result = Mix_Init(Engine->Audio.Codecs);
-    if(Result != Engine->Audio.Codecs)
-    {
-        ThrowWarning("Some or all of the requested audio formats failed to initialize.","InitSDL()");
-    }
-    if(Result == 0)
+    //Result = ImgInit(Engine->Video.) bleh
+    if(Result != Engine->Audio.Codecs || Result == 0)
     {
         char Traceback[STRING_BUFFER_SIZE];
         snprintf(Traceback,STRING_BUFFER_SIZE,"InitSDL(0x%X)",Engine);
-        ThrowWarning("Some or all of the requested audio codecs failed to initialize.",Traceback);
-        return(2);
+        ThrowWarning("Some or all of the requested audio formats failed to initialize.",Traceback,Engine);
+        return(WARNING_SDL_FAILURE);
     }
 
-    //add sdlimg flags here
-
-    return(0);
+    return(RETURN_SUCCESS);
 }
 
 void CleanupSDL()
@@ -167,7 +189,7 @@ void CleanupSDL()
     SDL_Quit();
 }
 
-void GetSDLEvents(Engine* Engine)
+int GetSDLEvents(Engine* Engine)
 {
     if(Engine)
     {
@@ -182,7 +204,9 @@ void GetSDLEvents(Engine* Engine)
             i++;
             }
         }
+        return(RETURN_SUCCESS);
     }
+    return(ERROR_INVALID_ENGINE);
 }
 
 int GetBasePath(Engine* Engine)
@@ -195,7 +219,7 @@ int GetBasePath(Engine* Engine)
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"GetBasePath(0x%X)",Engine);
             ThrowError("Failed to get base path!",Traceback,Engine);
-            return(1);
+            return(ERROR_SDL_FAILURE);
         }
         strcpy(Engine->BasePath,Result);
 
@@ -207,24 +231,24 @@ int GetBasePath(Engine* Engine)
             }
         }
 
-        return(0);
+        return(RETURN_SUCCESS);
     }
-    return(INVALID_ENGINE);
+    return(ERROR_INVALID_ENGINE);
 }
 
-char* GetAssetPath(char* Asset, Engine* Engine)
+char* GetAssetPath(char* Asset, char* Output, Engine* Engine)
 {
     if(Engine)
     {
         char Path[STRING_BUFFER_SIZE];
         snprintf(Path,STRING_BUFFER_SIZE,"%s%s",Engine->BasePath,Asset);
-        strcpy(Asset,Path);
-        return(Asset);
+        strcpy(Output,Path);
+        return(Output);
     }
-    return(NULL);
+    return((char*)ERROR_INVALID_ENGINE);
 }
 
-void KeepTime(Engine* Engine)
+int KeepTime(Engine* Engine)
 {
     if(Engine)
     {
@@ -235,32 +259,34 @@ void KeepTime(Engine* Engine)
         Engine->Clock.TotalFrames++;
         Engine->Clock.RealTime = time(NULL);
         Engine->Clock.FrameRate = (double)(1/Engine->Clock.DeltaTime);
+        return(RETURN_SUCCESS);
     }
+    return(ERROR_INVALID_ENGINE);
 }
 
-Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath)
+Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, int ERROR_LEVEL, int WARNING_LEVEL)
 {
     Engine* NewEngine = (Engine*)calloc(1,sizeof(Engine));
     if(!NewEngine)
     {
         ThrowError("Failed to allocate memory!","InitEngine()",NewEngine);
+        return((Engine*)ERROR_MEMORY);
     }
+
+    NewEngine->ERROR_LEVEL = ERROR_LEVEL;
+    NewEngine->WARNING_LEVEL = WARNING_LEVEL;
 
     ResourceInfo NewResourceInfo;
 
     GetBasePath(NewEngine);
 
     char Config[STRING_BUFFER_SIZE];
-    strcpy(Config,ConfigFile);
-    strcpy(NewEngine->ConfigPath,GetAssetPath(Config,NewEngine));
+    strcpy(NewEngine->ConfigPath,GetAssetPath(ConfigFile,Config,NewEngine));
     char Icon[STRING_BUFFER_SIZE];
-    strcpy(Icon,WindowIconPath);
-    strcpy(NewEngine->Video.WindowIconPath,GetAssetPath(Icon,NewEngine));
-    char Title[STRING_BUFFER_SIZE];
-    strcpy(Title,WindowTitle);
-    strcpy(NewEngine->Video.WindowTitle,Title);
+    strcpy(NewEngine->Video.WindowIconPath,GetAssetPath(WindowIconPath,Icon,NewEngine));
+    strcpy(NewEngine->Video.WindowTitle,WindowTitle);
 
-    UpdateConfig(Config,&NewEngine->Config);
+    UpdateConfig(Config,&NewEngine->Config,NewEngine);
     LoadEngineConfig(NewEngine);
     InitSDL(NewEngine);
     InitAudio(NewEngine);
@@ -299,7 +325,7 @@ Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath)
     return(NewEngine);
 }
 
-void RunEngine(Engine* Engine)
+int RunEngine(Engine* Engine)
 {
     if(Engine)
     {
@@ -328,12 +354,14 @@ void RunEngine(Engine* Engine)
         KeepTime(Engine);
         MixMusicVolume(Engine);
         Render(Engine);
+        return(RETURN_SUCCESS);
         //Clock a = Engine->Clock;
         //printf("Current Time: %lu\nPrevious Time: %lu\nDelta Time: %f\nTotal Time: %lu\nTotal Frames: %lu\nReal Time: %lu\nFramerate: %f\033[6A\r",a.CurrentTime,a.PreviousTime,a.DeltaTime,a.TotalTime,a.TotalFrames,a.RealTime,a.FrameRate);
     }
+    return(ERROR_INVALID_ENGINE);
 }
 
-void CleanupEngine(Engine* Engine)
+int CleanupEngine(Engine* Engine)
 {
     if(Engine)
     {
@@ -341,20 +369,20 @@ void CleanupEngine(Engine* Engine)
         
         //sounds
         ResourceInfo.Pointer = &Engine->Resource.Sounds;
-        ResourceInfo.FreeFunction = &Mix_FreeChunk;
+        ResourceInfo.FreeFunction = (void (*)(void*))&Mix_FreeChunk;
         ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSounds;
         ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSoundMemory;
         CleanupResourcePool(ResourceInfo,Engine);
         //music
         ResourceInfo.Pointer = &Engine->Resource.Music;
-        ResourceInfo.FreeFunction = &Mix_FreeMusic;
+        ResourceInfo.FreeFunction = (void (*)(void*))&Mix_FreeMusic;
         ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfMusics;
         ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedMusicMemory;
         CleanupResourcePool(ResourceInfo,Engine);
         CleanupVideo(Engine);
         //textures
         ResourceInfo.Pointer = &Engine->Resource.Textures;
-        ResourceInfo.FreeFunction = &SDL_DestroyTexture;
+        ResourceInfo.FreeFunction = (void (*)(void*))&SDL_DestroyTexture;
         ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTextures;
         ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTextureMemory;
         CleanupResourcePool(ResourceInfo,Engine);
@@ -378,6 +406,8 @@ void CleanupEngine(Engine* Engine)
         CleanupResourcePool(ResourceInfo,Engine);
         CleanupSDL();
         Engine->Running = false;
+        return(RETURN_SUCCESS);
     }
+    return(ERROR_INVALID_ENGINE);
 }
 

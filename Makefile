@@ -24,10 +24,12 @@ Release:
 	$(Compiler) $(ReleaseFlags) resources.res Source/*.c -o Binaries/$(Target).exe $(IncludeFlags)s $(LinkerFlags) 
 
 $(OBJECTS): Binaries/%.o: Source/%.c
-	$(Compiler) $(ReleaseFlags) $(CompileFlags) -c $< -o $@
+	$(Compiler) $(ReleaseFlags) $(IncludeFlags) -c $< -o $@
 
 StaticLibrary: $(OBJECTS)
 	ar rcs Binaries/libMOBSCE.a $(OBJECTS)
+	del Binaries\*.o
+	rm Binaries/*.o
 
 StaticTest:
 	cls

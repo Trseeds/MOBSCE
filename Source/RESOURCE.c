@@ -12,15 +12,15 @@ int InitResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
                 char Traceback[STRING_BUFFER_SIZE];
                 snprintf(Traceback,STRING_BUFFER_SIZE,"InitResourcePool(0x%X, 0x%X)",&ResourceInfo,Engine);
                 ThrowError("Failed to allocate memory!",Traceback,Engine);
-                return(1);
+                return(ERROR_MEMORY);
             }
 
             *(int*)ResourceInfo.AllocatedResourceMemory = MIN_ALLOCATE;
             *(int*)ResourceInfo.NumberOfResources = 0;
-            return(0);
+            return(RETURN_SUCCESS);
         }       
     }
-    return(INVALID_ENGINE);
+    return(ERROR_INVALID_ENGINE);
 }
 
 int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
@@ -38,7 +38,7 @@ int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
                 char Traceback[STRING_BUFFER_SIZE];
                 snprintf(Traceback,STRING_BUFFER_SIZE,"ExtendResourcePool(0x%X, 0x%X)",&ResourceInfo,Engine);
                 ThrowError("Failed to allocate new memory!",Traceback,Engine);
-                return(1);
+                return(ERROR_MEMORY);
             }
 
             *(int*)ResourceInfo.AllocatedResourceMemory += MIN_ALLOCATE;
@@ -49,14 +49,14 @@ int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
                 Pool[i] = NULL;
             }
 
-            return(0);
+            return(RETURN_SUCCESS);
         }
         char Traceback[STRING_BUFFER_SIZE];
         snprintf(Traceback,STRING_BUFFER_SIZE,"ExtendResourcePool(0x%X, 0x%X)",&ResourceInfo,Engine);
         ThrowError("Invalid Resource Info! No more memory can be allocated!",Traceback,Engine);
-        return(2);
+        return(ERROR_INVALID_PARAMETER);
     }
-    return(INVALID_ENGINE);
+    return(ERROR_INVALID_ENGINE);
 }
 
 int ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
@@ -74,26 +74,26 @@ int ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
                 char Traceback[STRING_BUFFER_SIZE];
                 snprintf(Traceback,STRING_BUFFER_SIZE,"ShrinkResourcePool(0x%X, 0x%X)",&ResourceInfo,Engine);
                 ThrowError("Failed to allocate new memory!",Traceback,Engine);
-                return(1);
+                return(ERROR_MEMORY);
             }
             *(int*)ResourceInfo.AllocatedResourceMemory -= MIN_ALLOCATE;
+            return(RETURN_SUCCESS);
         }
         char Traceback[STRING_BUFFER_SIZE];
         snprintf(Traceback,STRING_BUFFER_SIZE,"ShrinkResourcePool(0x%X, 0x%X)",&ResourceInfo,Engine);
-        ThrowWarning("Invalid Resource Info! Skipping shrink. (this is a memory leak, you must fix it.)",Traceback);
-        return(2);
+        ThrowWarning("Invalid Resource Info! Skipping shrink. (this is a memory leak, you must fix it.)",Traceback,Engine);
+        return(WARNING_INVALID_PARAMETER);
     }
-    return(INVALID_ENGINE);
+    return(ERROR_INVALID_ENGINE);
 }
 
-void CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
+int CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
 {
     if(Engine)
     {
         if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources && ResourceInfo.FreeFunction)
         {
-            //void** Pool = (void**)ResourceInfo.Pointer;
-            void** Pool = *(void***)ResourceInfo.Pointer;
+            void** Pool = *(void**)ResourceInfo.Pointer;
 
             for(int i = 0; i < *(int*)ResourceInfo.AllocatedResourceMemory; i++)
             {
@@ -103,12 +103,14 @@ void CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
                 }
             }
             free(Pool);
-            return;
+            return(RETURN_SUCCESS);
         }
         char Traceback[STRING_BUFFER_SIZE];
         snprintf(Traceback,STRING_BUFFER_SIZE,"CleanupResourcePool(0x%X, 0x%X)",&ResourceInfo,Engine);
-        ThrowWarning("Invalid Resource Info! Skipping cleanup. (this is a memory leak, you must fix it.)",Traceback);
+        ThrowWarning("Invalid Resource Info! Skipping cleanup. (this is a memory leak, you must fix it.)",Traceback,Engine);
+        return(WARNING_INVALID_PARAMETER);
     }
+    return(ERROR_INVALID_ENGINE);
 }
 
 Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, CustomSpriteData* CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
@@ -121,7 +123,7 @@ Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimen
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"CreateSprite(%s, 0x%X, 0x%X, 0x%X, %d, 0x%X, 0x%X)",Name,Position,Origin,Dimensions,TextureID,Routine,Engine);
             ThrowError("Failed to allocate memory!",Traceback,Engine);
-            return(NULL);
+            return((Sprite*)ERROR_MEMORY);
         }
 
         if(Engine->Resource.NumberOfSprites+1 >= Engine->Resource.AllocatedSpriteMemory)
@@ -155,10 +157,10 @@ Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimen
         Engine->SpriteZResortNeeded = true;
         return(NewSprite);
     }
-    return(NULL);
+    return((Sprite*)ERROR_INVALID_ENGINE);
 }
 
-void DestroySprite(Sprite* DSprite, Engine* Engine)
+int DestroySprite(Sprite* DSprite, Engine* Engine)
 {
     if(Engine)
     {
@@ -174,7 +176,7 @@ void DestroySprite(Sprite* DSprite, Engine* Engine)
 
             if(DSprite->CustomData)
             {
-                free(DSprite->CustomData);
+                free(DSprite->CustomData); //do freefuncs
             }
             free(DSprite);
             qsort(Engine->Sprites,Engine->Resource.NumberOfSprites,sizeof(Sprite*),CompactArray);
@@ -187,8 +189,14 @@ void DestroySprite(Sprite* DSprite, Engine* Engine)
                 ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSprites;
                 ShrinkResourcePool(ResourceInfo,Engine);
             }
+            return(RETURN_SUCCESS);
         }
+        char Traceback[STRING_BUFFER_SIZE];
+        snprintf(Traceback,STRING_BUFFER_SIZE,"DestroySprite(0x%X, 0x%X)",DSprite,Engine);
+        ThrowWarning("Invalid sprite passed.",Traceback,Engine);
+        return(WARNING_INVALID_PARAMETER);
     }
+    return(ERROR_INVALID_ENGINE);
 }
 
 Wiregon* CreateWiregon(Vector2* Verticies, Vector3 Position, int NumberOfVerticies, Vector3 Color, int Alpha, Engine* Engine)
@@ -201,7 +209,7 @@ Wiregon* CreateWiregon(Vector2* Verticies, Vector3 Position, int NumberOfVertici
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"CreateWiregon(0x%X, 0x%X, %d, 0x%X, %d, 0x%X)",Verticies,Position,NumberOfVerticies,Color,Alpha,Engine);
             ThrowError("Failed to allocate memory!",Traceback,Engine);
-            return(NULL);
+            return((Wiregon*)ERROR_MEMORY);
         }
 
         if(Engine->Resource.NumberOfWiregons+1 >= Engine->Resource.AllocatedWiregonMemory)
@@ -219,7 +227,7 @@ Wiregon* CreateWiregon(Vector2* Verticies, Vector3 Position, int NumberOfVertici
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"CreateWiregon(0x%X, 0x%X, %d, 0x%X, %d, 0x%X)",Verticies,Position,NumberOfVerticies,Color,Alpha,Engine);
             ThrowError("Failed to allocate memory!",Traceback,Engine);
-            return(NULL);
+            return((Wiregon*)ERROR_MEMORY);
         }
 
         NewWiregon->ID = GetNewObjectID(Engine);
@@ -235,10 +243,10 @@ Wiregon* CreateWiregon(Vector2* Verticies, Vector3 Position, int NumberOfVertici
 
         return(NewWiregon);
     }
-    return(NULL);
+    return((Wiregon*)ERROR_INVALID_ENGINE);
 }
 
-void DestroyWiregon(Wiregon* DWiregon, Engine* Engine)
+int DestroyWiregon(Wiregon* DWiregon, Engine* Engine)
 {
     if(Engine)
     {
@@ -267,8 +275,14 @@ void DestroyWiregon(Wiregon* DWiregon, Engine* Engine)
                 ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfWiregons;
                 ShrinkResourcePool(ResourceInfo,Engine);
             }
+            return(RETURN_SUCCESS);
         }
+        char Traceback[STRING_BUFFER_SIZE];
+        snprintf(Traceback,STRING_BUFFER_SIZE,"DestroyWiregon(0x%X, 0x%X)",DWiregon,Engine);
+        ThrowWarning("Invalid wiregon passed.",Traceback,Engine);
+        return(WARNING_INVALID_PARAMETER);
     }
+    return(ERROR_INVALID_ENGINE);
 }
 
 Sprite* GetSpriteByName(char* Name, Engine* Engine)
@@ -289,11 +303,11 @@ Sprite* GetSpriteByName(char* Name, Engine* Engine)
             }
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"GetSpriteByName(%s, 0x%X)",Name,Engine);
-            ThrowWarning("Could not find sprite.",Traceback);
-            return(NULL);
+            ThrowWarning("Could not find sprite.",Traceback,Engine);
+            return((Sprite*)WARNING_IGNORABLE_FAILURE);
         }
     }
-    return(NULL);
+    return((Sprite*)ERROR_INVALID_ENGINE);
 }
 
 Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, CustomActorData* CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine)
@@ -306,7 +320,7 @@ Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, 
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"CreateActor(%s, 0x%X, 0x%X, %d, 0x%X, 0x%X)",Name,Position,Dimensions,Voice,Routine,Engine);
             ThrowError("Failed to allocate memory!",Traceback,Engine);
-            return(NULL);
+            return((Actor*)ERROR_MEMORY);
         }
 
         if(Engine->Resource.NumberOfActors+1 >= Engine->Resource.AllocatedActorMemory)
@@ -330,10 +344,10 @@ Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, 
         Engine->Resource.NumberOfActors++;
         return(NewActor);
     }
-    return(NULL);
+    return((Actor*)ERROR_INVALID_ENGINE);
 }
 
-void DestroyActor(Actor* DActor, Engine* Engine)
+int DestroyActor(Actor* DActor, Engine* Engine)
 {
     if(Engine)
     {
@@ -375,8 +389,14 @@ void DestroyActor(Actor* DActor, Engine* Engine)
                     }
                 }
             }
+            return(RETURN_SUCCESS);
         }
+        char Traceback[STRING_BUFFER_SIZE];
+        snprintf(Traceback,STRING_BUFFER_SIZE,"DestroyActor(0x%X, 0x%X)",DActor,Engine);
+        ThrowWarning("Invalid actor passed.",Traceback,Engine);
+        return(WARNING_INVALID_PARAMETER);
     }
+    return(ERROR_INVALID_ENGINE);
 }
 
 Actor* GetActorByName(char* Name, Engine* Engine)
@@ -397,11 +417,11 @@ Actor* GetActorByName(char* Name, Engine* Engine)
             }
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"GetActorByName(%s, 0x%X)",Name,Engine);
-            ThrowWarning("Could not find actor.",Traceback);
-            return(NULL);
+            ThrowWarning("Could not find actor.",Traceback,Engine);
+            return((Actor*)WARNING_IGNORABLE_FAILURE);
         }
     }
-    return(NULL);
+    return((Actor*)ERROR_INVALID_ENGINE);
 }
 
 int CacheSound(char* File, Engine* Engine)
@@ -414,8 +434,8 @@ int CacheSound(char* File, Engine* Engine)
         {
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"CacheSound(%s, 0x%X)",File,Engine);
-            ThrowWarning("Could not create sound.",Traceback);
-            return(1);
+            ThrowWarning("Could not create sound.",Traceback,Engine);
+            return(WARNING_SDL_FAILURE);
         }
 
         if(Engine->Resource.NumberOfSounds+1 >= Engine->Resource.AllocatedSoundMemory)
@@ -429,9 +449,9 @@ int CacheSound(char* File, Engine* Engine)
 
         Engine->Resource.Sounds[Engine->Resource.NumberOfSounds] = NewSound;
         Engine->Resource.NumberOfSounds++;
-        return(0);
+        return(RETURN_SUCCESS);
     }
-    return(INVALID_ENGINE);
+    return(ERROR_INVALID_ENGINE);
 }
 
 int CacheMusic(char* File, Engine* Engine)
@@ -444,24 +464,24 @@ int CacheMusic(char* File, Engine* Engine)
         {
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"CacheMusic(%s, 0x%X)",File,Engine);
-            ThrowWarning("Could not create music.",Traceback);
-            return(1);
+            ThrowWarning("Could not create music.",Traceback,Engine);
+            return(WARNING_SDL_FAILURE);
         }
 
         if(Engine->Resource.NumberOfMusics+1 >= Engine->Resource.AllocatedMusicMemory)
         {
             ResourceInfo ResourceInfo;
-                ResourceInfo.Pointer = &Engine->Resource.Music;
-                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedMusicMemory;
-                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfMusics;
-                ExtendResourcePool(ResourceInfo,Engine);
+            ResourceInfo.Pointer = &Engine->Resource.Music;
+            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedMusicMemory;
+            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfMusics;
+            ExtendResourcePool(ResourceInfo,Engine);
         }
 
         Engine->Resource.Music[Engine->Resource.NumberOfMusics] = NewMusic;
         Engine->Resource.NumberOfMusics++;
-        return(0);
+        return(RETURN_SUCCESS);
     }
-    return(INVALID_ENGINE);
+    return(ERROR_INVALID_ENGINE);
 }
 
 int CacheTexture(char* File, Engine* Engine)
@@ -475,8 +495,8 @@ int CacheTexture(char* File, Engine* Engine)
             {
                 char Traceback[STRING_BUFFER_SIZE];
                 snprintf(Traceback,STRING_BUFFER_SIZE,"CacheTexture(%s, 0x%X)",File,Engine);
-                ThrowWarning("Could not create surface.",Traceback);
-                return(1);
+                ThrowWarning("Could not create surface.",Traceback,Engine);
+                return(WARNING_SDL_FAILURE);
             }
 
             SDL_Texture* NewTexture = SDL_CreateTextureFromSurface(Engine->Video.Renderer,Surface);
@@ -485,8 +505,8 @@ int CacheTexture(char* File, Engine* Engine)
             {
                 char Traceback[STRING_BUFFER_SIZE];
                 snprintf(Traceback,STRING_BUFFER_SIZE,"CacheTexture(%s, 0x%X)",File,Engine);
-                ThrowWarning("Could not create texture.",Traceback);
-                return(2);   
+                ThrowWarning("Could not create texture.",Traceback,Engine);
+                return(WARNING_SDL_FAILURE);   
             }
 
             if(Engine->Resource.NumberOfTextures+1 >= Engine->Resource.AllocatedTextureMemory)
@@ -500,8 +520,8 @@ int CacheTexture(char* File, Engine* Engine)
 
             Engine->Resource.Textures[Engine->Resource.NumberOfTextures] = NewTexture;
             Engine->Resource.NumberOfTextures++;
-            return(0);
+            return(RETURN_SUCCESS);
         }
     }
-    return(INVALID_ENGINE);
+    return(ERROR_INVALID_ENGINE);
 }

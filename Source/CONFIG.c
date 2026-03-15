@@ -76,10 +76,10 @@ int handler(void* user, const char* section, const char* name, const char* value
     {
         return(1);
     }
-    return(0);
+    return(RETURN_SUCCESS);
 }
 
-int UpdateConfig(char* File, Config* Config)
+int UpdateConfig(char* File, Config* Config, Engine* Engine)
 {
     Config->Samplerate = 48000;
     Config->Channels = 2;
@@ -99,14 +99,14 @@ int UpdateConfig(char* File, Config* Config)
     {
         char Traceback[STRING_BUFFER_SIZE];
         snprintf(Traceback,STRING_BUFFER_SIZE,"UpdateConfig(%s, 0x%X)",File,Config);
-        ThrowWarning("Failed to load config file.",Traceback);
-        return(1);
+        ThrowWarning("Failed to load config file.",Traceback,Engine);
+        return(WARNING_INIH_FAILURE);
     }
     
-    return(0);
+    return(RETURN_SUCCESS);
 }
 
-void LoadEngineConfig(Engine* Engine)
+int LoadEngineConfig(Engine* Engine)
 {
     if(Engine)
     {
@@ -122,5 +122,7 @@ void LoadEngineConfig(Engine* Engine)
         Engine->Video.LogicalDimensions.Y = Engine->Config.LogicalY;
         Engine->Video.WindowFlags = Engine->Config.WindowFlags;
         Engine->Video.RendererFlags = Engine->Config.RendererFlags;
+        return(RETURN_SUCCESS);
     }
+    return(ERROR_INVALID_ENGINE);
 }

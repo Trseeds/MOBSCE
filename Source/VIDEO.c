@@ -10,7 +10,7 @@ int InitVideo(Engine* Engine)
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"InitVideo(%X)",Engine);
             ThrowError("Failed to create window!",Traceback,Engine);
-            return(1);
+            return(ERROR_SDL_FAILURE);
         }
 
         Engine->Video.Renderer = SDL_CreateRenderer(Engine->Video.Window,-1,Engine->Video.RendererFlags);
@@ -19,7 +19,7 @@ int InitVideo(Engine* Engine)
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"InitVideo(0x%X)",Engine);
             ThrowError("Failed to create renderer!",Traceback,Engine);
-            return(2);
+            return(ERROR_SDL_FAILURE);
         }
 
         SDL_Surface* Icon = IMG_Load(Engine->Video.WindowIconPath);
@@ -27,7 +27,7 @@ int InitVideo(Engine* Engine)
         {
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"InitVideo(0x%X)",Engine);
-            ThrowWarning("Failed to create window icon.",Traceback);
+            ThrowWarning("Failed to create window icon.",Traceback,Engine);
         }
         if(Icon)
         {
@@ -38,28 +38,30 @@ int InitVideo(Engine* Engine)
         SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
         SDL_RenderSetLogicalSize(Engine->Video.Renderer,Engine->Video.LogicalDimensions.X,Engine->Video.LogicalDimensions.Y);
 
-        return(0);
+        return(RETURN_SUCCESS);
     }
-    return(INVALID_ENGINE);
+    return(ERROR_INVALID_ENGINE);
 }
 
-void RestartVideo(Engine* Engine)
+int RestartVideo(Engine* Engine)
 {
     if(Engine)
     {
         ResourceInfo ResourceInfo;
         ResourceInfo.Pointer = &Engine->Resource.Textures;
-        ResourceInfo.FreeFunction = &SDL_DestroyTexture;
+        ResourceInfo.FreeFunction = (void (*)(void*))&SDL_DestroyTexture;
         ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTextures;
         ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTextureMemory;
         CleanupResourcePool(ResourceInfo,Engine);
         InitResourcePool(ResourceInfo,Engine);
         CleanupVideo(Engine);
         InitVideo(Engine);
+        return(RETURN_SUCCESS);
     }
+    return(ERROR_INVALID_ENGINE);
 }
 
-void CleanupVideo(Engine* Engine)
+int CleanupVideo(Engine* Engine)
 {
     if(Engine)
     {
@@ -71,7 +73,9 @@ void CleanupVideo(Engine* Engine)
         {
             SDL_DestroyRenderer(Engine->Video.Renderer);
         }
+        return(RETURN_SUCCESS);
     }
+    return(ERROR_INVALID_ENGINE);
 }
 
 int DrawTexture(SDL_Texture* Texture, Vector2 Position, Vector2 Origin, Engine* Engine)
@@ -82,8 +86,8 @@ int DrawTexture(SDL_Texture* Texture, Vector2 Position, Vector2 Origin, Engine* 
         {
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"DrawTexture(0x%X, %d, %d, 0x%X)",Texture,Position,Origin,Engine);
-            ThrowWarning("Invalid texture.",Traceback);
-            return(1);
+            ThrowWarning("Invalid texture.",Traceback,Engine);
+            return(WARNING_INVALID_PARAMETER);
         }
 
         Vector2 Dimensions;
@@ -92,8 +96,8 @@ int DrawTexture(SDL_Texture* Texture, Vector2 Position, Vector2 Origin, Engine* 
         {
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"DrawTexture(0x%X, %d, %d, 0x%X)",Texture,Position,Origin,Engine);
-            ThrowWarning("Could not query texture information.",Traceback);
-            return(2);
+            ThrowWarning("Could not query texture information.",Traceback,Engine);
+            return(WARNING_SDL_FAILURE);
         }
 
         SDL_Rect Source;
@@ -112,13 +116,13 @@ int DrawTexture(SDL_Texture* Texture, Vector2 Position, Vector2 Origin, Engine* 
         {
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"DrawTexture(0x%X, %d, %d, 0x%X)",Texture,Position,Origin,Engine);
-            ThrowWarning("Could not draw texture.",Traceback);
+            ThrowWarning("Could not draw texture.",Traceback,Engine);
             return(3);
         }
 
-        return(0);
+        return(RETURN_SUCCESS);
     }
-    return(INVALID_ENGINE);
+    return(ERROR_INVALID_ENGINE);
 }
 
 int DrawSprite(Sprite* Sprite, Engine* Engine)
@@ -129,8 +133,8 @@ int DrawSprite(Sprite* Sprite, Engine* Engine)
         {
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"DrawSprite(0x%X, 0x%X)",Sprite,Engine);
-            ThrowWarning("Invalid sprite.",Traceback);
-            return(1);
+            ThrowWarning("Invalid sprite.",Traceback,Engine);
+            return(WARNING_INVALID_PARAMETER);
         }
 
         SDL_Rect Source;
@@ -159,19 +163,19 @@ int DrawSprite(Sprite* Sprite, Engine* Engine)
         {
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"DrawSprite(0x%X, 0x%X)",Sprite,Engine);
-            ThrowWarning("Could not draw sprite.",Traceback);
-            return(2);
+            ThrowWarning("Could not draw sprite.",Traceback,Engine);
+            return(WARNING_SDL_FAILURE);
         }
         if(ResultA != 0 || ResultC != 0)
         {
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"DrawSprite(0x%X, 0x%X)",Sprite,Engine);
-            ThrowWarning("Special sprite effects failed to render.",Traceback);
-            return(3);
+            ThrowWarning("Special sprite effects failed to render.",Traceback,Engine);
+            return(WARNING_SDL_FAILURE);
         }
-        return(0);
+        return(RETURN_SUCCESS);
     }
-    return(INVALID_ENGINE);
+    return(ERROR_INVALID_ENGINE);
 }
 
 int DrawWiregon(Wiregon* Wiregon, Engine* Engine)
@@ -182,8 +186,8 @@ int DrawWiregon(Wiregon* Wiregon, Engine* Engine)
         {
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"DrawWiregon(0x%X, 0x%X)",Wiregon,Engine);
-            ThrowWarning("Invalid wiregon.",Traceback);
-            return(1);
+            ThrowWarning("Invalid wiregon.",Traceback,Engine);
+            return(WARNING_INVALID_PARAMETER);
         }
 
         SDL_Point RealVerticies[Wiregon->NumberOfVerticies];
@@ -198,23 +202,24 @@ int DrawWiregon(Wiregon* Wiregon, Engine* Engine)
         {
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"DrawWiregon(0x%X, 0x%X)",Wiregon,Engine);
-            ThrowWarning("Could not set drawing color.",Traceback);
-            return(2);
+            ThrowWarning("Could not set drawing color.",Traceback,Engine);
+            return(WARNING_SDL_FAILURE);
         }
 
-        Result = SDL_RenderDrawLines(Engine->Video.Renderer,&RealVerticies,Wiregon->NumberOfVerticies);
+        Result = SDL_RenderDrawLines(Engine->Video.Renderer,RealVerticies,Wiregon->NumberOfVerticies);
         if(Result != 0)
         {
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"DrawWiregon(0x%X, 0x%X)",Wiregon,Engine);
-            ThrowWarning("Could not draw wiregon.",Traceback);
-            return(3);
+            ThrowWarning("Could not draw wiregon.",Traceback,Engine);
+            return(WARNING_SDL_FAILURE);
         }
+        return(RETURN_SUCCESS);
     }
-    return(INVALID_ENGINE);
+    return(ERROR_INVALID_ENGINE);
 }
 
-void Render(Engine* Engine)
+int Render(Engine* Engine)
 {
     if(Engine)
     {
@@ -245,7 +250,7 @@ void Render(Engine* Engine)
                 {
                     char Traceback[STRING_BUFFER_SIZE];
                     snprintf(Traceback,STRING_BUFFER_SIZE,"Render(0x%X)",Engine);
-                    ThrowWarning("Sprite is invalid.",Traceback);
+                    ThrowWarning("Sprite is invalid.",Traceback,Engine);
                 }
             }
             if(i < Engine->Resource.NumberOfWiregons)
@@ -253,17 +258,17 @@ void Render(Engine* Engine)
                 if(Engine->Wiregons[i])
                 {
                     DrawWiregon(Engine->Wiregons[i],Engine);
-                    //DestroyWiregon(Engine->Wiregons[i],Engine);
-                    //in retrospect, what the fuck was i thinking??
                 }
                 else
                 {
                     char Traceback[STRING_BUFFER_SIZE];
                     snprintf(Traceback,STRING_BUFFER_SIZE,"Render(0x%X)",Engine);
-                    ThrowWarning("Wiregon is invalid.",Traceback);
+                    ThrowWarning("Wiregon is invalid.",Traceback,Engine);
                 }
             }
         }
         SDL_RenderPresent(Engine->Video.Renderer);
+        return(RETURN_SUCCESS);
     }
+    return(ERROR_INVALID_ENGINE);
 }
