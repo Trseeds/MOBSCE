@@ -22,7 +22,6 @@ Engine
 #include <math.h>
 #include <time.h>
 #include "BUTTONS.h"
-#include "GAME.h"
 
 #define STRING_BUFFER_SIZE 1024
 #define OBJECT_NAME_SIZE 64
@@ -74,6 +73,9 @@ typedef struct FVector4 {
 	double W;
 } FVector4;
 
+typedef struct CustomSpriteData CustomSpriteData;
+typedef struct CustomActorData CustomActorData;
+
 //config struct used for parsing the config file
 typedef struct Config {
 	int Samplerate;
@@ -110,7 +112,7 @@ typedef struct Actor {
 	Vector2 Dimensions;
 	int Voice;
 	void (*Routine)(struct Actor*, struct Engine*);
-	CustomActorData CustomData;
+	CustomActorData* CustomData;
 } Actor;
 
 typedef struct Sprite {
@@ -120,7 +122,7 @@ typedef struct Sprite {
 	SpriteRenderParameters RenderParameters;
 	Actor* Actor;
 	void (*Routine)(struct Sprite*, struct Engine*);
-	CustomSpriteData CustomData;
+	CustomSpriteData* CustomData;
 } Sprite;
 
 typedef struct Wiregon {
@@ -294,8 +296,8 @@ int CacheMusic(char* File, Engine* Engine);
 //video
 int CacheTexture(char* File, Engine* Engine);
 //objects
-Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, CustomSpriteData CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine);
-Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, CustomActorData CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine);
+Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, CustomSpriteData* CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine);
+Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, CustomActorData* CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine);
 Wiregon* CreateWiregon(Vector2* Verticies, Vector3 Position, int NumberOfVerticies, Vector3 Color, int Alpha, Engine* Engine);
 void DestroySprite(Sprite* DSprite, Engine* Engine);
 void DestroyActor(Actor* DActor, Engine* Engine);

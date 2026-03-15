@@ -1,5 +1,22 @@
 #include "MOBSCE.h"
+#include "GAME.h"
 
+/*
+Keep these delcarations, it's hacky, I know, and I'm sorry.
+You can change them as you wish, just dont remove them.
+*/
+/***************************************************************************************/
+typedef struct CustomSpriteData {
+    unsigned char Byte;
+} CustomSpriteData;
+
+typedef struct CustomActorData {
+    int MousedOver;
+    int Dragged;
+    Sprite* Sprite;
+    Wiregon* Wiregon;
+} CustomActorData;
+/***************************************************************************************/
 void CrazyColors(Sprite* Sprite, Engine* Engine)
 {
     int RedMod = GetRandomNumber(0,16) - 8;
@@ -33,23 +50,23 @@ void CursorFunction(Actor* Actor, Engine* Engine)
     }
     if(Engine->Input.MouseDown[MB_LEFT] || Engine->Input.GamepadTriggers[GP_TRGR_RIGHT] > 0.1)
     {
-        RainbowColors(Actor->CustomData.Sprite,Engine);
+        RainbowColors(Actor->CustomData->Sprite,Engine);
     }
     if((Engine->Input.MouseUp[MB_LEFT] || Engine->Input.GamepadTriggersUp[GP_TRGR_RIGHT]))
     {
         RumbleGamepad(25,250,Engine);
     }
-    if((Engine->Input.MouseUp[MB_RIGHT] || Engine->Input.GamepadTriggersUp[GP_TRGR_LEFT]) && Actor->CustomData.Sprite->RenderParameters.Tint.X == 0)
+    if((Engine->Input.MouseUp[MB_RIGHT] || Engine->Input.GamepadTriggersUp[GP_TRGR_LEFT]) && Actor->CustomData->Sprite->RenderParameters.Tint.X == 0)
     {
-        Actor->CustomData.Sprite->RenderParameters.Tint.X = 255;
+        Actor->CustomData->Sprite->RenderParameters.Tint.X = 255;
     }
-    if(Actor->CustomData.Sprite->RenderParameters.Tint.X > 1)
+    if(Actor->CustomData->Sprite->RenderParameters.Tint.X > 1)
     {
-        Actor->CustomData.Sprite->RenderParameters.Tint.X -= 4;
+        Actor->CustomData->Sprite->RenderParameters.Tint.X -= 4;
     }
-    if(Actor->CustomData.Sprite->RenderParameters.Tint.X < 1)
+    if(Actor->CustomData->Sprite->RenderParameters.Tint.X < 1)
     {
-        Actor->CustomData.Sprite->RenderParameters.Tint.X = 0;
+        Actor->CustomData->Sprite->RenderParameters.Tint.X = 0;
     }
 }
 
@@ -90,10 +107,10 @@ void AlignSpriteToActor(Sprite* Sprite, Engine* Engine)
 
 void AlignWiregonToActor(Actor* Actor, Engine* Engine)
 {
-    if(Actor->CustomData.Wiregon)
+    if(Actor->CustomData->Wiregon)
     {
-        Vector3 Position = {Actor->Position.X-25,Actor->Position.Y+25,Actor->CustomData.Wiregon->Position.Z};
-        Actor->CustomData.Wiregon->Position = Position;
+        Vector3 Position = {Actor->Position.X-25,Actor->Position.Y+25,Actor->CustomData->Wiregon->Position.Z};
+        Actor->CustomData->Wiregon->Position = Position;
     }
 }
 
@@ -101,13 +118,13 @@ void TestActorFunction(Actor* ActorA, Engine* Engine)
 {
     AlignWiregonToActor(ActorA, Engine);
     Actor* Cursor = GetActorByName("Mouse Cursor",Engine);
-    if(!ActorA->CustomData.Dragged)
+    if(!ActorA->CustomData->Dragged)
     {
-        ActorA->CustomData.MousedOver = false;
+        ActorA->CustomData->MousedOver = false;
     }
     if(!Engine->Input.MouseDown[MB_LEFT])
     {
-        ActorA->CustomData.Dragged = false;
+        ActorA->CustomData->Dragged = false;
     }
     if(Cursor->Position.X > ActorA->Position.X && Cursor->Position.X < ActorA->Position.X+ActorA->Dimensions.X)
     {
@@ -115,21 +132,21 @@ void TestActorFunction(Actor* ActorA, Engine* Engine)
         {
             if(Engine->Input.MouseDown[MB_LEFT] || Engine->Input.GamepadTriggers[GP_TRGR_RIGHT] >= 0.9)
             {
-                ActorA->CustomData.Dragged = true;
+                ActorA->CustomData->Dragged = true;
             }
             if(Engine->Input.MouseUp[MB_RIGHT] || Engine->Input.GamepadTriggersUp[GP_TRGR_LEFT])
             {
-                DestroySprite(ActorA->CustomData.Sprite,Engine);
-                DestroyWiregon(ActorA->CustomData.Wiregon,Engine);
+                DestroySprite(ActorA->CustomData->Sprite,Engine);
+                DestroyWiregon(ActorA->CustomData->Wiregon,Engine);
                 DestroyActor(ActorA,Engine);
                 PlaySound(0,ActorA->Voice,100,ActorA->Position.X,Engine);
                 RumbleGamepad(100,250,Engine);
             }
-            ActorA->CustomData.MousedOver = true;
+            ActorA->CustomData->MousedOver = true;
         }
     }
 
-    if(ActorA->CustomData.Dragged)
+    if(ActorA->CustomData->Dragged)
     {
         MouseDrag(ActorA, Cursor, Engine);
     }
@@ -151,15 +168,13 @@ void CreateTestObject(Engine* Engine)
     Vector2 ActorPosition;
     Vector4 Origin;
     Vector2 Dimensions;
-    CustomSpriteData Dummy;
-    CustomActorData Data;
+    CustomSpriteData* Dummy = calloc(1,sizeof(CustomSpriteData));
+    CustomActorData* Data = calloc(1,sizeof(CustomActorData));
     ActorPosition.X = GetRandomNumber(0,Engine->Video.LogicalDimensions.X); ActorPosition.Y = GetRandomNumber(0,Engine->Video.LogicalDimensions.Y);
     SpritePosition.X = 0; SpritePosition.Y = 0; SpritePosition.Z = 2;
     Origin.X = 0; Origin.Y = 0; Origin.Z = 16; Origin.W = 16;
     Dimensions.X = GetRandomNumber(8,32); Dimensions.Y = GetRandomNumber(8,32);
-    Actor* TestActor = CreateActor("Test Actor",ActorPosition,Dimensions,0,Data,&TestActorFunction,Engine);
-    Sprite* TestSprite = CreateSprite("Test Sprite",SpritePosition,Origin,Dimensions,TXTR_PLAYER,Dummy,TestActor,&TestSpriteFunction,Engine);
-    Data.Sprite = TestSprite;
+    Sprite* TestSprite = CreateSprite("Test Sprite",SpritePosition,Origin,Dimensions,TXTR_PLAYER,Dummy,NULL,&TestSpriteFunction,Engine);
 
     //wiregons
     Vector2 Verticies[9] = {
@@ -175,14 +190,16 @@ void CreateTestObject(Engine* Engine)
     Vector3 Position = {TestSprite->RenderParameters.Position.X,TestSprite->RenderParameters.Position.Y,TestSprite->RenderParameters.Position.Z};
     Vector3 Color = {255,255,255};
     int NumberOfVerticies = 9;
-    Data.Wiregon = CreateWiregon(&Verticies,Position,NumberOfVerticies,Color,255,Engine);
+    Data->Wiregon = CreateWiregon(&Verticies,Position,NumberOfVerticies,Color,255,Engine);
 
-    TestActor->CustomData = Data;
     TestSprite->RenderParameters.Angle = GetRandomNumber(0,360);
     TestSprite->RenderParameters.Flip = GetRandomNumber(0,2);
     TestSprite->RenderParameters.Tint.X = GetRandomNumber(0,255);
     TestSprite->RenderParameters.Tint.Y = GetRandomNumber(0,255);
     TestSprite->RenderParameters.Tint.Z = GetRandomNumber(0,255);
+
+    Actor* TestActor = CreateActor("Test Actor",ActorPosition,Dimensions,0,Data,&TestActorFunction,Engine);
+    TestSprite->Actor = TestActor;
 
     
 }
@@ -215,8 +232,8 @@ void InitGame(Engine* Engine)
     Vector2 ActorPosition;
     Vector4 Origin;
     Vector2 Dimensions;
-    CustomSpriteData SpriteData;
-    CustomActorData ActorData;
+    CustomSpriteData* SpriteData = calloc(1,sizeof(CustomSpriteData));
+    CustomActorData* ActorData = calloc(1,sizeof(CustomActorData));
     ActorPosition.X = 0; ActorPosition.Y = 0;
     SpritePosition.X = 0; SpritePosition.Y = 0; SpritePosition.Z = 0;
     Origin.X = 0; Origin.Y = 0; Origin.Z = 640; Origin.W = 480;
@@ -230,7 +247,7 @@ void InitGame(Engine* Engine)
     Origin.X = 0; Origin.Y = 0; Origin.Z = 64; Origin.W = 64;
     Actor* CursorActor = CreateActor("Mouse Cursor",ActorPosition,Dimensions,0,ActorData,&CursorFunction,Engine);
     Sprite* CursorSprite = CreateSprite("Mouse Cursor",SpritePosition,Origin,Dimensions,TXTR_CURSOR,SpriteData,CursorActor,&AlignSpriteToActor,Engine);
-    CursorActor->CustomData.Sprite = CursorSprite;
+    CursorActor->CustomData->Sprite = CursorSprite;
     CursorSprite->RenderParameters.Tint.X = 0;
     CursorSprite->RenderParameters.Tint.Y = 0;
     CursorSprite->RenderParameters.Tint.Z = 0;
@@ -265,7 +282,7 @@ int main(int argc, char* argv[])
                     if(ActorFriend)
                     {
                         DestroyActor(ActorFriend,Engine1);
-                        DestroyWiregon(ActorFriend->CustomData.Wiregon,Engine1);
+                        DestroyWiregon(ActorFriend->CustomData->Wiregon,Engine1);
                     }
                 }
             }

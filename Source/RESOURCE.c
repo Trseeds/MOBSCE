@@ -111,7 +111,7 @@ void CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
     }
 }
 
-Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, CustomSpriteData CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
+Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, CustomSpriteData* CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
 {
     if(Engine)
     {
@@ -172,6 +172,10 @@ void DestroySprite(Sprite* DSprite, Engine* Engine)
                 }
             }
 
+            if(DSprite->CustomData)
+            {
+                free(DSprite->CustomData);
+            }
             free(DSprite);
             qsort(Engine->Sprites,Engine->Resource.NumberOfSprites,sizeof(Sprite*),CompactArray);
             Engine->Resource.NumberOfSprites--;
@@ -292,7 +296,7 @@ Sprite* GetSpriteByName(char* Name, Engine* Engine)
     return(NULL);
 }
 
-Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, CustomActorData CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine)
+Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, CustomActorData* CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine)
 {
     if(Engine)
     {
@@ -344,7 +348,11 @@ void DestroyActor(Actor* DActor, Engine* Engine)
                     Engine->Actors[i] = NULL;
                 }
             }
-            
+
+            if(DActor->CustomData)
+            {
+                free(DActor->CustomData);
+            }
             free(DActor);
             qsort(Engine->Actors, Engine->Resource.NumberOfActors, sizeof(Actor*), CompactArray);
             Engine->Resource.NumberOfActors--;
