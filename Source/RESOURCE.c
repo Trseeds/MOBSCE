@@ -123,7 +123,7 @@ Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimen
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"CreateSprite(%s, 0x%X, 0x%X, 0x%X, %d, 0x%X, 0x%X)",Name,Position,Origin,Dimensions,TextureID,Routine,Engine);
             ThrowError("Failed to allocate memory!",Traceback,Engine);
-            return((Sprite*)ERROR_MEMORY);
+            return(WARNING_NULL);
         }
 
         if(Engine->Resource.NumberOfSprites+1 >= Engine->Resource.AllocatedSpriteMemory)
@@ -135,7 +135,7 @@ Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimen
             ExtendResourcePool(ResourceInfo,Engine);
         }
 
-        strcpy(NewSprite->Name,Name);
+        strncpy(NewSprite->Name,Name,OBJECT_NAME_SIZE);
         NewSprite->ID = GetNewObjectID(Engine);
         NewSprite->RenderParameters.Position.X = Position.X; NewSprite->RenderParameters.Position.Y = Position.Y; NewSprite->RenderParameters.Position.Z = Position.Z;
         NewSprite->RenderParameters.Origin.X = Origin.X; NewSprite->RenderParameters.Origin.Y = Origin.Y; NewSprite->RenderParameters.Origin.Z = Origin.Z; NewSprite->RenderParameters.Origin.W = Origin.W; 
@@ -157,7 +157,7 @@ Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimen
         Engine->SpriteZResortNeeded = true;
         return(NewSprite);
     }
-    return((Sprite*)ERROR_INVALID_ENGINE);
+    return(WARNING_NULL);
 }
 
 int DestroySprite(Sprite* DSprite, void (*FreeFunction)(struct CustomSpriteData*, struct Engine*), Engine* Engine)
@@ -183,7 +183,6 @@ int DestroySprite(Sprite* DSprite, void (*FreeFunction)(struct CustomSpriteData*
                 char Traceback[STRING_BUFFER_SIZE];
                 snprintf(Traceback,STRING_BUFFER_SIZE,"DestroySprite(0x%X, 0x%X, 0x%X)",DSprite,FreeFunction,Engine);
                 ThrowWarning("Invalid custom data.",Traceback,Engine);
-                return(WARNING_INVALID_PARAMETER); 
             }
             free(DSprite);
             qsort(Engine->Sprites,Engine->Resource.NumberOfSprites,sizeof(Sprite*),CompactArray);
@@ -225,10 +224,10 @@ Sprite* GetSpriteByName(char* Name, Engine* Engine)
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"GetSpriteByName(%s, 0x%X)",Name,Engine);
             ThrowWarning("Could not find sprite.",Traceback,Engine);
-            return((Sprite*)WARNING_IGNORABLE_FAILURE);
+            return(WARNING_NULL);
         }
     }
-    return((Sprite*)ERROR_INVALID_ENGINE);
+    return(WARNING_NULL);
 }
 
 Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, CustomActorData* CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine)
@@ -241,7 +240,7 @@ Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, 
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"CreateActor(%s, 0x%X, 0x%X, %d, 0x%X, 0x%X)",Name,Position,Dimensions,Voice,Routine,Engine);
             ThrowError("Failed to allocate memory!",Traceback,Engine);
-            return((Actor*)ERROR_MEMORY);
+            return(WARNING_NULL);
         }
 
         if(Engine->Resource.NumberOfActors+1 >= Engine->Resource.AllocatedActorMemory)
@@ -253,7 +252,7 @@ Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, 
             ExtendResourcePool(ResourceInfo,Engine);
         }
 
-        strcpy(NewActor->Name,Name);
+        strncpy(NewActor->Name,Name,OBJECT_NAME_SIZE);
         NewActor->ID = GetNewObjectID(Engine);
         NewActor->Position.X = Position.X; NewActor->Position.Y = Position.Y;
         NewActor->Dimensions.X = Dimensions.X; NewActor->Dimensions.Y = Dimensions.Y;
@@ -265,7 +264,7 @@ Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, 
         Engine->Resource.NumberOfActors++;
         return(NewActor);
     }
-    return((Actor*)ERROR_INVALID_ENGINE);
+    return(WARNING_NULL);
 }
 
 int DestroyActor(Actor* DActor, void (*FreeFunction)(struct CustomActorData*, struct Engine*), Engine* Engine)
@@ -293,7 +292,6 @@ int DestroyActor(Actor* DActor, void (*FreeFunction)(struct CustomActorData*, st
                 char Traceback[STRING_BUFFER_SIZE];
                 snprintf(Traceback,STRING_BUFFER_SIZE,"DestroyActor(0x%X, 0x%X, 0x%X)",DActor,FreeFunction,Engine);
                 ThrowWarning("Invalid custom data.",Traceback,Engine);
-                return(WARNING_INVALID_PARAMETER); 
             }
             free(DActor);
             qsort(Engine->Actors, Engine->Resource.NumberOfActors, sizeof(Actor*), CompactArray);
@@ -346,10 +344,10 @@ Actor* GetActorByName(char* Name, Engine* Engine)
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"GetActorByName(%s, 0x%X)",Name,Engine);
             ThrowWarning("Could not find actor.",Traceback,Engine);
-            return((Actor*)WARNING_IGNORABLE_FAILURE);
+            return(WARNING_NULL);
         }
     }
-    return((Actor*)ERROR_INVALID_ENGINE);
+    return(WARNING_NULL);
 }
 
 Wiregon* CreateWiregon(Vector2* Verticies, Vector3 Position, int NumberOfVerticies, Vector3 Color, int Alpha, Engine* Engine)
@@ -362,7 +360,7 @@ Wiregon* CreateWiregon(Vector2* Verticies, Vector3 Position, int NumberOfVertici
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"CreateWiregon(0x%X, 0x%X, %d, 0x%X, %d, 0x%X)",Verticies,Position,NumberOfVerticies,Color,Alpha,Engine);
             ThrowError("Failed to allocate memory!",Traceback,Engine);
-            return((Wiregon*)ERROR_MEMORY);
+            return(WARNING_NULL);
         }
 
         if(Engine->Resource.NumberOfWiregons+1 >= Engine->Resource.AllocatedWiregonMemory)
@@ -380,7 +378,7 @@ Wiregon* CreateWiregon(Vector2* Verticies, Vector3 Position, int NumberOfVertici
             char Traceback[STRING_BUFFER_SIZE];
             snprintf(Traceback,STRING_BUFFER_SIZE,"CreateWiregon(0x%X, 0x%X, %d, 0x%X, %d, 0x%X)",Verticies,Position,NumberOfVerticies,Color,Alpha,Engine);
             ThrowError("Failed to allocate memory!",Traceback,Engine);
-            return((Wiregon*)ERROR_MEMORY);
+            return(WARNING_NULL);
         }
 
         NewWiregon->ID = GetNewObjectID(Engine);
@@ -396,7 +394,7 @@ Wiregon* CreateWiregon(Vector2* Verticies, Vector3 Position, int NumberOfVertici
 
         return(NewWiregon);
     }
-    return((Wiregon*)ERROR_INVALID_ENGINE);
+    return(WARNING_NULL);
 }
 
 int DestroyWiregon(Wiregon* DWiregon, Engine* Engine)

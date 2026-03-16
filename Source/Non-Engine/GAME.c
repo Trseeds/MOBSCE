@@ -1,109 +1,155 @@
 #include "MOBSCE.h"
 #include "GAME.h"
 
+Vector4 WV[6] = 
+    {
+        {0,0,1279,7},
+        {0,0,7,951},
+        {0,952,1279,959},
+        {8,456,639,479},
+        {1272,0,1279,959},
+        {697,884,728,907}
+    };
+
 /*
-Keep these delcarations, it's hacky, I know, and I'm sorry.
-You can change them as you wish, just dont remove them.
+Edit these functions to free the appropriate resources inside the custom data functions
+and then free themselves, called by the engine.
 */
 /***************************************************************************************/
-typedef struct CustomSpriteData {
-    unsigned char Byte;
-} CustomSpriteData;
-
-typedef struct CustomActorData {
-    int MousedOver;
-    int Dragged;
-    Sprite* Sprite;
-    Wiregon* Wiregon;
-} CustomActorData;
-
 void CustomSpriteDataFreeFunction(CustomSpriteData* CustomSpriteData, Engine* Engine)
 {
-    __asm__("nop");
+    free(CustomSpriteData);
 }
 
 void CustomActorDataFreeFunction(CustomActorData* CustomActorData, Engine* Engine)
 {
-    __asm__("nop");
+    free(CustomActorData);
 }
 /***************************************************************************************/
-void CrazyColors(Sprite* Sprite, Engine* Engine)
-{
-    int RedMod = GetRandomNumber(0,16) - 8;
-    int GreenMod = GetRandomNumber(0,16) - 8;
-    int BlueMod = GetRandomNumber(0,16) - 8;
-    Sprite->RenderParameters.Tint.X += RedMod%255;
-    Sprite->RenderParameters.Tint.Y += GreenMod%255;
-    Sprite->RenderParameters.Tint.Z += BlueMod%255;
-}
 
-void RainbowColors(Sprite* Sprite, Engine* Engine)
+/*SPRITE AND ACTOR ROUTINES*************************************************************/
+void RenderNumberWiregon(int NUM, int Scale, Wiregon* Wiregon, Engine* Engine)
 {
-    Vector3* oc = &Sprite->RenderParameters.Tint;
-    static double Speed = 0;
-    Speed += 0.05;
-    oc->X = (sin(Speed) * 127) + 128;
-    oc->Y = (sin(Speed + 2.094) * 127) + 128;
-    oc->Z = (sin(Speed + 4.188) * 127) + 128;
-}
+    if(NUM > 9 || NUM < 0)
+    {
+        return;
+    }
+    int NumberOfVerticies = 8;
+    Vector2* Verticies = calloc(NumberOfVerticies,sizeof(Vector2));
+    switch(NUM)
+    {
+        case 0:
+            Verticies[0].X = 0; Verticies[0].Y = 0;
+            Verticies[1].X = 2; Verticies[1].Y = 0;
+            Verticies[2].X = 2; Verticies[2].Y = 4;
+            Verticies[3].X = 0; Verticies[3].Y = 4;
+            Verticies[4].X = 0; Verticies[4].Y = 0;
+            Verticies[5].X = 0; Verticies[5].Y = 0;
+            Verticies[6].X = 0; Verticies[6].Y = 0;
+            Verticies[7].X = 0; Verticies[7].Y = 0;
+            break;
+        case 1:
+            Verticies[0].X = 2; Verticies[0].Y = 0;
+            Verticies[1].X = 2; Verticies[1].Y = 4;
+            Verticies[2].X = 2; Verticies[2].Y = 0;
+            Verticies[3].X = 2; Verticies[3].Y = 0;
+            Verticies[4].X = 2; Verticies[4].Y = 0;
+            Verticies[5].X = 2; Verticies[5].Y = 0;
+            Verticies[6].X = 2; Verticies[6].Y = 0;
+            Verticies[7].X = 2; Verticies[7].Y = 0;
+            break;
+        case 2:
+            Verticies[0].X = 0; Verticies[0].Y = 0;
+            Verticies[1].X = 2; Verticies[1].Y = 0;
+            Verticies[2].X = 2; Verticies[2].Y = 2;
+            Verticies[3].X = 0; Verticies[3].Y = 2;
+            Verticies[4].X = 0; Verticies[4].Y = 4;
+            Verticies[5].X = 2; Verticies[5].Y = 4;
+            Verticies[6].X = 2; Verticies[6].Y = 4;
+            Verticies[7].X = 2; Verticies[7].Y = 4;
+            break;
+        case 3:
+            Verticies[0].X = 0; Verticies[0].Y = 0;
+            Verticies[1].X = 2; Verticies[1].Y = 0;
+            Verticies[2].X = 2; Verticies[2].Y = 2;
+            Verticies[3].X = 0; Verticies[3].Y = 2;
+            Verticies[4].X = 2; Verticies[4].Y = 2;
+            Verticies[5].X = 2; Verticies[5].Y = 4;
+            Verticies[6].X = 0; Verticies[6].Y = 4;
+            Verticies[7].X = 0; Verticies[7].Y = 4;
+            break;
+        case 4:
+            Verticies[0].X = 0; Verticies[0].Y = 0;
+            Verticies[1].X = 0; Verticies[1].Y = 2;
+            Verticies[2].X = 2; Verticies[2].Y = 2;
+            Verticies[3].X = 2; Verticies[3].Y = 0;
+            Verticies[4].X = 2; Verticies[4].Y = 4;
+            Verticies[5].X = 2; Verticies[5].Y = 4;
+            Verticies[6].X = 2; Verticies[6].Y = 4;
+            Verticies[7].X = 2; Verticies[7].Y = 4;
+            break;
+        case 5:
+            Verticies[0].X = 0; Verticies[0].Y = 0;
+            Verticies[1].X = 2; Verticies[1].Y = 0;
+            Verticies[2].X = 0; Verticies[2].Y = 0;
+            Verticies[3].X = 0; Verticies[3].Y = 2;
+            Verticies[4].X = 2; Verticies[4].Y = 2;
+            Verticies[5].X = 2; Verticies[5].Y = 4;
+            Verticies[6].X = 0; Verticies[6].Y = 4;
+            Verticies[7].X = 0; Verticies[7].Y = 4;
+            break;
+        case 6:
+            Verticies[0].X = 0; Verticies[0].Y = 0;
+            Verticies[1].X = 2; Verticies[1].Y = 0;
+            Verticies[2].X = 0; Verticies[2].Y = 0;
+            Verticies[3].X = 0; Verticies[3].Y = 4;
+            Verticies[4].X = 2; Verticies[4].Y = 4;
+            Verticies[5].X = 2; Verticies[5].Y = 2;
+            Verticies[6].X = 0; Verticies[6].Y = 2;
+            Verticies[7].X = 0; Verticies[7].Y = 2;
+            break;
+        case 7:
+            Verticies[0].X = 0; Verticies[0].Y = 0;
+            Verticies[1].X = 2; Verticies[1].Y = 0;
+            Verticies[2].X = 2; Verticies[2].Y = 4;
+            Verticies[3].X = 2; Verticies[3].Y = 4;
+            Verticies[4].X = 2; Verticies[4].Y = 4;
+            Verticies[5].X = 2; Verticies[5].Y = 4;
+            Verticies[6].X = 2; Verticies[6].Y = 4;
+            Verticies[7].X = 2; Verticies[7].Y = 4;
+            break;
+        case 8:
+            Verticies[0].X = 0; Verticies[0].Y = 0;
+            Verticies[1].X = 0; Verticies[1].Y = 4;
+            Verticies[2].X = 2; Verticies[2].Y = 4;
+            Verticies[3].X = 2; Verticies[3].Y = 0;
+            Verticies[4].X = 2; Verticies[4].Y = 2;
+            Verticies[5].X = 0; Verticies[5].Y = 2;
+            Verticies[6].X = 0; Verticies[6].Y = 0;
+            Verticies[7].X = 2; Verticies[7].Y = 0;
+            break;
+        case 9:
+            Verticies[0].X = 0; Verticies[0].Y = 0;
+            Verticies[1].X = 0; Verticies[1].Y = 2;
+            Verticies[2].X = 2; Verticies[2].Y = 2;
+            Verticies[3].X = 2; Verticies[3].Y = 0;
+            Verticies[4].X = 0; Verticies[4].Y = 0;
+            Verticies[5].X = 2; Verticies[5].Y = 0;
+            Verticies[6].X = 2; Verticies[6].Y = 4;
+            Verticies[7].X = 2; Verticies[7].Y = 4;
+            break;
 
-void CursorFunction(Actor* Actor, Engine* Engine)
-{
-    if(!Engine->Input.GamepadIsConnected)
-    {
-        FollowMouse(Actor,Engine);
+        default:
+            break;
     }
-    else
+    for(int i = 0; i < NumberOfVerticies; i++)
     {
-        Actor->Position.X += Engine->Input.GamepadSticks[GP_STK_LEFT_X] * 5;
-        Actor->Position.Y += Engine->Input.GamepadSticks[GP_STK_LEFT_Y] * 5;
+        Verticies[i].X *= Scale;
+        Verticies[i].Y *= Scale;
     }
-    if(Engine->Input.MouseDown[MB_LEFT] || Engine->Input.GamepadTriggers[GP_TRGR_RIGHT] > 0.1)
-    {
-        RainbowColors(Actor->CustomData->Sprite,Engine);
-    }
-    if((Engine->Input.MouseUp[MB_LEFT] || Engine->Input.GamepadTriggersUp[GP_TRGR_RIGHT]))
-    {
-        RumbleGamepad(25,250,Engine);
-    }
-    if((Engine->Input.MouseUp[MB_RIGHT] || Engine->Input.GamepadTriggersUp[GP_TRGR_LEFT]) && Actor->CustomData->Sprite->RenderParameters.Tint.X == 0)
-    {
-        Actor->CustomData->Sprite->RenderParameters.Tint.X = 255;
-    }
-    if(Actor->CustomData->Sprite->RenderParameters.Tint.X > 1)
-    {
-        Actor->CustomData->Sprite->RenderParameters.Tint.X -= 4;
-    }
-    if(Actor->CustomData->Sprite->RenderParameters.Tint.X < 1)
-    {
-        Actor->CustomData->Sprite->RenderParameters.Tint.X = 0;
-    }
-}
-
-void ScreenCrawl(Actor* Actor, Engine* Engine)
-{
-    Actor->Position.X++;
-    Actor->Position.Y++;
-    if(Actor->Position.X > Engine->Video.LogicalDimensions.X)
-    {
-        Actor->Position.X = 0;
-    }
-    if(Actor->Position.Y > Engine->Video.LogicalDimensions.Y)
-    {
-        Actor->Position.Y = 0;
-    }
-}
-
-void FollowMouse(Actor* Actor, Engine* Engine)
-{
-    Actor->Position.X = Engine->Input.MousePosition.X;
-    Actor->Position.Y = Engine->Input.MousePosition.Y;
-}
-
-void MouseDrag(Actor* ActorA, Actor* Cursor, Engine* Engine)
-{
-    ActorA->Position.X = Cursor->Position.X - (ActorA->Dimensions.X/2);
-    ActorA->Position.Y = Cursor->Position.Y - (ActorA->Dimensions.Y/2);
+    free(Wiregon->Verticies);
+    Wiregon->Verticies = Verticies;
+    Wiregon->NumberOfVerticies = NumberOfVerticies;
 }
 
 void AlignSpriteToActor(Sprite* Sprite, Engine* Engine)
@@ -115,234 +161,407 @@ void AlignSpriteToActor(Sprite* Sprite, Engine* Engine)
     }
 }
 
-void AlignWiregonToActor(Actor* Actor, Engine* Engine)
+void AlignSpriteToActorOnCamera(Sprite* Sprite, Engine* Engine)
 {
-    if(Actor->CustomData->Wiregon)
+    if(Sprite->Actor)
     {
-        Vector3 Position = {Actor->Position.X-25,Actor->Position.Y+25,Actor->CustomData->Wiregon->Position.Z};
-        Actor->CustomData->Wiregon->Position = Position;
-    }
-}
+        Actor* Camera = Sprite->Actor->CustomData->Camera;
+        Sprite->RenderParameters.Visible = false;
 
-void TestActorFunction(Actor* ActorA, Engine* Engine)
-{
-    AlignWiregonToActor(ActorA, Engine);
-    Actor* Cursor = GetActorByName("Mouse Cursor",Engine);
-    if(!ActorA->CustomData->Dragged)
-    {
-        ActorA->CustomData->MousedOver = false;
-    }
-    if(!Engine->Input.MouseDown[MB_LEFT])
-    {
-        ActorA->CustomData->Dragged = false;
-    }
-    if(Cursor->Position.X > ActorA->Position.X && Cursor->Position.X < ActorA->Position.X+ActorA->Dimensions.X)
-    {
-        if(Cursor->Position.Y > ActorA->Position.Y && Cursor->Position.Y < ActorA->Position.Y+ActorA->Dimensions.Y)
+        int ScreenX = Sprite->Actor->Position.X - Camera->Position.X;
+        int ScreenY = Sprite->Actor->Position.Y - Camera->Position.Y;
+        if(ScreenX + Sprite->RenderParameters.Dimensions.X >= 0 && 
+           ScreenX <= Camera->Dimensions.X &&
+           ScreenY + Sprite->RenderParameters.Dimensions.Y >= 0 && 
+           ScreenY <= Camera->Dimensions.Y)
         {
-            if(Engine->Input.MouseDown[MB_LEFT] || Engine->Input.GamepadTriggers[GP_TRGR_RIGHT] >= 0.9)
-            {
-                ActorA->CustomData->Dragged = true;
-            }
-            if(Engine->Input.MouseUp[MB_RIGHT] || Engine->Input.GamepadTriggersUp[GP_TRGR_LEFT])
-            {
-                DestroySprite(ActorA->CustomData->Sprite,&CustomSpriteDataFreeFunction,Engine);
-                DestroyWiregon(ActorA->CustomData->Wiregon,Engine);
-                DestroyActor(ActorA,&CustomActorDataFreeFunction,Engine);
-                PlaySound(0,ActorA->Voice,100,ActorA->Position.X,Engine);
-                RumbleGamepad(100,250,Engine);
-            }
-            ActorA->CustomData->MousedOver = true;
+            Sprite->RenderParameters.Position.X = ScreenX;
+            Sprite->RenderParameters.Position.Y = ScreenY;
+            Sprite->RenderParameters.Visible = true;
         }
     }
+}
 
-    if(ActorA->CustomData->Dragged)
+void CameraTrack(Actor* Camera, Engine* Engine)
+{
+    if(!Camera->CustomData->Target)
     {
-        MouseDrag(ActorA, Cursor, Engine);
+        Camera->CustomData->Target = GetActorByName("Player",Engine);
     }
-    else
+    Camera->Position.X = (Camera->CustomData->Target->Position.X + Camera->CustomData->Target->Dimensions.X/2) - (Camera->Dimensions.X/2);
+    Camera->Position.Y = (Camera->CustomData->Target->Position.Y + Camera->CustomData->Target->Dimensions.Y/2) - (Camera->Dimensions.Y/2);
+}
+
+void ActorScreenWrap(Actor* Actor, Engine* Engine)
+{
+    if(Actor->Position.X > Engine->Video.LogicalDimensions.X)
     {
-        ScreenCrawl(ActorA, Engine);
+        Actor->Position.X = 0;
+    }
+    if(Actor->Position.X < 0)
+    {
+        Actor->Position.X = Engine->Video.LogicalDimensions.X;
+    }
+    if(Actor->Position.Y > Engine->Video.LogicalDimensions.Y)
+    {
+        Actor->Position.Y = 0;
+    }
+    if(Actor->Position.Y < 0)
+    {
+        Actor->Position.Y = Engine->Video.LogicalDimensions.Y;
     }
 }
 
-void TestSpriteFunction(Sprite* Sprite, Engine* Engine)
+void ActorScreenCollision(Actor* Actor, Engine* Engine)
 {
-    CrazyColors(Sprite,Engine);
-    AlignSpriteToActor(Sprite,Engine);
+    if(Actor->Position.X+Actor->Dimensions.X > Engine->Video.LogicalDimensions.X)
+    {
+        Actor->Position.X = Engine->Video.LogicalDimensions.X-Actor->Dimensions.X;
+        Actor->CustomData->Velocity.X = 0;
+    }
+    if(Actor->Position.X < 0)
+    {
+        Actor->Position.X = 0;
+        Actor->CustomData->Velocity.X = 0;
+    }
+    if(Actor->Position.Y+Actor->Dimensions.Y > Engine->Video.LogicalDimensions.Y)
+    {
+        Actor->Position.Y = Engine->Video.LogicalDimensions.Y-Actor->Dimensions.Y;
+        Actor->CustomData->Velocity.Y = 0;
+    }
+    if(Actor->Position.Y < 0)
+    {
+        Actor->Position.Y = 0;
+        Actor->CustomData->Velocity.Y = 0;
+    }
 }
 
-void CreateTestObject(Engine* Engine)
+void ActorSideScroller(Actor* Actor, Engine* Engine)
 {
-    Vector3 SpritePosition;
+    if(Actor->Position.Y+Actor->Dimensions.Y > Engine->Video.LogicalDimensions.Y)
+    {
+        Actor->Position.Y = Engine->Video.LogicalDimensions.Y-Actor->Dimensions.Y;
+        Actor->CustomData->Velocity.Y = 0;
+    }
+    if(Actor->Position.Y < 0)
+    {
+        Actor->Position.Y = 0;
+        Actor->CustomData->Velocity.Y = 0;
+    }
+}
+
+void ApplyPhysics(Actor* Actor)
+{
+    CustomActorData* PhysProps = Actor->CustomData;
+    //x drag
+    if(PhysProps->Velocity.X > PhysProps->Drag)
+    {
+        PhysProps->Velocity.X -= PhysProps->Drag;
+    }
+    if(PhysProps->Velocity.X < PhysProps->Drag*-1)
+    {
+        PhysProps->Velocity.X += PhysProps->Drag;
+    }
+    if((PhysProps->Velocity.X < PhysProps->Drag) && PhysProps->Velocity.X > 0)
+    {
+        PhysProps->Velocity.X = 0;
+    }
+    if((PhysProps->Velocity.X > PhysProps->Drag*-1) && PhysProps->Velocity.X < 0)
+    {
+        PhysProps->Velocity.X = 0;
+    }
+    //y drag
+    if(PhysProps->Velocity.Y > PhysProps->Drag)
+    {
+        PhysProps->Velocity.Y -= PhysProps->Drag;
+    }
+    if(PhysProps->Velocity.Y < PhysProps->Drag*-1)
+    {
+        PhysProps->Velocity.Y += PhysProps->Drag;
+    }
+    if((PhysProps->Velocity.Y < PhysProps->Drag) && PhysProps->Velocity.Y > 0)
+    {
+        PhysProps->Velocity.Y = 0;
+    }
+    if((PhysProps->Velocity.Y > PhysProps->Drag*-1) && PhysProps->Velocity.Y < 0)
+    {
+        PhysProps->Velocity.Y = 0;
+    }
+    //gravity
+    PhysProps->Velocity.Y += PhysProps->Gravity;
+
+    Actor->Position.X += PhysProps->Velocity.X;
+    Actor->Position.Y += PhysProps->Velocity.Y;
+}
+
+void PlayerRoutine(Actor* Player, Engine* Engine)
+{
+    ActorWorldCollide(Player,Engine);
+    ApplyPhysics(Player);
+    if(Engine->Input.KeysDown[K_UP] && Player->CustomData->Velocity.Y == 0.500000)
+    {
+        Player->CustomData->Velocity.Y -= Player->CustomData->JumpForce;
+        Player->Position.Y--;
+    }
+    if(Engine->Input.KeysDown[K_DOWN])
+    {
+        Player->CustomData->Velocity.Y += 0.5;
+    }
+    if(Engine->Input.KeysDown[K_LEFT])
+    {
+        Player->CustomData->Velocity.X -= 0.5;
+    }
+    if(Engine->Input.KeysDown[K_RIGHT])
+    {
+        Player->CustomData->Velocity.X += 0.5;
+    }
+}
+
+void MonsterRoutine(Actor* Monster, Engine* Engine)
+{
+    ActorWorldCollide(Monster,Engine);
+    ApplyPhysics(Monster);
+    if(!Monster->CustomData->Target)
+    {
+        Monster->CustomData->Target = GetActorByName("Player",Engine);
+    }
+
+    if(Monster->Position.X < Monster->CustomData->Target->Position.X)
+    {
+        Monster->CustomData->Velocity.X += 0.2;
+    }
+    if(Monster->Position.X > Monster->CustomData->Target->Position.X)
+    {
+        Monster->CustomData->Velocity.X -= 0.2;
+    }
+    if(Monster->Position.Y < Monster->CustomData->Target->Position.Y)
+    {
+        Monster->CustomData->Velocity.Y += 0.2;
+    }
+    if(Monster->Position.Y > Monster->CustomData->Target->Position.Y && Monster->CustomData->Velocity.Y == 0.500000)
+    {
+        Monster->CustomData->Velocity.Y -= Monster->CustomData->JumpForce;
+        Monster->Position.Y--;
+    }
+}
+/*SPRITE AND ACTOR ROUTINES END*********************************************************/
+
+void CreateCamera(Engine* Engine)
+{
     Vector2 ActorPosition;
-    Vector4 Origin;
-    Vector2 Dimensions;
-    CustomSpriteData* Dummy = calloc(1,sizeof(CustomSpriteData));
-    CustomActorData* Data = calloc(1,sizeof(CustomActorData));
-    ActorPosition.X = GetRandomNumber(0,Engine->Video.LogicalDimensions.X); ActorPosition.Y = GetRandomNumber(0,Engine->Video.LogicalDimensions.Y);
-    SpritePosition.X = 0; SpritePosition.Y = 0; SpritePosition.Z = 2;
-    Origin.X = 0; Origin.Y = 0; Origin.Z = 16; Origin.W = 16;
-    Dimensions.X = GetRandomNumber(8,32); Dimensions.Y = GetRandomNumber(8,32);
-    Sprite* TestSprite = CreateSprite("Test Sprite",SpritePosition,Origin,Dimensions,TXTR_PLAYER,Dummy,NULL,&TestSpriteFunction,Engine);
-
-    //wiregons
-    Vector2 Verticies[9] = {
-    {0,0},
-    {25,25},
-    {50,25},
-    {75,0},
-    {75,-25},
-    {50,-50},
-    {25,-50},
-    {0,-25},
-    {0,0}};
-    Vector3 Position = {TestSprite->RenderParameters.Position.X,TestSprite->RenderParameters.Position.Y,TestSprite->RenderParameters.Position.Z};
-    Vector3 Color = {255,255,255};
-    int NumberOfVerticies = 9;
-    Data->Wiregon = CreateWiregon(&Verticies,Position,NumberOfVerticies,Color,255,Engine);
-
-    TestSprite->RenderParameters.Angle = GetRandomNumber(0,360);
-    TestSprite->RenderParameters.Flip = GetRandomNumber(0,2);
-    TestSprite->RenderParameters.Tint.X = GetRandomNumber(0,255);
-    TestSprite->RenderParameters.Tint.Y = GetRandomNumber(0,255);
-    TestSprite->RenderParameters.Tint.Z = GetRandomNumber(0,255);
-
-    Data->Sprite = TestSprite;
-    Actor* TestActor = CreateActor("Test Actor",ActorPosition,Dimensions,0,Data,&TestActorFunction,Engine);
-    TestSprite->Actor = TestActor;
-
-    
-}
-
-void CacheTextures(Engine* Engine)
-{
-    char Buffer[STRING_BUFFER_SIZE];
-    CacheTexture(GetAssetPath("Assets/Images/Backgrounds/TestBG.png",Buffer,Engine),Engine);
-    CacheTexture(GetAssetPath("Assets/Images/Sprites/Player.png",Buffer,Engine),Engine);
-    CacheTexture(GetAssetPath("Assets/Images/Sprites/Cursor.png",Buffer,Engine),Engine);
-}
-
-void ReassignSpriteTextures(Engine* Engine)
-{
-    for(int i = 0; i < Engine->Resource.NumberOfSprites; i++)
-    {
-        Engine->Sprites[i]->RenderParameters.Texture = Engine->Resource.Textures[Engine->Sprites[i]->TextureID];
-    }
-}
-
-void InitGame(Engine* Engine)
-{
-    CacheTextures(Engine);
-    char Buffer[STRING_BUFFER_SIZE];
-    CacheSound(GetAssetPath("Assets/Sounds/Cough.wav",Buffer,Engine),Engine);
-
-    Vector3 SpritePosition;
-    Vector2 ActorPosition;
-    Vector4 Origin;
-    Vector2 Dimensions;
-    CustomSpriteData* SpriteData = calloc(1,sizeof(CustomSpriteData));
+    Vector2 ActorDimensions;
+    int Voice = 0;
     CustomActorData* ActorData = calloc(1,sizeof(CustomActorData));
     ActorPosition.X = 0; ActorPosition.Y = 0;
-    SpritePosition.X = 0; SpritePosition.Y = 0; SpritePosition.Z = 0;
-    Origin.X = 0; Origin.Y = 0; Origin.Z = 640; Origin.W = 480;
-    Dimensions.X = 640; Dimensions.Y = 480;
-    Sprite* BGSprite = CreateSprite("BG",SpritePosition,Origin,Dimensions,TXTR_BG,SpriteData,NULL,&RainbowColors,Engine);
-    BGSprite->RenderParameters.Tint.X = 64;
-    BGSprite->RenderParameters.Tint.Y = 128;
-    BGSprite->RenderParameters.Tint.Z = 192;
-    SpritePosition.Z = 1000;
-    Dimensions.X = 64; Dimensions.Y = 64;
-    Origin.X = 0; Origin.Y = 0; Origin.Z = 64; Origin.W = 64;
-    Actor* CursorActor = CreateActor("Mouse Cursor",ActorPosition,Dimensions,0,ActorData,&CursorFunction,Engine);
-    Sprite* CursorSprite = CreateSprite("Mouse Cursor",SpritePosition,Origin,Dimensions,TXTR_CURSOR,SpriteData,CursorActor,&AlignSpriteToActor,Engine);
-    CursorActor->CustomData->Sprite = CursorSprite;
-    CursorSprite->RenderParameters.Tint.X = 0;
-    CursorSprite->RenderParameters.Tint.Y = 0;
-    CursorSprite->RenderParameters.Tint.Z = 0;
+    ActorDimensions.X = 640; ActorDimensions.Y = 480;
+    Actor* Actor = CreateActor("Camera",ActorPosition,ActorDimensions,Voice,ActorData,&CameraTrack,Engine);
+}
 
+void CreateFPSCounter(Wiregon** Output, Engine* Engine)
+{
+    Vector3 Position = {0,0,1000};
+    Vector3 Color = {0,0,0};
+    Output[0] = CreateWiregon(NULL,Position,0,Color,255,Engine);
+    Position.X = 4*5;
+    Output[1] = CreateWiregon(NULL,Position,0,Color,255,Engine);
+    Position.X = 8*5;
+    Output[2] = CreateWiregon(NULL,Position,0,Color,255,Engine);
+}
+
+void CreateObjectCounter(Wiregon** Output, Engine* Engine)
+{
+    Vector3 Position = {0,0,1000};
+    Vector3 Color = {0,0,0};
+    Position.X = 0*5;
+    Position.Y = 6*5;
+    Output[0] = CreateWiregon(NULL,Position,0,Color,255,Engine);
+    Position.X = 4*5;
+    Output[1] = CreateWiregon(NULL,Position,0,Color,255,Engine);
+    Position.X = 8*5;
+    Output[2] = CreateWiregon(NULL,Position,0,Color,255,Engine);
+    Position.X = 12*5;
+    Output[3] = CreateWiregon(NULL,Position,0,Color,255,Engine);
+    Position.X = 16*5;
+    Output[4] = CreateWiregon(NULL,Position,0,Color,255,Engine);
+}
+
+void CacheTexturesGame(Engine* Engine)
+{
+    char Buffer[STRING_BUFFER_SIZE];
+    char Player[STRING_BUFFER_SIZE];
+    char Monster[STRING_BUFFER_SIZE];
+    CacheTexture(GetAssetPath("Assets/Images/Backgrounds/TestBG.png",Buffer,Engine),Engine);
+    CacheTexture(GetAssetPath("Assets/Images/Sprites/Player.png",Buffer,Engine),Engine);
+    CacheTexture(GetAssetPath("Assets/Images/Sprites/Monster.png",Buffer,Engine),Engine);
+}
+
+void CreateBGGame(Engine* Engine)
+{
+    Vector2 ActorPosition;
+    Vector2 ActorDimensions;
+    int Voice = 0;
+    CustomActorData* ActorData = calloc(1,sizeof(CustomActorData));
+    ActorData->Camera = GetActorByName("Camera",Engine);
+    ActorPosition.X = 0; ActorPosition.Y = 0;
+    ActorDimensions.X = 1280; ActorDimensions.Y = 960;
+    Actor* Actor = CreateActor("Background",ActorPosition,ActorDimensions,Voice,ActorData,NULL,Engine);
+    /***********************************************************************************/
+    Vector3 Position;
+    Vector4 Origin;
+    Vector2 Dimensions;
+    CustomActorData* SpriteData = calloc(1,sizeof(CustomSpriteData));
+    Position.X = 0; Position.Y = 0; Position.Z = 0;
+    Origin.X = 0; Origin.Y = 0; Origin.Z = 1280; Origin.W = 960;
+    Dimensions.X = 1280; Dimensions.Y = 960;
+    CreateSprite("Background",Position,Origin,Dimensions,TXTR_BG,SpriteData,Actor,&AlignSpriteToActorOnCamera,Engine);
+}
+
+void CreatePlayerGame(Engine* Engine)
+{
+    Vector2 ActorPosition;
+    Vector2 ActorDimensions;
+    int Voice = 0;
+    CustomActorData* ActorData = calloc(1,sizeof(CustomActorData));
+    ActorData->JumpForce = 15;
+    ActorData->Drag = 0.01;
+    ActorData->Gravity = 0.5;
+    ActorData->Camera = GetActorByName("Camera",Engine);
+    ActorData->World = WV;
+    ActorPosition.X = 100; ActorPosition.Y = 100;
+    ActorDimensions.X = 16; ActorDimensions.Y = 16;
+    Actor* Actor = CreateActor("Player",ActorPosition,ActorDimensions,Voice,ActorData,&PlayerRoutine,Engine);
+    /***********************************************************************************/
+    Vector3 SpritePosition;
+    Vector4 SpriteOrigin;
+    Vector2 SpriteDimensions;
+    CustomActorData* SpriteData = calloc(1,sizeof(CustomSpriteData));
+    SpritePosition.X = 0; SpritePosition.Y = 0; SpritePosition.Z = 2;
+    SpriteOrigin.X = 0; SpriteOrigin.Y = 0; SpriteOrigin.Z = 16; SpriteOrigin.W = 16;
+    SpriteDimensions.X = 16; SpriteDimensions.Y = 16;
+    CreateSprite("Player",SpritePosition,SpriteOrigin,SpriteDimensions,TXTR_PLAYER,SpriteData,Actor,&AlignSpriteToActorOnCamera,Engine);
+}
+
+void CreateMonsterGame(Engine* Engine)
+{
+    Vector2 ActorPosition;
+    Vector2 ActorDimensions;
+    int Voice = 1;
+    CustomActorData* ActorData = calloc(1,sizeof(CustomActorData));
+    ActorData->JumpForce = GetRandomNumber(5,20);
+    ActorData->Drag = 0.01;
+    ActorData->Gravity = 0.5;
+    ActorData->Camera = GetActorByName("Camera",Engine);
+    ActorData->World = WV;
+    ActorPosition.X = 300; ActorPosition.Y = 300;
+    ActorDimensions.X = GetRandomNumber(8,64); ActorDimensions.Y = GetRandomNumber(8,64);
+    Actor* Actor = CreateActor("Monster",ActorPosition,ActorDimensions,Voice,ActorData,&MonsterRoutine,Engine);
+    /***********************************************************************************/
+    Vector3 SpritePosition;
+    Vector4 SpriteOrigin;
+    Vector2 SpriteDimensions;
+    CustomActorData* SpriteData = calloc(1,sizeof(CustomSpriteData));
+    SpritePosition.X = 0; SpritePosition.Y = 0; SpritePosition.Z = 1;
+    SpriteOrigin.X = 0; SpriteOrigin.Y = GetRandomNumber(0,4)*32; SpriteOrigin.Z = 32; SpriteOrigin.W = 32;
+    SpriteDimensions.X = ActorDimensions.X; SpriteDimensions.Y = ActorDimensions.Y;
+    Sprite* Sprite = CreateSprite("Monster",SpritePosition,SpriteOrigin,SpriteDimensions,TXTR_MONSTER,SpriteData,Actor,&AlignSpriteToActorOnCamera,Engine);
+    Sprite->RenderParameters.Tint.X = GetRandomNumber(0,255);
+    Sprite->RenderParameters.Tint.Y = GetRandomNumber(0,255);
+    Sprite->RenderParameters.Tint.Z = GetRandomNumber(0,255);
+}
+
+void InitGame(Wiregon** FPS, Wiregon** OBJ, Engine* Engine)
+{
+    CacheTexturesGame(Engine);
+    CreateCamera(Engine);
+    CreateBGGame(Engine);
+    CreatePlayerGame(Engine);
+    CreateMonsterGame(Engine);
+    CreateFPSCounter(FPS,Engine);
+    CreateObjectCounter(OBJ,Engine);
 }
 
 int main(int argc, char* argv[])
 {
-    Engine* Engine1 = InitEngine("Config.ini","MOBSCE Example","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL);
-    InitGame(Engine1);
-    while(Engine1->Running)
+    Engine* Engine = InitEngine("Config.ini","Monster","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL);
+
+    Wiregon* FPSCounter[3];
+    Wiregon* OBJCounter[5];
+    InitGame(FPSCounter,OBJCounter,Engine);
+
+    while(Engine->Running)
     {
-        if(Engine1->Input.KeysUp[K_R] || Engine1->Input.GamepadButtonsUp[GP_FB_START])
-        {
-            CleanupEngine(Engine1);
-            Engine1 = InitEngine("Config.ini","MOBSCE Example","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL);
-            InitGame(Engine1);
-        }
-        if((Engine1->Input.KeysDown[K_S] && !Engine1->Input.KeysDown[K_RIGHTCONTROL]) || (Engine1->Input.GamepadButtonsDown[GP_FB_BOTTOM] && !Engine1->Input.GamepadButtonsDown[GP_FB_TOP]))
-        {
-            CreateTestObject(Engine1);
-        }
-        if(Engine1->Input.KeysDown[K_K] || Engine1->Input.GamepadButtonsDown[GP_FB_LEFT])
-        {
-            if(Engine1->Sprites[1])
-            {
-                Sprite* SpriteFriend = GetSpriteByName("Test Sprite",Engine1);
-                if(SpriteFriend)
-                {
-                    Actor* ActorFriend = SpriteFriend->Actor;
-                    DestroySprite(SpriteFriend,&CustomSpriteDataFreeFunction,Engine1);
-                    if(ActorFriend)
-                    {
-                        DestroyActor(ActorFriend,&CustomActorDataFreeFunction,Engine1);
-                        DestroyWiregon(ActorFriend->CustomData->Wiregon,Engine1);
-                    }
-                }
-            }
-        }
-        if((Engine1->Input.KeysDown[K_RIGHTCONTROL] && Engine1->Input.KeysUp[K_S]) || (Engine1->Input.GamepadButtonsDown[GP_FB_TOP] && Engine1->Input.GamepadButtonsUp[GP_FB_BOTTOM]))
-        {
-            for(int i = 0; i < 10000; i++)
-            {
-                CreateTestObject(Engine1);
-            }
-        }
-        if((Engine1->Input.KeysDown[K_LEFTALT] || Engine1->Input.KeysDown[K_RIGHTALT]) && Engine1->Input.KeysUp[K_RETURN])
-        {
-            if(Engine1->Video.WindowFlags == SDL_WINDOW_SHOWN)
-            {
-                Engine1->Video.WindowFlags = SDL_WINDOW_FULLSCREEN_DESKTOP;
-                Engine1->Video.LogicalDimensions.X = 1920;
-                Engine1->Video.LogicalDimensions.Y = 1080;
-                RestartVideo(Engine1);
-                CacheTextures(Engine1);
-                ReassignSpriteTextures(Engine1);
-            }
-            else
-            {
-                Engine1->Video.LogicalDimensions.X = 640;
-                Engine1->Video.LogicalDimensions.Y = 480;
-                Engine1->Video.WindowFlags = SDL_WINDOW_SHOWN;
-                RestartVideo(Engine1);
-                CacheTextures(Engine1);
-                ReassignSpriteTextures(Engine1);
-            }
-        }
-
-        if(Engine1->Input.KeysUp[K_E])
-        {
-            ThrowError("Test Error","You",Engine1);
-        }
-        if(Engine1->Input.KeysUp[K_W])
-        {
-            ThrowWarning("Test Warning","You",Engine1);
-        }
-
-        RunEngine(Engine1);
         for(int i = 0; i < EVENT_QUEUE_SIZE; i++)
         {
-            if(Engine1->Events[i].type == SDL_QUIT || Engine1->Input.KeysUp[K_ESCAPE] || Engine1->Input.GamepadButtonsUp[GP_FB_RIGHT])
+            if(Engine->Events[i].type == SDL_QUIT)
             {
-                CleanupEngine(Engine1);
-                free(Engine1);
+                CleanupEngine(Engine);
+                free(Engine);
                 return(0);
             }
         }
+
+        RenderNumberWiregon((int)(Engine->Clock.FrameRate)/100,5,FPSCounter[0],Engine);
+        RenderNumberWiregon(((int)(Engine->Clock.FrameRate)/10)%10,5,FPSCounter[1],Engine);
+        RenderNumberWiregon((int)(Engine->Clock.FrameRate)%10,5,FPSCounter[2],Engine);
+        RenderNumberWiregon((int)(Engine->Resource.NumberOfActors)/10000,5,OBJCounter[0],Engine);
+        RenderNumberWiregon(((int)(Engine->Resource.NumberOfActors)/1000)%10,5,OBJCounter[1],Engine);
+        RenderNumberWiregon(((int)(Engine->Resource.NumberOfActors)/100)%10,5,OBJCounter[2],Engine);
+        RenderNumberWiregon(((int)(Engine->Resource.NumberOfActors)/10)%10,5,OBJCounter[3],Engine);
+        RenderNumberWiregon((int)(Engine->Resource.NumberOfActors)%10,5,OBJCounter[4],Engine);
+        if(Engine->Clock.FrameRate >= 1000)
+        {
+            RenderNumberWiregon(9,5,FPSCounter[0],Engine);
+            RenderNumberWiregon(9,5,FPSCounter[1],Engine);
+            RenderNumberWiregon(9,5,FPSCounter[2],Engine);
+        }
+        if(Engine->Resource.NumberOfActors > 99999)
+        {
+            RenderNumberWiregon(9,5,OBJCounter[0],Engine);
+            RenderNumberWiregon(9,5,OBJCounter[1],Engine);
+            RenderNumberWiregon(9,5,OBJCounter[2],Engine);
+            RenderNumberWiregon(9,5,OBJCounter[3],Engine);
+            RenderNumberWiregon(9,5,OBJCounter[4],Engine);
+        }
+
+        if(Engine->Input.KeysUp[K_ESCAPE])
+        {
+            CleanupEngine(Engine);
+            free(Engine);
+            return(0);
+        }
+        if(Engine->Input.KeysUp[K_R])
+        {
+            CleanupEngine(Engine);
+            free(Engine);
+            Engine = InitEngine("Config.ini","Monster","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL);
+            InitGame(FPSCounter,OBJCounter,Engine);
+        }
+        if(Engine->Input.KeysDown[K_S])
+        {
+            CreateMonsterGame(Engine);
+        }
+        if(Engine->Input.KeysDown[K_K])
+        {
+            Sprite* Sprite = GetSpriteByName("Monster",Engine);
+            if(Sprite)
+            {
+                Actor* Actor = Sprite->Actor;
+                DestroySprite(Sprite,&CustomSpriteDataFreeFunction,Engine);
+                DestroyActor(Actor,&CustomActorDataFreeFunction,Engine);
+            }
+        }
+
+        if(Engine->Input.KeysDown[K_LEFTCONTROL] || Engine->Input.KeysDown[K_RIGHTCONTROL])
+        {
+            if(Engine->Input.KeysUp[K_S])
+            {
+                for(int i = 0; i < 10000; i++)
+                {
+                    CreateMonsterGame(Engine);
+                }
+            }
+        }
+
+        RunEngine(Engine);
     }
 }

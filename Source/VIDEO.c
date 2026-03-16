@@ -223,6 +223,7 @@ int Render(Engine* Engine)
 {
     if(Engine)
     {
+        SDL_RenderClear(Engine->Video.Renderer);
         if(Engine->SpriteZResortNeeded)
         {
             qsort(Engine->Sprites, Engine->Resource.NumberOfSprites, sizeof(Sprite*), SortSpritesByZ);

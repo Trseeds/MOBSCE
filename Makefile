@@ -16,12 +16,12 @@ Test:
 	Binaries/$(Target)_Test
 Debug:
 	cls
-	$(Compiler) $(DebugFlags) Source/*.c -o Binaries/$(Target)_Debug.exe $(IncludeFlags) $(LinkerFlags)
+	$(Compiler) $(DebugFlags) Source/*.c Source/Non-Engine/*.c -o Binaries/$(Target)_Debug.exe $(IncludeFlags) $(LinkerFlags)
 	gdb Binaries/$(Target)_Debug
 Release:
 	cls
 	windres resources.rc -O coff -o resources.res
-	$(Compiler) $(ReleaseFlags) resources.res Source/*.c -o Binaries/$(Target).exe $(IncludeFlags) $(LinkerFlags) 
+	$(Compiler) $(ReleaseFlags) resources.res Source/*.c Source/Non-Engine/*.c -o Binaries/$(Target).exe $(IncludeFlags) $(LinkerFlags) 
 
 $(OBJECTS): Binaries/%.o: Source/%.c
 	$(Compiler) $(ReleaseFlags) $(IncludeFlags) -c $< -o $@

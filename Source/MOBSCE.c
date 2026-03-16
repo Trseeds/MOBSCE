@@ -186,6 +186,8 @@ int InitSDL(Engine* Engine)
 
 void CleanupSDL()
 {
+    IMG_Quit();
+    Mix_Quit();
     SDL_Quit();
 }
 
@@ -221,7 +223,7 @@ int GetBasePath(Engine* Engine)
             ThrowError("Failed to get base path!",Traceback,Engine);
             return(ERROR_SDL_FAILURE);
         }
-        strcpy(Engine->BasePath,Result);
+        strncpy(Engine->BasePath,Result,STRING_BUFFER_SIZE);
 
         for(int i = 0; i < STRING_BUFFER_SIZE; i++)
         {
@@ -242,10 +244,10 @@ char* GetAssetPath(char* Asset, char* Output, Engine* Engine)
     {
         char Path[STRING_BUFFER_SIZE];
         snprintf(Path,STRING_BUFFER_SIZE,"%s%s",Engine->BasePath,Asset);
-        strcpy(Output,Path);
+        strncpy(Output,Path,STRING_BUFFER_SIZE);
         return(Output);
     }
-    return((char*)ERROR_INVALID_ENGINE);
+    return(WARNING_NULL);
 }
 
 int KeepTime(Engine* Engine)
@@ -270,7 +272,7 @@ Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, in
     if(!NewEngine)
     {
         ThrowError("Failed to allocate memory!","InitEngine()",NewEngine);
-        return((Engine*)ERROR_MEMORY);
+        return(WARNING_NULL);
     }
 
     NewEngine->ERROR_LEVEL = ERROR_LEVEL;
@@ -281,10 +283,10 @@ Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, in
     GetBasePath(NewEngine);
 
     char Config[STRING_BUFFER_SIZE];
-    strcpy(NewEngine->ConfigPath,GetAssetPath(ConfigFile,Config,NewEngine));
+    strncpy(NewEngine->ConfigPath,GetAssetPath(ConfigFile,Config,NewEngine),STRING_BUFFER_SIZE);
     char Icon[STRING_BUFFER_SIZE];
-    strcpy(NewEngine->Video.WindowIconPath,GetAssetPath(WindowIconPath,Icon,NewEngine));
-    strcpy(NewEngine->Video.WindowTitle,WindowTitle);
+    strncpy(NewEngine->Video.WindowIconPath,GetAssetPath(WindowIconPath,Icon,NewEngine),STRING_BUFFER_SIZE);
+    strncpy(NewEngine->Video.WindowTitle,WindowTitle,STRING_BUFFER_SIZE);
 
     UpdateConfig(Config,&NewEngine->Config,NewEngine);
     LoadEngineConfig(NewEngine);
