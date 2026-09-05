@@ -1,7 +1,7 @@
 Compiler = gcc
 IncludeFlags = -I Source -I Libraries/SDL2/Include -I Libraries/INIH
 LinkerFlags = -L Libraries/SDL2/lib/x64 -L Libraries/INIH -lSDL2main -lSDL2 -lSDL2_mixer -lSDL2_image -lINIH
-TestFlags = -o0
+TestFlags = -o3 -march=native
 DebugFlags = -g3 -o0
 ReleaseFlags = -g0 -o3 -s -flto -std=c11
 SOURCES = Source/MOBSCE.c Source/CONFIG.c Source/INPUT.c Source/RESOURCE.c Source/VIDEO.c Source/AUDIO.c

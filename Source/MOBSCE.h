@@ -23,9 +23,12 @@ Engine
 #include <time.h>
 #include "BUTTONS.h"
 
-#define STRING_BUFFER_SIZE 1024
-#define OBJECT_NAME_SIZE 64
-#define MIN_ALLOCATE 16
+#define OBJECT_USED 1
+#define OBJECT_DIRTY 2
+
+#define STRING_BUFFER_SIZE 5120
+#define OBJECT_NAME_SIZE 128
+#define MIN_ALLOCATE 1000
 #define EVENT_QUEUE_SIZE 512
 #define TINT_NOCHANGE 255
 
@@ -55,6 +58,8 @@ enum Flip {
 };
 
 //basic data types
+typedef unsigned char byte;
+
 typedef struct Vector2 {
 	int X;
 	int Y;
@@ -126,8 +131,10 @@ typedef struct SpriteRenderParameters {
 
 //objects
 typedef struct Actor {
-	char Name[OBJECT_NAME_SIZE];
+	byte IsUsed;
 	Uint64 ID;
+	Uint32 ReferenceIndex;
+	char Name[OBJECT_NAME_SIZE];
 	FVector2 Position;
 	Vector2 Dimensions;
 	int Voice;
@@ -136,23 +143,17 @@ typedef struct Actor {
 } Actor;
 
 typedef struct Sprite {
-	char Name[OBJECT_NAME_SIZE];
+	byte IsUsed;
 	Uint64 ID;
+	Uint32 ReferenceIndex;
+	char Name[OBJECT_NAME_SIZE];
 	int TextureID;
 	SpriteRenderParameters RenderParameters;
-	Actor* Actor;
+	Uint32 ActorReferenceIndex;
+	Uint64 ExpectedActorID;
 	void (*Routine)(struct Sprite*, Engine*);
 	CustomSpriteData* CustomData;
 } Sprite;
-
-typedef struct Wiregon {
-	int ID;
-	Vector2* Verticies;
-	Vector3 Position;
-	Vector3 Color;
-	int Alpha;
-	int NumberOfVerticies;
-} Wiregon;
 
 //engine
 typedef struct Audio {
@@ -220,14 +221,16 @@ typedef struct Resource {
 	int NumberOfSounds;
 	int NumberOfMusics;
 	int NumberOfSprites;
+	int NumberOfSpriteReferences;
 	int NumberOfActors;
-	int NumberOfWiregons;
+	int NumberOfActorReferences;
 	int AllocatedTextureMemory;
 	int AllocatedSoundMemory;
 	int AllocatedMusicMemory;
 	int AllocatedSpriteMemory;
+	int AllocatedSpriteReferenceMemory;
 	int AllocatedActorMemory;
-	int AllocatedWiregonMemory;
+	int AllocatedActorReferenceMemory;
 } Resource;
 
 typedef struct Engine {
@@ -239,32 +242,35 @@ typedef struct Engine {
 	Input Input;
 	Clock Clock;
 	Resource Resource;
-	Actor** Actors;
-	Sprite** Sprites;
-	Wiregon** Wiregons;
+	Actor* Actors;
+	Actor** ActorReferences;
+	Sprite* Sprites;
+	Sprite** SpriteReferences;
 	SDL_Event Events[EVENT_QUEUE_SIZE];
 	Uint64 IDCounter;
 	int Running;
 	int SpriteZResortNeeded;
-	int WiregonZResortNeeded;
 	int ERROR_LEVEL;
 	int WARNING_LEVEL;
 } Engine;
 
 typedef struct ResourceInfo {
 	void* Pointer;
+	int SizeOfResource;
 	void (*FreeFunction)(void*);
 	int* AllocatedResourceMemory;
 	int* NumberOfResources;
+	byte IsPointerArray;
 } ResourceInfo;
 
 //engine stuff
+int IsZero(void* Pointer, int Size);
 void ThrowError(char* Message, char* Thrower, Engine* Engine);
 void ThrowWarning(char* Message, char* Thrower, Engine* Engine);
 Uint64 GetNewObjectID(Engine* Engine);
 int CompactArray(const void* X, const void* Y);
+int CompactArrayOfObjects(const void* X, const void* Y);
 int SortSpritesByZ(const void* X, const void* Y);
-int SortWiregonsByZ(const void* X, const void* Y);
 int PoolCanBeShrunk(void* Pool, int AllocatedElements, int AllocatedSize);
 int LinearMap(int Number, int NumberMax, int RangeMax, int RangeMin);
 void SeedRNG();
@@ -294,7 +300,6 @@ int RestartVideo(Engine* Engine);
 int CleanupVideo(Engine* Engine);
 int DrawTexture(SDL_Texture* Texture, Vector2 Position, Vector2 Origin, Engine* Engine);
 int DrawSprite(Sprite* Sprite, Engine* Engine);
-int DrawWiregon(Wiregon* Wiregon, Engine* Engine);
 int Render(Engine* Engine);
 
 //input
@@ -308,10 +313,16 @@ int RumbleGamepad(int Strength, int Duration, Engine* Engine);
 int KeepTime(Engine* Engine);
 
 //resource
+void* OSMemoryAllocate(size_t Size);
+void OSMemoryFree(void* Pointer, size_t Size);
 int InitResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
 int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
 int ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
 int CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
+void* FindOpenObjectSpace(void* Pool, int PoolSize, int Size);
+Uint32 FindOpenReferenceSpace(void* Pool, int AllocatedReferenceMemory);
+void SpriteFreeFunction(void* SpritePtr);
+void ActorFreeFunction(void* ActorPtr);
 //audio
 int CacheSound(char* File, Engine* Engine);
 int CacheMusic(char* File, Engine* Engine);
@@ -320,11 +331,10 @@ int CacheTexture(char* File, Engine* Engine);
 //objects
 Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, CustomSpriteData* CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine);
 Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, CustomActorData* CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine);
-Wiregon* CreateWiregon(Vector2* Verticies, Vector3 Position, int NumberOfVerticies, Vector3 Color, int Alpha, Engine* Engine);
-int DestroySprite(Sprite* DSprite, void (*FreeFunction)(struct CustomSpriteData*, struct Engine*), Engine* Engine);
-int DestroyActor(Actor* DActor, void (*FreeFunction)(struct CustomActorData*, struct Engine*), Engine* Engine);
-int DestroyWiregon(Wiregon* DWiregon, Engine* Engine);
+int DestroySprite(Sprite* DSprite, void (*FreeFunction)(void*), Engine* Engine);
+int DestroyActor(Actor* DActor, void (*FreeFunction)(void*), Engine* Engine);
 Sprite* GetSpriteByName(char* Name, Engine* Engine);
 Actor* GetActorByName(char* Name, Engine* Engine);
+Actor* GetActorByID(Uint64 ID, Engine* Engine);
 
 #endif

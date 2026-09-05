@@ -1,19 +1,32 @@
 #include "MOBSCE.h"
 
+int IsZero(void* Pointer, int Size)
+{
+    for(int i = 0; i < Size; i++)
+    {
+        if(*(unsigned char*)(Pointer+i))
+        {
+            return(false);
+        }
+    }
+    return(true);
+}
+
 void ThrowError(char* Message, char* Thrower, Engine* Engine)
 {
     char BoxErrorMessage[STRING_BUFFER_SIZE];
-    if(Engine->ERROR_LEVEL != -1)
+    int EL = Engine->ERROR_LEVEL;
+    if(EL != -1)
     {
-        if(Engine->ERROR_LEVEL == 0)
+        if(EL == 0)
         {
             snprintf(BoxErrorMessage,STRING_BUFFER_SIZE,"An error has occurred.");
         }
-        if(Engine->ERROR_LEVEL == 1)
+        if(EL == 1)
         {
             snprintf(BoxErrorMessage,STRING_BUFFER_SIZE,"Error Message: %s",Message);
         }
-        if(Engine->ERROR_LEVEL == 2)
+        if(EL == 2)
         {
             snprintf(BoxErrorMessage,STRING_BUFFER_SIZE,"Error Message: %s\nThrower: %s",Message,Thrower);
         }
@@ -24,13 +37,14 @@ void ThrowError(char* Message, char* Thrower, Engine* Engine)
 
 void ThrowWarning(char* Message, char* Thrower, Engine* Engine)
 {
-    if(Engine->WARNING_LEVEL > 0)
+    int WL = Engine->WARNING_LEVEL;
+    if(WL > 0)
     {
-        if(Engine->WARNING_LEVEL == 1)
+        if(WL == 1)
         {
             printf("\n\nWarning: %s\n\n",Message);
         }
-        if(Engine->WARNING_LEVEL == 2)
+        if(WL == 2)
         {
             printf("\n\nWarning: %s\nThrower: %s\n\n",Message,Thrower);
         }
@@ -66,62 +80,57 @@ int CompactArray(const void* X, const void* Y)
     return(0);
 }
 
-int SortSpritesByZ(const void* X, const void* Y)
+int CompactArrayOfObjects(const void* X, const void* Y)
 {
-    Sprite* Sprite1 = *(Sprite**)X;
-    Sprite* Sprite2 = *(Sprite**)Y;
-    if (Sprite1 == NULL && Sprite2 == NULL)
-    {
-        return(0);
-    } 
-    if (Sprite1 == NULL)
-    {
-        return(-1);
-    }
-    if (Sprite2 == NULL)
-    {
-        return(1);
-    }
-    if(Sprite1->RenderParameters.Position.Z == Sprite2->RenderParameters.Position.Z)
+    const byte NX = *(byte*)X;
+    const byte NY = *(byte*)Y;
+    if(NX == false && NY == false)
     {
         return(0);
     }
-    if(Sprite1->RenderParameters.Position.Z < Sprite2->RenderParameters.Position.Z)
+    if(NX != false && NY != false)
     {
-        return(-1);
+        return(0);
     }
-    if(Sprite1->RenderParameters.Position.Z > Sprite2->RenderParameters.Position.Z)
+    if(NX == false)
     {
         return(1);
+    }
+    if(NY == false)
+    {
+        return(-1);
     }
     return(0);
 }
 
-int SortWiregonsByZ(const void* X, const void* Y)
+int SortSpritesByZ(const void* X, const void* Y)
 {
-    Wiregon* Wiregon1 = *(Wiregon**)X;
-    Wiregon* Wiregon2 = *(Wiregon**)Y;
-    if (Wiregon1 == NULL && Wiregon2 == NULL)
+    const byte NX = *(byte*)X;
+    const byte NY = *(byte*)Y;
+    const int SPR1Z = ((Sprite*)X)->RenderParameters.Position.Z;
+    const int SPR2Z = ((Sprite*)Y)->RenderParameters.Position.Z;
+    if(NX == false && NY == false)
     {
         return(0);
-    } 
-    if (Wiregon1 == NULL)
-    {
-        return(-1);
     }
-    if (Wiregon2 == NULL)
+    if(NX == false)
     {
         return(1);
     }
-    if(Wiregon1->Position.Z == Wiregon2->Position.Z)
-    {
-        return(0);
-    }
-    if(Wiregon1->Position.Z < Wiregon2->Position.Z)
+    if(NY == false)
     {
         return(-1);
     }
-    if(Wiregon1->Position.Z > Wiregon2->Position.Z)
+    
+    if(SPR1Z == SPR2Z)
+    {
+        return(0);
+    }
+    if(SPR1Z < SPR2Z)
+    {
+        return(-1);
+    }
+    if(SPR1Z > SPR2Z)
     {
         return(1);
     }
@@ -254,13 +263,14 @@ int KeepTime(Engine* Engine)
 {
     if(Engine)
     {
-        Engine->Clock.PreviousTime = Engine->Clock.CurrentTime;
-        Engine->Clock.CurrentTime = SDL_GetPerformanceCounter();
-        Engine->Clock.DeltaTime = (double)((Engine->Clock.CurrentTime-Engine->Clock.PreviousTime)/(double)SDL_GetPerformanceFrequency());
-        Engine->Clock.TotalTime += (Engine->Clock.CurrentTime-Engine->Clock.PreviousTime);
-        Engine->Clock.TotalFrames++;
-        Engine->Clock.RealTime = time(NULL);
-        Engine->Clock.FrameRate = (double)(1/Engine->Clock.DeltaTime);
+        Clock* C = &Engine->Clock;
+        C->PreviousTime = C->CurrentTime;
+        C->CurrentTime = SDL_GetPerformanceCounter();
+        C->DeltaTime = (double)((C->CurrentTime-C->PreviousTime)/(double)SDL_GetPerformanceFrequency());
+        C->TotalTime += (C->CurrentTime-C->PreviousTime);
+        C->TotalFrames++;
+        C->RealTime = time(NULL);
+        C->FrameRate = (double)(1/C->DeltaTime);
         return(RETURN_SUCCESS);
     }
     return(ERROR_INVALID_ENGINE);
@@ -268,7 +278,7 @@ int KeepTime(Engine* Engine)
 
 Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, int ERROR_LEVEL, int WARNING_LEVEL)
 {
-    Engine* NewEngine = (Engine*)calloc(1,sizeof(Engine));
+    Engine* NewEngine = (Engine*)OSMemoryAllocate(sizeof(Engine));
     if(!NewEngine)
     {
         ThrowError("Failed to allocate memory!","InitEngine()",NewEngine);
@@ -294,34 +304,46 @@ Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, in
     InitAudio(NewEngine);
     //sounds
     NewResourceInfo.Pointer = &NewEngine->Resource.Sounds;
+    NewResourceInfo.SizeOfResource = sizeof(Mix_Chunk*);
     NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedSoundMemory;
     NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfSounds;
     InitResourcePool(NewResourceInfo,NewEngine);
     //music
     NewResourceInfo.Pointer = &NewEngine->Resource.Music;
+    NewResourceInfo.SizeOfResource = sizeof(Mix_Music*);
     NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedMusicMemory;
     NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfMusics;
     InitResourcePool(NewResourceInfo,NewEngine);
     InitVideo(NewEngine);
     //textures
     NewResourceInfo.Pointer = &NewEngine->Resource.Textures;
+    NewResourceInfo.SizeOfResource = sizeof(SDL_Texture*);
     NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedTextureMemory;
     NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfTextures;
     InitResourcePool(NewResourceInfo, NewEngine);
     //actors
     NewResourceInfo.Pointer = &NewEngine->Actors;
+    NewResourceInfo.SizeOfResource = sizeof(Actor);
     NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedActorMemory;
     NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfActors;
     InitResourcePool(NewResourceInfo,NewEngine);
+    //actor references
+    NewResourceInfo.Pointer = &NewEngine->ActorReferences;
+    NewResourceInfo.SizeOfResource = sizeof(void*);
+    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedActorReferenceMemory;
+    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfActorReferences;
+    InitResourcePool(NewResourceInfo,NewEngine);
     //sprites
     NewResourceInfo.Pointer = &NewEngine->Sprites;
+    NewResourceInfo.SizeOfResource = sizeof(Sprite);
     NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedSpriteMemory;
     NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfSprites;
     InitResourcePool(NewResourceInfo,NewEngine);
-    //Wiregons
-    NewResourceInfo.Pointer = &NewEngine->Wiregons;
-    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedWiregonMemory;
-    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfWiregons;
+    //sprite references
+    NewResourceInfo.Pointer = &NewEngine->SpriteReferences;
+    NewResourceInfo.SizeOfResource = sizeof(void*);
+    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedSpriteReferenceMemory;
+    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfSpriteReferences;
     InitResourcePool(NewResourceInfo,NewEngine);
     NewEngine->Running = true;
     return(NewEngine);
@@ -333,23 +355,27 @@ int RunEngine(Engine* Engine)
     {
         GetSDLEvents(Engine);
         GetInput(Engine);
-        for(int i = 0; i < Engine->Resource.NumberOfSprites; i++)
+        int ASM = Engine->Resource.AllocatedSpriteMemory;
+        int AAM = Engine->Resource.AllocatedActorMemory;
+        Sprite* S = Engine->Sprites;
+        Actor* A = Engine->Actors;
+        for(int i = 0; i < ASM; i++)
         {
-            if(Engine->Sprites[i])
+            if(S[i].IsUsed)
             {
-                if(Engine->Sprites[i]->Routine != NULL)
+                if(S[i].Routine != NULL)
                 {
-                    Engine->Sprites[i]->Routine(Engine->Sprites[i],Engine);
+                    S[i].Routine(&S[i],Engine);
                 }
             }
         }
-        for(int i = 0; i < Engine->Resource.NumberOfActors; i++)
+        for(int i = 0; i < AAM; i++)
         {
-            if(Engine->Actors[i])
+            if(A[i].IsUsed)
             {
-                if(Engine->Actors[i]->Routine)
+                if(((Actor)A[i]).Routine)
                 {
-                    Engine->Actors[i]->Routine(Engine->Actors[i],Engine);
+                    A[i].Routine(&A[i],Engine);
                 }
             }
         }
@@ -371,42 +397,61 @@ int CleanupEngine(Engine* Engine)
         
         //sounds
         ResourceInfo.Pointer = &Engine->Resource.Sounds;
+        ResourceInfo.SizeOfResource = sizeof(Mix_Chunk*);
         ResourceInfo.FreeFunction = (void (*)(void*))&Mix_FreeChunk;
         ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSounds;
         ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSoundMemory;
+        ResourceInfo.IsPointerArray = true;
         CleanupResourcePool(ResourceInfo,Engine);
         //music
         ResourceInfo.Pointer = &Engine->Resource.Music;
+        ResourceInfo.SizeOfResource = sizeof(Mix_Music*);
         ResourceInfo.FreeFunction = (void (*)(void*))&Mix_FreeMusic;
         ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfMusics;
         ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedMusicMemory;
+        ResourceInfo.IsPointerArray = true;
         CleanupResourcePool(ResourceInfo,Engine);
-        CleanupVideo(Engine);
         //textures
         ResourceInfo.Pointer = &Engine->Resource.Textures;
+        ResourceInfo.SizeOfResource = sizeof(SDL_Texture*);
         ResourceInfo.FreeFunction = (void (*)(void*))&SDL_DestroyTexture;
         ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTextures;
         ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTextureMemory;
+        ResourceInfo.IsPointerArray = true;
         CleanupResourcePool(ResourceInfo,Engine);
         //sprites
         ResourceInfo.Pointer = &Engine->Sprites;
-        ResourceInfo.FreeFunction = &free;
+        ResourceInfo.SizeOfResource = sizeof(Sprite);
+        ResourceInfo.FreeFunction = &SpriteFreeFunction;
         ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSprites;
         ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteMemory;
+        ResourceInfo.IsPointerArray = false;
+        CleanupResourcePool(ResourceInfo,Engine);
+        //sprite references
+        ResourceInfo.Pointer = &Engine->SpriteReferences;
+        ResourceInfo.SizeOfResource = sizeof(void*);
+        ResourceInfo.FreeFunction = NULL;
+        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteReferenceMemory;
+        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSpriteReferences;
+        ResourceInfo.IsPointerArray = true;
         CleanupResourcePool(ResourceInfo,Engine);
         //actors
         ResourceInfo.Pointer = &Engine->Actors;
-        ResourceInfo.FreeFunction = &free;
+        ResourceInfo.SizeOfResource = sizeof(Actor);
+        ResourceInfo.FreeFunction = &ActorFreeFunction;
         ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActors;
         ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
+        ResourceInfo.IsPointerArray = false;
         CleanupResourcePool(ResourceInfo,Engine);
-        //Wiregons
-        ResourceInfo.Pointer = &Engine->Wiregons;
-        ResourceInfo.FreeFunction = &free;
-        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfWiregons;
-        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedWiregonMemory;
+        //actor references
+        ResourceInfo.Pointer = &Engine->ActorReferences;
+        ResourceInfo.SizeOfResource = sizeof(void*);
+        ResourceInfo.FreeFunction = NULL;
+        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorReferenceMemory;
+        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActorReferences;
+        ResourceInfo.IsPointerArray = true;
         CleanupResourcePool(ResourceInfo,Engine);
-        CleanupSDL();
+        CleanupVideo(Engine);
         Engine->Running = false;
         return(RETURN_SUCCESS);
     }

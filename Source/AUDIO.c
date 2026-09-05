@@ -54,7 +54,10 @@ int PlaySound(int SoundID, int Voice, int Volume, int Pan, Engine* Engine)
             return(WARNING_INVALID_PARAMETER);
         }
         
-        Mix_HaltChannel(Voice);
+        if(Voice != -1)
+        {
+            Mix_HaltChannel(Voice);
+        }
         if(Engine->Audio.Muted)
         {
             return(RETURN_SUCCESS);

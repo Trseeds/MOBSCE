@@ -1,12 +1,40 @@
 #include "MOBSCE.h"
 
+#ifdef _WIN32
+    #include <windows.h>
+    void* OSMemoryAllocate(size_t Size)
+    {
+        void* Pointer = VirtualAlloc(NULL,Size,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE);
+        return(Pointer);
+    }
+    void OSMemoryFree(void* Pointer, size_t Size)
+    {
+        VirtualFree(Pointer,0,MEM_RELEASE);
+    }
+#elif defined(__unix__)
+    #include <sys/mman.h>
+    void* OSMemoryAllocate(size_t Size)
+    {
+        void* Pointer = mmap(NULL,Size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
+        if(Pointer == MAP_FAILED)
+        {
+            return(NULL);
+        }
+        return(Pointer);
+    }
+    void OSMemoryFree(void* Pointer, size_t Size)
+    {
+        munmap(Pointer,Size);
+    }
+#endif
+
 int InitResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
 {
     if(Engine)
     {
         if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources)
         {
-            *(void**)ResourceInfo.Pointer = calloc(MIN_ALLOCATE,sizeof(void*));
+            *(void**)ResourceInfo.Pointer = OSMemoryAllocate(MIN_ALLOCATE*ResourceInfo.SizeOfResource);
             if(!*(void**)ResourceInfo.Pointer)
             {
                 char Traceback[STRING_BUFFER_SIZE];
@@ -30,8 +58,9 @@ int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
         if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources)
         {
             void** OldPtr = *(void**)ResourceInfo.Pointer;
-            int NewSize = *(int*)ResourceInfo.AllocatedResourceMemory+MIN_ALLOCATE;
-            *(void**)ResourceInfo.Pointer = realloc(*(void**)ResourceInfo.Pointer,NewSize*sizeof(void*));
+            int OldSize = *(int*)ResourceInfo.AllocatedResourceMemory*ResourceInfo.SizeOfResource;
+            int NewSize = (*(int*)ResourceInfo.AllocatedResourceMemory+MIN_ALLOCATE)*ResourceInfo.SizeOfResource;
+            *(void**)ResourceInfo.Pointer = OSMemoryAllocate(NewSize);
             if(!*(void**)ResourceInfo.Pointer)
             {
                 *(void**)ResourceInfo.Pointer = OldPtr;
@@ -41,19 +70,15 @@ int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
                 return(ERROR_MEMORY);
             }
 
+            memcpy(*(void**)ResourceInfo.Pointer,OldPtr,OldSize);
+            OSMemoryFree(OldPtr,OldSize);
             *(int*)ResourceInfo.AllocatedResourceMemory += MIN_ALLOCATE;
-            void** Pool = *(void**)ResourceInfo.Pointer;
-
-            for(int i = *(int*)ResourceInfo.AllocatedResourceMemory-MIN_ALLOCATE; i < *(int*)ResourceInfo.AllocatedResourceMemory; i++)
-            {
-                Pool[i] = NULL;
-            }
 
             return(RETURN_SUCCESS);
         }
         char Traceback[STRING_BUFFER_SIZE];
         snprintf(Traceback,STRING_BUFFER_SIZE,"ExtendResourcePool(0x%X, 0x%X)",&ResourceInfo,Engine);
-        ThrowError("Invalid Resource Info! No more memory can be allocated!",Traceback,Engine);
+        ThrowError("Invalid Resource Info! (critical engine error!!!)",Traceback,Engine);
         return(ERROR_INVALID_PARAMETER);
     }
     return(ERROR_INVALID_ENGINE);
@@ -66,8 +91,9 @@ int ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
         if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources)
         {
             void** OldPtr = *(void**)ResourceInfo.Pointer;
-            int NewSize = *(int*)ResourceInfo.AllocatedResourceMemory-MIN_ALLOCATE;
-            *(void**)ResourceInfo.Pointer = realloc(*(void**)ResourceInfo.Pointer,NewSize*sizeof(void*));
+            int OldSize = *(int*)ResourceInfo.AllocatedResourceMemory*ResourceInfo.SizeOfResource;
+            int NewSize = (*(int*)ResourceInfo.AllocatedResourceMemory-MIN_ALLOCATE)*ResourceInfo.SizeOfResource;
+            *(void**)ResourceInfo.Pointer = OSMemoryAllocate(NewSize);
             if(!*(void**)ResourceInfo.Pointer)
             {
                 *(void**)ResourceInfo.Pointer = OldPtr;
@@ -76,7 +102,11 @@ int ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
                 ThrowError("Failed to allocate new memory!",Traceback,Engine);
                 return(ERROR_MEMORY);
             }
+
+            memcpy(*(void**)ResourceInfo.Pointer,OldPtr,NewSize);
+            OSMemoryFree(OldPtr,OldSize);
             *(int*)ResourceInfo.AllocatedResourceMemory -= MIN_ALLOCATE;
+
             return(RETURN_SUCCESS);
         }
         char Traceback[STRING_BUFFER_SIZE];
@@ -91,18 +121,30 @@ int CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
 {
     if(Engine)
     {
-        if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources && ResourceInfo.FreeFunction)
+        if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources)
         {
-            void** Pool = *(void**)ResourceInfo.Pointer;
+            byte* Pool = *(void**)ResourceInfo.Pointer;
+            int Size = *(int*)ResourceInfo.AllocatedResourceMemory*ResourceInfo.SizeOfResource;
 
-            for(int i = 0; i < *(int*)ResourceInfo.AllocatedResourceMemory; i++)
+            for(int i = 0; i < Size; i += ResourceInfo.SizeOfResource)
             {
-                if(Pool[i])
+                void* Element = Pool+i;
+                if(!IsZero(Element,ResourceInfo.SizeOfResource))
                 {
-                    ResourceInfo.FreeFunction(Pool[i]);
+                    if(ResourceInfo.FreeFunction)
+                    {
+                        if(ResourceInfo.IsPointerArray)
+                        {
+                            ResourceInfo.FreeFunction(*(void**)Element);
+                        }
+                        else
+                        {
+                            ResourceInfo.FreeFunction(Element);
+                        }
+                    }
                 }
             }
-            free(Pool);
+            OSMemoryFree(Pool,Size);
             return(RETURN_SUCCESS);
         }
         char Traceback[STRING_BUFFER_SIZE];
@@ -113,28 +155,62 @@ int CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
+void* FindOpenObjectSpace(void* Pool, int PoolSize, int Size)
+{
+    for(int i = 0; i < PoolSize; i += Size)
+    {
+        if(!*(byte*)(Pool+i))
+        {
+            return(Pool+i);
+        }
+    }
+}
+
+Uint32 FindOpenReferenceSpace(void* Pool, int AllocatedReferenceMemory)
+{
+    void** RealPool = (void**)Pool;
+    for(int i = 0; i < AllocatedReferenceMemory; i++)
+    {
+        if(!RealPool[i])
+        {
+            return(i);
+        }
+    }
+}
+
 Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, CustomSpriteData* CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
 {
     if(Engine)
     {
-        Sprite* NewSprite = (Sprite*)calloc(1,sizeof(Sprite));
-        if(!NewSprite)
-        {
-            char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"CreateSprite(%s, 0x%X, 0x%X, 0x%X, %d, 0x%X, 0x%X)",Name,Position,Origin,Dimensions,TextureID,Routine,Engine);
-            ThrowError("Failed to allocate memory!",Traceback,Engine);
-            return(WARNING_NULL);
-        }
-
         if(Engine->Resource.NumberOfSprites+1 >= Engine->Resource.AllocatedSpriteMemory)
         {
             ResourceInfo ResourceInfo;
             ResourceInfo.Pointer = &Engine->Sprites;
+            ResourceInfo.SizeOfResource = sizeof(Sprite);
             ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteMemory;
             ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSprites;
             ExtendResourcePool(ResourceInfo,Engine);
+            ResourceInfo.Pointer = &Engine->SpriteReferences;
+            ResourceInfo.SizeOfResource = sizeof(Sprite*);
+            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteReferenceMemory;
+            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSpriteReferences;
+            ExtendResourcePool(ResourceInfo,Engine);
+            qsort(Engine->Sprites, Engine->Resource.NumberOfSprites, sizeof(Sprite), CompactArrayOfObjects);
+            int ASM = Engine->Resource.AllocatedSpriteMemory;
+            Sprite* S = Engine->Sprites;
+            for(int i = 0; i < ASM; i++)
+            {
+                if(S[i].IsUsed)
+                {
+                    Engine->SpriteReferences[Engine->Sprites[i].ReferenceIndex] = &S[i];
+                }
+            }
         }
 
+        Sprite* NewSprite = FindOpenObjectSpace(Engine->Sprites,Engine->Resource.AllocatedSpriteMemory*sizeof(Sprite),sizeof(Sprite));
+        NewSprite->ReferenceIndex = FindOpenReferenceSpace(Engine->SpriteReferences,Engine->Resource.AllocatedSpriteReferenceMemory);
+        Engine->SpriteReferences[NewSprite->ReferenceIndex] = NewSprite;
+        NewSprite->IsUsed = true;
         strncpy(NewSprite->Name,Name,OBJECT_NAME_SIZE);
         NewSprite->ID = GetNewObjectID(Engine);
         NewSprite->RenderParameters.Position.X = Position.X; NewSprite->RenderParameters.Position.Y = Position.Y; NewSprite->RenderParameters.Position.Z = Position.Z;
@@ -148,11 +224,19 @@ Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimen
         NewSprite->RenderParameters.Transparency = 100;
         Vector3 Tint = {TINT_NOCHANGE,TINT_NOCHANGE,TINT_NOCHANGE};
         NewSprite->RenderParameters.Tint = Tint;
-        NewSprite->Actor = Actor;
+        if(Actor)
+        {
+            NewSprite->ActorReferenceIndex = Actor->ReferenceIndex;
+            NewSprite->ExpectedActorID = Actor->ID;
+        }
+        else
+        {
+            NewSprite->ActorReferenceIndex = 0;
+            NewSprite->ExpectedActorID = 0;
+        }
         NewSprite->CustomData = CustomData;
         NewSprite->Routine = Routine;
 
-        Engine->Sprites[Engine->Resource.NumberOfSprites] = NewSprite;
         Engine->Resource.NumberOfSprites++;
         Engine->SpriteZResortNeeded = true;
         return(NewSprite);
@@ -160,23 +244,17 @@ Sprite* CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimen
     return(WARNING_NULL);
 }
 
-int DestroySprite(Sprite* DSprite, void (*FreeFunction)(struct CustomSpriteData*, struct Engine*), Engine* Engine)
+int DestroySprite(Sprite* DSprite, void (*FreeFunction)(void*), Engine* Engine)
 {
     if(Engine)
     {
         if(DSprite)
         {
-            for(int i = 0; i < Engine->Resource.NumberOfSprites; i++)
+            Sprite* OldPtr = DSprite;
+            int Index;
+            if(DSprite)
             {
-                if(Engine->Sprites[i]->ID == DSprite->ID)
-                {
-                    Engine->Sprites[i] = NULL;
-                }
-            }
-
-            if(DSprite->CustomData)
-            {
-                FreeFunction(DSprite->CustomData,Engine);
+                FreeFunction(DSprite);
             }
             else
             {
@@ -184,16 +262,42 @@ int DestroySprite(Sprite* DSprite, void (*FreeFunction)(struct CustomSpriteData*
                 snprintf(Traceback,STRING_BUFFER_SIZE,"DestroySprite(0x%X, 0x%X, 0x%X)",DSprite,FreeFunction,Engine);
                 ThrowWarning("Invalid custom data.",Traceback,Engine);
             }
-            free(DSprite);
-            qsort(Engine->Sprites,Engine->Resource.NumberOfSprites,sizeof(Sprite*),CompactArray);
+            int ASM = Engine->Resource.AllocatedSpriteMemory;
+            Sprite* S = Engine->Sprites;
+            for(int i = 0; i < ASM; i++)
+            {
+                if(S[i].ID == DSprite->ID)
+                {
+                    Engine->SpriteReferences[DSprite->ReferenceIndex] = NULL;
+                    memset(&S[i],0,sizeof(Sprite));
+                }
+            }
+            Engine->SpriteZResortNeeded = true;
             Engine->Resource.NumberOfSprites--;
 
-            if(PoolCanBeShrunk(Engine->Sprites,Engine->Resource.AllocatedSpriteMemory,Engine->Resource.NumberOfSprites))
+            if(PoolCanBeShrunk(Engine->Sprites,Engine->Resource.NumberOfSprites,Engine->Resource.AllocatedSpriteMemory))
             {
+                qsort(Engine->Sprites, Engine->Resource.AllocatedSpriteMemory, sizeof(Sprite), CompactArrayOfObjects);
                 ResourceInfo ResourceInfo;
+                ResourceInfo.Pointer = &Engine->Sprites;
+                ResourceInfo.SizeOfResource = sizeof(Sprite);
                 ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteMemory;
                 ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSprites;
                 ShrinkResourcePool(ResourceInfo,Engine);
+                ResourceInfo.Pointer = &Engine->SpriteReferences;
+                ResourceInfo.SizeOfResource = sizeof(Sprite*);
+                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteReferenceMemory;
+                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSpriteReferences;
+                ShrinkResourcePool(ResourceInfo,Engine);
+                int ASM = Engine->Resource.AllocatedSpriteMemory;
+                Sprite* S = Engine->Sprites;
+                for(int i = 0; i < ASM; i++)
+                {
+                    if(S[i].IsUsed)
+                    {
+                        Engine->SpriteReferences[S[i].ReferenceIndex] = &S[i];
+                    }
+                }
             }
             return(RETURN_SUCCESS);
         }
@@ -209,15 +313,17 @@ Sprite* GetSpriteByName(char* Name, Engine* Engine)
 {
     if(Engine)
     {
-        if(Engine->Sprites)
+        int ASM = Engine->Resource.AllocatedSpriteMemory;
+        Sprite* S = Engine->Sprites;
+        if(S)
         {
-            for(int i = 0; i < Engine->Resource.NumberOfSprites; i++)
+            for(int i = 0; i < ASM; i++)
             {
-                if(Engine->Sprites[i])
+                if(S[i].IsUsed)
                 {
-                    if(!strcmp(Engine->Sprites[i]->Name,Name))
+                    if(!strcmp(S[i].Name,Name))
                     {
-                        return(Engine->Sprites[i]);
+                        return(&S[i]);
                     }
                 }
             }
@@ -234,24 +340,35 @@ Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, 
 {
     if(Engine)
     {
-        Actor* NewActor = (Actor*)calloc(1,sizeof(Actor));
-        if(!NewActor)
-        {
-            char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"CreateActor(%s, 0x%X, 0x%X, %d, 0x%X, 0x%X)",Name,Position,Dimensions,Voice,Routine,Engine);
-            ThrowError("Failed to allocate memory!",Traceback,Engine);
-            return(WARNING_NULL);
-        }
-
         if(Engine->Resource.NumberOfActors+1 >= Engine->Resource.AllocatedActorMemory)
         {
             ResourceInfo ResourceInfo;
             ResourceInfo.Pointer = &Engine->Actors;
+            ResourceInfo.SizeOfResource = sizeof(Actor);
             ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
             ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActors;
             ExtendResourcePool(ResourceInfo,Engine);
+            ResourceInfo.Pointer = &Engine->ActorReferences;
+            ResourceInfo.SizeOfResource = sizeof(Actor*);
+            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorReferenceMemory;
+            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActorReferences;
+            ExtendResourcePool(ResourceInfo,Engine);
+            qsort(Engine->Actors, Engine->Resource.NumberOfActors, sizeof(Actor), CompactArrayOfObjects);
+            int AAM = Engine->Resource.AllocatedActorMemory;
+            Actor* A = Engine->Actors;
+            for(int i = 0; i < AAM; i++)
+            {
+                if(A[i].IsUsed)
+                {
+                    Engine->ActorReferences[A[i].ReferenceIndex] = &A[i];
+                }
+            }
         }
 
+        Actor* NewActor = FindOpenObjectSpace(Engine->Actors,Engine->Resource.AllocatedActorMemory*sizeof(Actor),sizeof(Actor));
+        NewActor->ReferenceIndex = FindOpenReferenceSpace(Engine->ActorReferences,Engine->Resource.AllocatedActorReferenceMemory);
+        Engine->ActorReferences[NewActor->ReferenceIndex] = NewActor;
+        NewActor->IsUsed = true;
         strncpy(NewActor->Name,Name,OBJECT_NAME_SIZE);
         NewActor->ID = GetNewObjectID(Engine);
         NewActor->Position.X = Position.X; NewActor->Position.Y = Position.Y;
@@ -260,14 +377,13 @@ Actor* CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, 
         NewActor->CustomData = CustomData;
         NewActor->Routine = Routine;
 
-        Engine->Actors[Engine->Resource.NumberOfActors] = NewActor;
         Engine->Resource.NumberOfActors++;
         return(NewActor);
     }
     return(WARNING_NULL);
 }
 
-int DestroyActor(Actor* DActor, void (*FreeFunction)(struct CustomActorData*, struct Engine*), Engine* Engine)
+int DestroyActor(Actor* DActor, void (*FreeFunction)(void*), Engine* Engine)
 {
     if(Engine)
     {
@@ -275,17 +391,9 @@ int DestroyActor(Actor* DActor, void (*FreeFunction)(struct CustomActorData*, st
         {
             Actor* OldPtr = DActor;
             int Index;
-            for(int i = 0; i < Engine->Resource.NumberOfActors; i++)
+            if(DActor)
             {
-                if(Engine->Actors[i]->ID == DActor->ID)
-                {
-                    Engine->Actors[i] = NULL;
-                }
-            }
-
-            if(DActor->CustomData)
-            {
-                FreeFunction(DActor->CustomData,Engine);
+                FreeFunction(DActor);
             }
             else
             {
@@ -293,25 +401,41 @@ int DestroyActor(Actor* DActor, void (*FreeFunction)(struct CustomActorData*, st
                 snprintf(Traceback,STRING_BUFFER_SIZE,"DestroyActor(0x%X, 0x%X, 0x%X)",DActor,FreeFunction,Engine);
                 ThrowWarning("Invalid custom data.",Traceback,Engine);
             }
-            free(DActor);
-            qsort(Engine->Actors, Engine->Resource.NumberOfActors, sizeof(Actor*), CompactArray);
-            Engine->Resource.NumberOfActors--;
             
-            if(PoolCanBeShrunk(Engine->Actors,Engine->Resource.AllocatedActorMemory,Engine->Resource.NumberOfActors))
+            int AAM = Engine->Resource.AllocatedActorMemory;
+            Actor* A = Engine->Actors;
+            for(int i = 0; i < AAM; i++)
             {
-                ResourceInfo ResourceInfo;
-                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
-                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActors;
-                ShrinkResourcePool(ResourceInfo,Engine);
+                if(A[i].ID == DActor->ID)
+                {
+                    Engine->ActorReferences[DActor->ReferenceIndex] = NULL;
+                    memset(&A[i],0,sizeof(Actor));
+                }
             }
 
-            for(int i = 0; i < Engine->Resource.NumberOfSprites; i++)
+            Engine->Resource.NumberOfActors--;
+            
+            if(PoolCanBeShrunk(Engine->Actors,Engine->Resource.NumberOfActors,Engine->Resource.AllocatedActorMemory))
             {
-                if(Engine->Sprites[i])
+                qsort(Engine->Actors, Engine->Resource.AllocatedActorMemory, sizeof(Actor), CompactArrayOfObjects);
+                ResourceInfo ResourceInfo;
+                ResourceInfo.Pointer = &Engine->Actors;
+                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
+                ResourceInfo.SizeOfResource = sizeof(Actor);
+                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActors;
+                ShrinkResourcePool(ResourceInfo,Engine);
+                ResourceInfo.Pointer = &Engine->ActorReferences;
+                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorReferenceMemory;
+                ResourceInfo.SizeOfResource = sizeof(Actor*);
+                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActorReferences;
+                ShrinkResourcePool(ResourceInfo,Engine);
+                int AAM = Engine->Resource.AllocatedActorMemory;
+                Actor* A = Engine->Actors;
+                for(int i = 0; i < AAM; i++)
                 {
-                    if(Engine->Sprites[i]->Actor == OldPtr)
+                    if(A[i].IsUsed)
                     {
-                        Engine->Sprites[i]->Actor = NULL;
+                        Engine->ActorReferences[A[i].ReferenceIndex] = &A[i];
                     }
                 }
             }
@@ -329,15 +453,17 @@ Actor* GetActorByName(char* Name, Engine* Engine)
 {
     if(Engine)
     {
-        if(Engine->Actors)
+        Actor* A = Engine->Actors;
+        int AAM = Engine->Resource.AllocatedActorMemory;
+        if(A)
         {
-            for(int i = 0; i < Engine->Resource.NumberOfActors; i++)
+            for(int i = 0; i < AAM; i++)
             {
-                if(Engine->Actors[i])
+                if(A[i].IsUsed)
                 {
-                    if(!strcmp(Engine->Actors[i]->Name,Name))
+                    if(!strcmp(A[i].Name,Name))
                     {
-                        return(Engine->Actors[i]);
+                        return(&A[i]);
                     }
                 }
             }
@@ -350,90 +476,31 @@ Actor* GetActorByName(char* Name, Engine* Engine)
     return(WARNING_NULL);
 }
 
-Wiregon* CreateWiregon(Vector2* Verticies, Vector3 Position, int NumberOfVerticies, Vector3 Color, int Alpha, Engine* Engine)
+Actor* GetActorByID(Uint64 ID, Engine* Engine)
 {
     if(Engine)
     {
-        Wiregon* NewWiregon = (Wiregon*)calloc(1,sizeof(Wiregon));
-        if(!NewWiregon)
+        Actor* A = Engine->Actors;
+        int AAM = Engine->Resource.AllocatedActorMemory;
+        if(A)
         {
-            char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"CreateWiregon(0x%X, 0x%X, %d, 0x%X, %d, 0x%X)",Verticies,Position,NumberOfVerticies,Color,Alpha,Engine);
-            ThrowError("Failed to allocate memory!",Traceback,Engine);
-            return(WARNING_NULL);
-        }
-
-        if(Engine->Resource.NumberOfWiregons+1 >= Engine->Resource.AllocatedWiregonMemory)
-        {
-            ResourceInfo ResourceInfo;
-            ResourceInfo.Pointer = &Engine->Wiregons;
-            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedWiregonMemory;
-            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfWiregons;
-            ExtendResourcePool(ResourceInfo,Engine);
-        }
-
-        NewWiregon->Verticies = (Vector2*)calloc(NumberOfVerticies,sizeof(Vector2));
-        if(!NewWiregon->Verticies)
-        {
-            char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"CreateWiregon(0x%X, 0x%X, %d, 0x%X, %d, 0x%X)",Verticies,Position,NumberOfVerticies,Color,Alpha,Engine);
-            ThrowError("Failed to allocate memory!",Traceback,Engine);
-            return(WARNING_NULL);
-        }
-
-        NewWiregon->ID = GetNewObjectID(Engine);
-        memcpy(NewWiregon->Verticies,Verticies,sizeof(Vector2)*NumberOfVerticies);
-        NewWiregon->Position = Position;
-        NewWiregon->NumberOfVerticies = NumberOfVerticies;
-        NewWiregon->Color = Color;
-        NewWiregon->Alpha = Alpha;
-
-        Engine->Wiregons[Engine->Resource.NumberOfWiregons] = NewWiregon;
-        Engine->Resource.NumberOfWiregons++;
-        Engine->WiregonZResortNeeded = true;
-
-        return(NewWiregon);
-    }
-    return(WARNING_NULL);
-}
-
-int DestroyWiregon(Wiregon* DWiregon, Engine* Engine)
-{
-    if(Engine)
-    {
-        if(DWiregon)
-        {
-            for(int i = 0; i < Engine->Resource.NumberOfWiregons; i++)
+            for(int i = 0; i < AAM; i++)
             {
-                if(Engine->Wiregons[i]->ID == DWiregon->ID)
+                if(A[i].IsUsed)
                 {
-                    Engine->Wiregons[i] = NULL;
+                    if(A[i].ID == ID)
+                    {
+                        return(&A[i]);
+                    }
                 }
             }
-            
-            if(DWiregon->Verticies)
-            {
-                free(DWiregon->Verticies);
-            }
-            free(DWiregon);
-            qsort(Engine->Wiregons,Engine->Resource.NumberOfWiregons,sizeof(Wiregon*),CompactArray);
-            Engine->Resource.NumberOfWiregons--;
-
-            if(PoolCanBeShrunk(Engine->Wiregons,Engine->Resource.AllocatedWiregonMemory,Engine->Resource.NumberOfWiregons))
-            {
-                ResourceInfo ResourceInfo;
-                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedWiregonMemory;
-                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfWiregons;
-                ShrinkResourcePool(ResourceInfo,Engine);
-            }
-            return(RETURN_SUCCESS);
+            char Traceback[STRING_BUFFER_SIZE];
+            snprintf(Traceback,STRING_BUFFER_SIZE,"GetActorByID(%d, 0x%X)",ID,Engine);
+            ThrowWarning("Could not find actor.",Traceback,Engine);
+            return(WARNING_NULL);
         }
-        char Traceback[STRING_BUFFER_SIZE];
-        snprintf(Traceback,STRING_BUFFER_SIZE,"DestroyWiregon(0x%X, 0x%X)",DWiregon,Engine);
-        ThrowWarning("Invalid wiregon passed.",Traceback,Engine);
-        return(WARNING_INVALID_PARAMETER);
     }
-    return(ERROR_INVALID_ENGINE);
+    return(WARNING_NULL);
 }
 
 int CacheSound(char* File, Engine* Engine)
@@ -454,6 +521,7 @@ int CacheSound(char* File, Engine* Engine)
         {
             ResourceInfo ResourceInfo;
             ResourceInfo.Pointer = &Engine->Resource.Sounds;
+            ResourceInfo.SizeOfResource = sizeof(Mix_Chunk*);
             ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSoundMemory;
             ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSounds;
             ExtendResourcePool(ResourceInfo,Engine);
@@ -484,6 +552,7 @@ int CacheMusic(char* File, Engine* Engine)
         {
             ResourceInfo ResourceInfo;
             ResourceInfo.Pointer = &Engine->Resource.Music;
+            ResourceInfo.SizeOfResource = sizeof(Mix_Music*);
             ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedMusicMemory;
             ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfMusics;
             ExtendResourcePool(ResourceInfo,Engine);
@@ -525,6 +594,7 @@ int CacheTexture(char* File, Engine* Engine)
             {
                 ResourceInfo ResourceInfo;
                 ResourceInfo.Pointer = &Engine->Resource.Textures;
+                ResourceInfo.SizeOfResource = sizeof(SDL_Texture*);
                 ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTextureMemory;
                 ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTextures;
                 ExtendResourcePool(ResourceInfo,Engine);

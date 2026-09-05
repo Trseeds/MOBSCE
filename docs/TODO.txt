@@ -1,7 +1,0 @@
-functions
-structs
-constants
-dependencies
-compilation
-getting started/basic setup and main function
-tutorial

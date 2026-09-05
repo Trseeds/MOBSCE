@@ -1,195 +1,38 @@
 #include "MOBSCE.h"
 #include "GAME.h"
 
-Vector4 WV[6] = 
-    {
-        {0,0,1279,7},
-        {0,0,7,951},
-        {0,952,1279,959},
-        {8,456,639,479},
-        {1272,0,1279,959},
-        {697,884,728,907}
-    };
-
 /*
 Edit these functions to free the appropriate resources inside the custom data functions
-and then free themselves, called by the engine.
+and then free themselves, called by the engine. Do NOT Free the objects themselves, this
+cause problems.
 */
 /***************************************************************************************/
-void CustomSpriteDataFreeFunction(CustomSpriteData* CustomSpriteData, Engine* Engine)
+void SpriteFreeFunction(void* SpritePtr)
 {
-    free(CustomSpriteData);
+    Sprite* FSprite = (Sprite*)SpritePtr;
+    free(FSprite->CustomData);
 }
 
-void CustomActorDataFreeFunction(CustomActorData* CustomActorData, Engine* Engine)
+void ActorFreeFunction(void* ActorPtr)
 {
-    free(CustomActorData);
+    Actor* FActor = (Actor*)ActorPtr;
+    free(FActor->CustomData);
 }
 /***************************************************************************************/
 
 /*SPRITE AND ACTOR ROUTINES*************************************************************/
-void RenderNumberWiregon(int NUM, int Scale, Wiregon* Wiregon, Engine* Engine)
-{
-    if(NUM > 9 || NUM < 0)
-    {
-        return;
-    }
-    int NumberOfVerticies = 8;
-    Vector2* Verticies = calloc(NumberOfVerticies,sizeof(Vector2));
-    switch(NUM)
-    {
-        case 0:
-            Verticies[0].X = 0; Verticies[0].Y = 0;
-            Verticies[1].X = 2; Verticies[1].Y = 0;
-            Verticies[2].X = 2; Verticies[2].Y = 4;
-            Verticies[3].X = 0; Verticies[3].Y = 4;
-            Verticies[4].X = 0; Verticies[4].Y = 0;
-            Verticies[5].X = 0; Verticies[5].Y = 0;
-            Verticies[6].X = 0; Verticies[6].Y = 0;
-            Verticies[7].X = 0; Verticies[7].Y = 0;
-            break;
-        case 1:
-            Verticies[0].X = 2; Verticies[0].Y = 0;
-            Verticies[1].X = 2; Verticies[1].Y = 4;
-            Verticies[2].X = 2; Verticies[2].Y = 0;
-            Verticies[3].X = 2; Verticies[3].Y = 0;
-            Verticies[4].X = 2; Verticies[4].Y = 0;
-            Verticies[5].X = 2; Verticies[5].Y = 0;
-            Verticies[6].X = 2; Verticies[6].Y = 0;
-            Verticies[7].X = 2; Verticies[7].Y = 0;
-            break;
-        case 2:
-            Verticies[0].X = 0; Verticies[0].Y = 0;
-            Verticies[1].X = 2; Verticies[1].Y = 0;
-            Verticies[2].X = 2; Verticies[2].Y = 2;
-            Verticies[3].X = 0; Verticies[3].Y = 2;
-            Verticies[4].X = 0; Verticies[4].Y = 4;
-            Verticies[5].X = 2; Verticies[5].Y = 4;
-            Verticies[6].X = 2; Verticies[6].Y = 4;
-            Verticies[7].X = 2; Verticies[7].Y = 4;
-            break;
-        case 3:
-            Verticies[0].X = 0; Verticies[0].Y = 0;
-            Verticies[1].X = 2; Verticies[1].Y = 0;
-            Verticies[2].X = 2; Verticies[2].Y = 2;
-            Verticies[3].X = 0; Verticies[3].Y = 2;
-            Verticies[4].X = 2; Verticies[4].Y = 2;
-            Verticies[5].X = 2; Verticies[5].Y = 4;
-            Verticies[6].X = 0; Verticies[6].Y = 4;
-            Verticies[7].X = 0; Verticies[7].Y = 4;
-            break;
-        case 4:
-            Verticies[0].X = 0; Verticies[0].Y = 0;
-            Verticies[1].X = 0; Verticies[1].Y = 2;
-            Verticies[2].X = 2; Verticies[2].Y = 2;
-            Verticies[3].X = 2; Verticies[3].Y = 0;
-            Verticies[4].X = 2; Verticies[4].Y = 4;
-            Verticies[5].X = 2; Verticies[5].Y = 4;
-            Verticies[6].X = 2; Verticies[6].Y = 4;
-            Verticies[7].X = 2; Verticies[7].Y = 4;
-            break;
-        case 5:
-            Verticies[0].X = 0; Verticies[0].Y = 0;
-            Verticies[1].X = 2; Verticies[1].Y = 0;
-            Verticies[2].X = 0; Verticies[2].Y = 0;
-            Verticies[3].X = 0; Verticies[3].Y = 2;
-            Verticies[4].X = 2; Verticies[4].Y = 2;
-            Verticies[5].X = 2; Verticies[5].Y = 4;
-            Verticies[6].X = 0; Verticies[6].Y = 4;
-            Verticies[7].X = 0; Verticies[7].Y = 4;
-            break;
-        case 6:
-            Verticies[0].X = 0; Verticies[0].Y = 0;
-            Verticies[1].X = 2; Verticies[1].Y = 0;
-            Verticies[2].X = 0; Verticies[2].Y = 0;
-            Verticies[3].X = 0; Verticies[3].Y = 4;
-            Verticies[4].X = 2; Verticies[4].Y = 4;
-            Verticies[5].X = 2; Verticies[5].Y = 2;
-            Verticies[6].X = 0; Verticies[6].Y = 2;
-            Verticies[7].X = 0; Verticies[7].Y = 2;
-            break;
-        case 7:
-            Verticies[0].X = 0; Verticies[0].Y = 0;
-            Verticies[1].X = 2; Verticies[1].Y = 0;
-            Verticies[2].X = 2; Verticies[2].Y = 4;
-            Verticies[3].X = 2; Verticies[3].Y = 4;
-            Verticies[4].X = 2; Verticies[4].Y = 4;
-            Verticies[5].X = 2; Verticies[5].Y = 4;
-            Verticies[6].X = 2; Verticies[6].Y = 4;
-            Verticies[7].X = 2; Verticies[7].Y = 4;
-            break;
-        case 8:
-            Verticies[0].X = 0; Verticies[0].Y = 0;
-            Verticies[1].X = 0; Verticies[1].Y = 4;
-            Verticies[2].X = 2; Verticies[2].Y = 4;
-            Verticies[3].X = 2; Verticies[3].Y = 0;
-            Verticies[4].X = 2; Verticies[4].Y = 2;
-            Verticies[5].X = 0; Verticies[5].Y = 2;
-            Verticies[6].X = 0; Verticies[6].Y = 0;
-            Verticies[7].X = 2; Verticies[7].Y = 0;
-            break;
-        case 9:
-            Verticies[0].X = 0; Verticies[0].Y = 0;
-            Verticies[1].X = 0; Verticies[1].Y = 2;
-            Verticies[2].X = 2; Verticies[2].Y = 2;
-            Verticies[3].X = 2; Verticies[3].Y = 0;
-            Verticies[4].X = 0; Verticies[4].Y = 0;
-            Verticies[5].X = 2; Verticies[5].Y = 0;
-            Verticies[6].X = 2; Verticies[6].Y = 4;
-            Verticies[7].X = 2; Verticies[7].Y = 4;
-            break;
-
-        default:
-            break;
-    }
-    for(int i = 0; i < NumberOfVerticies; i++)
-    {
-        Verticies[i].X *= Scale;
-        Verticies[i].Y *= Scale;
-    }
-    free(Wiregon->Verticies);
-    Wiregon->Verticies = Verticies;
-    Wiregon->NumberOfVerticies = NumberOfVerticies;
-}
 
 void AlignSpriteToActor(Sprite* Sprite, Engine* Engine)
-{
-    if(Sprite->Actor)
+{   
+    Actor* Actor = Engine->ActorReferences[Sprite->ActorReferenceIndex];
+    if(Actor)
     {
-        Sprite->RenderParameters.Position.X = Sprite->Actor->Position.X;
-        Sprite->RenderParameters.Position.Y = Sprite->Actor->Position.Y;
-    }
-}
-
-void AlignSpriteToActorOnCamera(Sprite* Sprite, Engine* Engine)
-{
-    if(Sprite->Actor)
-    {
-        Actor* Camera = Sprite->Actor->CustomData->Camera;
-        Sprite->RenderParameters.Visible = false;
-
-        int ScreenX = Sprite->Actor->Position.X - Camera->Position.X;
-        int ScreenY = Sprite->Actor->Position.Y - Camera->Position.Y;
-        if(ScreenX + Sprite->RenderParameters.Dimensions.X >= 0 && 
-           ScreenX <= Camera->Dimensions.X &&
-           ScreenY + Sprite->RenderParameters.Dimensions.Y >= 0 && 
-           ScreenY <= Camera->Dimensions.Y)
+        if(Actor->ID == Sprite->ExpectedActorID)
         {
-            Sprite->RenderParameters.Position.X = ScreenX;
-            Sprite->RenderParameters.Position.Y = ScreenY;
-            Sprite->RenderParameters.Visible = true;
+            Sprite->RenderParameters.Position.X = Actor->Position.X;
+            Sprite->RenderParameters.Position.Y = Actor->Position.Y;
         }
     }
-}
-
-void CameraTrack(Actor* Camera, Engine* Engine)
-{
-    if(!Camera->CustomData->Target)
-    {
-        Camera->CustomData->Target = GetActorByName("Player",Engine);
-    }
-    Camera->Position.X = (Camera->CustomData->Target->Position.X + Camera->CustomData->Target->Dimensions.X/2) - (Camera->Dimensions.X/2);
-    Camera->Position.Y = (Camera->CustomData->Target->Position.Y + Camera->CustomData->Target->Dimensions.Y/2) - (Camera->Dimensions.Y/2);
 }
 
 void ActorScreenWrap(Actor* Actor, Engine* Engine)
@@ -209,44 +52,6 @@ void ActorScreenWrap(Actor* Actor, Engine* Engine)
     if(Actor->Position.Y < 0)
     {
         Actor->Position.Y = Engine->Video.LogicalDimensions.Y;
-    }
-}
-
-void ActorScreenCollision(Actor* Actor, Engine* Engine)
-{
-    if(Actor->Position.X+Actor->Dimensions.X > Engine->Video.LogicalDimensions.X)
-    {
-        Actor->Position.X = Engine->Video.LogicalDimensions.X-Actor->Dimensions.X;
-        Actor->CustomData->Velocity.X = 0;
-    }
-    if(Actor->Position.X < 0)
-    {
-        Actor->Position.X = 0;
-        Actor->CustomData->Velocity.X = 0;
-    }
-    if(Actor->Position.Y+Actor->Dimensions.Y > Engine->Video.LogicalDimensions.Y)
-    {
-        Actor->Position.Y = Engine->Video.LogicalDimensions.Y-Actor->Dimensions.Y;
-        Actor->CustomData->Velocity.Y = 0;
-    }
-    if(Actor->Position.Y < 0)
-    {
-        Actor->Position.Y = 0;
-        Actor->CustomData->Velocity.Y = 0;
-    }
-}
-
-void ActorSideScroller(Actor* Actor, Engine* Engine)
-{
-    if(Actor->Position.Y+Actor->Dimensions.Y > Engine->Video.LogicalDimensions.Y)
-    {
-        Actor->Position.Y = Engine->Video.LogicalDimensions.Y-Actor->Dimensions.Y;
-        Actor->CustomData->Velocity.Y = 0;
-    }
-    if(Actor->Position.Y < 0)
-    {
-        Actor->Position.Y = 0;
-        Actor->CustomData->Velocity.Y = 0;
     }
 }
 
@@ -287,8 +92,6 @@ void ApplyPhysics(Actor* Actor)
     {
         PhysProps->Velocity.Y = 0;
     }
-    //gravity
-    PhysProps->Velocity.Y += PhysProps->Gravity;
 
     Actor->Position.X += PhysProps->Velocity.X;
     Actor->Position.Y += PhysProps->Velocity.Y;
@@ -296,12 +99,11 @@ void ApplyPhysics(Actor* Actor)
 
 void PlayerRoutine(Actor* Player, Engine* Engine)
 {
-    ActorWorldCollide(Player,Engine);
+    ActorScreenWrap(Player,Engine);
     ApplyPhysics(Player);
-    if(Engine->Input.KeysDown[K_UP] && Player->CustomData->Velocity.Y == 0.500000)
+    if(Engine->Input.KeysDown[K_UP])
     {
-        Player->CustomData->Velocity.Y -= Player->CustomData->JumpForce;
-        Player->Position.Y--;
+        Player->CustomData->Velocity.Y -= 0.5;
     }
     if(Engine->Input.KeysDown[K_DOWN])
     {
@@ -319,80 +121,107 @@ void PlayerRoutine(Actor* Player, Engine* Engine)
 
 void MonsterRoutine(Actor* Monster, Engine* Engine)
 {
-    ActorWorldCollide(Monster,Engine);
+    ActorScreenWrap(Monster,Engine);
     ApplyPhysics(Monster);
-    if(!Monster->CustomData->Target)
+    Actor* Target = Engine->ActorReferences[Monster->CustomData->TargetReferenceIndex];
+    if(Target->ID != Monster->CustomData->TargetID)
     {
-        Monster->CustomData->Target = GetActorByName("Player",Engine);
+        return;
     }
 
-    if(Monster->Position.X < Monster->CustomData->Target->Position.X)
+    if(Monster->Position.X < Target->Position.X)
     {
         Monster->CustomData->Velocity.X += 0.2;
     }
-    if(Monster->Position.X > Monster->CustomData->Target->Position.X)
+    if(Monster->Position.X > Target->Position.X)
     {
         Monster->CustomData->Velocity.X -= 0.2;
     }
-    if(Monster->Position.Y < Monster->CustomData->Target->Position.Y)
+    if(Monster->Position.Y < Target->Position.Y)
     {
         Monster->CustomData->Velocity.Y += 0.2;
     }
-    if(Monster->Position.Y > Monster->CustomData->Target->Position.Y && Monster->CustomData->Velocity.Y == 0.500000)
+    if(Monster->Position.Y > Target->Position.Y)
     {
-        Monster->CustomData->Velocity.Y -= Monster->CustomData->JumpForce;
-        Monster->Position.Y--;
+        Monster->CustomData->Velocity.Y -= 0.2;
     }
+}
+
+void UpdateDigit(int Reference, int Divisor, int Data, Engine* Engine)
+{
+    Sprite* Digit = Engine->SpriteReferences[Reference];
+    Digit->RenderParameters.Origin.X = 32 * ((Data / Divisor) % 10);
 }
 /*SPRITE AND ACTOR ROUTINES END*********************************************************/
 
-void CreateCamera(Engine* Engine)
-{
-    Vector2 ActorPosition;
-    Vector2 ActorDimensions;
-    int Voice = 0;
-    CustomActorData* ActorData = calloc(1,sizeof(CustomActorData));
-    ActorPosition.X = 0; ActorPosition.Y = 0;
-    ActorDimensions.X = 640; ActorDimensions.Y = 480;
-    Actor* Actor = CreateActor("Camera",ActorPosition,ActorDimensions,Voice,ActorData,&CameraTrack,Engine);
-}
-
-void CreateFPSCounter(Wiregon** Output, Engine* Engine)
+void CreateFPSCounter(int* References, Engine* Engine)
 {
     Vector3 Position = {0,0,1000};
-    Vector3 Color = {0,0,0};
-    Output[0] = CreateWiregon(NULL,Position,0,Color,255,Engine);
-    Position.X = 4*5;
-    Output[1] = CreateWiregon(NULL,Position,0,Color,255,Engine);
-    Position.X = 8*5;
-    Output[2] = CreateWiregon(NULL,Position,0,Color,255,Engine);
+    Vector4 Origin = {0,0,32,32};
+    Vector2 Dimensions = {32,32};
+    References[0] = CreateSprite("FPS Digit 100,000",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    Position.X += 32;
+    References[1] = CreateSprite("FPS Digit 10,000",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    Position.X += 32;
+    References[2] = CreateSprite("FPS Digit 1,000",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    Position.X += 32;
+    References[3] = CreateSprite("FPS Digit 100",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    Position.X += 32;
+    References[4] = CreateSprite("FPS Digit 10",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    Position.X += 32;
+    References[5] = CreateSprite("FPS Digit 1",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
 }
 
-void CreateObjectCounter(Wiregon** Output, Engine* Engine)
+void CreateObjectCounter(int* References, Engine* Engine)
 {
-    Vector3 Position = {0,0,1000};
-    Vector3 Color = {0,0,0};
-    Position.X = 0*5;
-    Position.Y = 6*5;
-    Output[0] = CreateWiregon(NULL,Position,0,Color,255,Engine);
-    Position.X = 4*5;
-    Output[1] = CreateWiregon(NULL,Position,0,Color,255,Engine);
-    Position.X = 8*5;
-    Output[2] = CreateWiregon(NULL,Position,0,Color,255,Engine);
-    Position.X = 12*5;
-    Output[3] = CreateWiregon(NULL,Position,0,Color,255,Engine);
-    Position.X = 16*5;
-    Output[4] = CreateWiregon(NULL,Position,0,Color,255,Engine);
+    Vector3 Position = {0,32,1000};
+    Vector4 Origin = {0,0,32,32};
+    Vector2 Dimensions = {32,32};
+    References[0] = CreateSprite("OBJ Digit 100,000",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    Position.X += 32;
+    References[1] = CreateSprite("OBJ Digit 10,000",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    Position.X += 32;
+    References[2] = CreateSprite("OBJ Digit 1,000",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    Position.X += 32;
+    References[3] = CreateSprite("OBJ Digit 100",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    Position.X += 32;
+    References[4] = CreateSprite("OBJ Digit 10",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    Position.X += 32;
+    References[5] = CreateSprite("OBJ Digit 1",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+}
+
+void CreateSpriteCounter(int* References, Engine* Engine)
+{
+    Vector3 Position = {0,64,1000};
+    Vector4 Origin = {0,0,32,32};
+    Vector2 Dimensions = {32,32};
+    References[0] = CreateSprite("SPR Digit 100,000",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    Position.X += 32;
+    References[1] = CreateSprite("SPR Digit 10,000",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    Position.X += 32;
+    References[2] = CreateSprite("SPR Digit 1,000",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    Position.X += 32;
+    References[3] = CreateSprite("SPR Digit 100",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    Position.X += 32;
+    References[4] = CreateSprite("SPR Digit 10",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    Position.X += 32;
+    References[5] = CreateSprite("SPR Digit 1",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
 }
 
 void CacheTexturesGame(Engine* Engine)
 {
     char Buffer[STRING_BUFFER_SIZE];
-    char Player[STRING_BUFFER_SIZE];
-    char Monster[STRING_BUFFER_SIZE];
     CacheTexture(GetAssetPath("Assets/Images/Backgrounds/TestBG.png",Buffer,Engine),Engine);
     CacheTexture(GetAssetPath("Assets/Images/Sprites/Player.png",Buffer,Engine),Engine);
     CacheTexture(GetAssetPath("Assets/Images/Sprites/Monster.png",Buffer,Engine),Engine);
+    CacheTexture(GetAssetPath("Assets/Images/Sprites/Numbers.png",Buffer,Engine),Engine);
+}
+
+void CacheSoundsAndMusicGame(Engine* Engine)
+{
+    char Buffer[STRING_BUFFER_SIZE];
+    CacheSound(GetAssetPath("Assets/Sounds/Cough.wav",Buffer,Engine),Engine);
+    CacheMusic(GetAssetPath("Assets/Sounds/Music/Waiting for Romero to Play.mp3",Buffer,Engine),Engine);
 }
 
 void CreateBGGame(Engine* Engine)
@@ -401,7 +230,6 @@ void CreateBGGame(Engine* Engine)
     Vector2 ActorDimensions;
     int Voice = 0;
     CustomActorData* ActorData = calloc(1,sizeof(CustomActorData));
-    ActorData->Camera = GetActorByName("Camera",Engine);
     ActorPosition.X = 0; ActorPosition.Y = 0;
     ActorDimensions.X = 1280; ActorDimensions.Y = 960;
     Actor* Actor = CreateActor("Background",ActorPosition,ActorDimensions,Voice,ActorData,NULL,Engine);
@@ -409,11 +237,11 @@ void CreateBGGame(Engine* Engine)
     Vector3 Position;
     Vector4 Origin;
     Vector2 Dimensions;
-    CustomActorData* SpriteData = calloc(1,sizeof(CustomSpriteData));
+    CustomSpriteData* SpriteData = calloc(1,sizeof(CustomSpriteData));
     Position.X = 0; Position.Y = 0; Position.Z = 0;
     Origin.X = 0; Origin.Y = 0; Origin.Z = 1280; Origin.W = 960;
     Dimensions.X = 1280; Dimensions.Y = 960;
-    CreateSprite("Background",Position,Origin,Dimensions,TXTR_BG,SpriteData,Actor,&AlignSpriteToActorOnCamera,Engine);
+    CreateSprite("Background",Position,Origin,Dimensions,TXTR_BG,SpriteData,Actor,NULL,Engine);
 }
 
 void CreatePlayerGame(Engine* Engine)
@@ -422,11 +250,7 @@ void CreatePlayerGame(Engine* Engine)
     Vector2 ActorDimensions;
     int Voice = 0;
     CustomActorData* ActorData = calloc(1,sizeof(CustomActorData));
-    ActorData->JumpForce = 15;
     ActorData->Drag = 0.01;
-    ActorData->Gravity = 0.5;
-    ActorData->Camera = GetActorByName("Camera",Engine);
-    ActorData->World = WV;
     ActorPosition.X = 100; ActorPosition.Y = 100;
     ActorDimensions.X = 16; ActorDimensions.Y = 16;
     Actor* Actor = CreateActor("Player",ActorPosition,ActorDimensions,Voice,ActorData,&PlayerRoutine,Engine);
@@ -434,11 +258,11 @@ void CreatePlayerGame(Engine* Engine)
     Vector3 SpritePosition;
     Vector4 SpriteOrigin;
     Vector2 SpriteDimensions;
-    CustomActorData* SpriteData = calloc(1,sizeof(CustomSpriteData));
+    CustomSpriteData* SpriteData = calloc(1,sizeof(CustomSpriteData));
     SpritePosition.X = 0; SpritePosition.Y = 0; SpritePosition.Z = 2;
     SpriteOrigin.X = 0; SpriteOrigin.Y = 0; SpriteOrigin.Z = 16; SpriteOrigin.W = 16;
     SpriteDimensions.X = 16; SpriteDimensions.Y = 16;
-    CreateSprite("Player",SpritePosition,SpriteOrigin,SpriteDimensions,TXTR_PLAYER,SpriteData,Actor,&AlignSpriteToActorOnCamera,Engine);
+    CreateSprite("Player",SpritePosition,SpriteOrigin,SpriteDimensions,TXTR_PLAYER,SpriteData,Actor,&AlignSpriteToActor,Engine);
 }
 
 void CreateMonsterGame(Engine* Engine)
@@ -446,47 +270,48 @@ void CreateMonsterGame(Engine* Engine)
     Vector2 ActorPosition;
     Vector2 ActorDimensions;
     int Voice = 1;
-    CustomActorData* ActorData = calloc(1,sizeof(CustomActorData));
-    ActorData->JumpForce = GetRandomNumber(5,20);
+    CustomActorData* ActorData = malloc(sizeof(CustomActorData));
     ActorData->Drag = 0.01;
-    ActorData->Gravity = 0.5;
-    ActorData->Camera = GetActorByName("Camera",Engine);
-    ActorData->World = WV;
     ActorPosition.X = 300; ActorPosition.Y = 300;
     ActorDimensions.X = GetRandomNumber(8,64); ActorDimensions.Y = GetRandomNumber(8,64);
     Actor* Actor = CreateActor("Monster",ActorPosition,ActorDimensions,Voice,ActorData,&MonsterRoutine,Engine);
+    Actor->CustomData->TargetReferenceIndex = GetActorByName("Player",Engine)->ReferenceIndex;
+    Actor->CustomData->TargetID = Engine->ActorReferences[Actor->CustomData->TargetReferenceIndex]->ID;
     /***********************************************************************************/
     Vector3 SpritePosition;
     Vector4 SpriteOrigin;
     Vector2 SpriteDimensions;
-    CustomActorData* SpriteData = calloc(1,sizeof(CustomSpriteData));
+    CustomSpriteData* SpriteData = malloc(sizeof(CustomSpriteData));
     SpritePosition.X = 0; SpritePosition.Y = 0; SpritePosition.Z = 1;
     SpriteOrigin.X = 0; SpriteOrigin.Y = GetRandomNumber(0,4)*32; SpriteOrigin.Z = 32; SpriteOrigin.W = 32;
     SpriteDimensions.X = ActorDimensions.X; SpriteDimensions.Y = ActorDimensions.Y;
-    Sprite* Sprite = CreateSprite("Monster",SpritePosition,SpriteOrigin,SpriteDimensions,TXTR_MONSTER,SpriteData,Actor,&AlignSpriteToActorOnCamera,Engine);
+    Sprite* Sprite = CreateSprite("Monster",SpritePosition,SpriteOrigin,SpriteDimensions,TXTR_MONSTER,SpriteData,Actor,&AlignSpriteToActor,Engine);
     Sprite->RenderParameters.Tint.X = GetRandomNumber(0,255);
     Sprite->RenderParameters.Tint.Y = GetRandomNumber(0,255);
     Sprite->RenderParameters.Tint.Z = GetRandomNumber(0,255);
 }
 
-void InitGame(Wiregon** FPS, Wiregon** OBJ, Engine* Engine)
+void InitGame(int* FPS, int* OBJ, int* SPR, Engine* Engine)
 {
     CacheTexturesGame(Engine);
-    CreateCamera(Engine);
+    CacheSoundsAndMusicGame(Engine);
     CreateBGGame(Engine);
     CreatePlayerGame(Engine);
     CreateMonsterGame(Engine);
     CreateFPSCounter(FPS,Engine);
     CreateObjectCounter(OBJ,Engine);
+    CreateSpriteCounter(SPR,Engine);
+    PlayMusic(MUS_WFRTP,Engine);
 }
 
 int main(int argc, char* argv[])
 {
-    Engine* Engine = InitEngine("Config.ini","Monster","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL);
+    Engine* Engine = InitEngine("Config.ini","MOBSCE Demo","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL);
 
-    Wiregon* FPSCounter[3];
-    Wiregon* OBJCounter[5];
-    InitGame(FPSCounter,OBJCounter,Engine);
+    int FPSCounter[6];
+    int OBJCounter[6];
+    int SPRCounter[6];
+    InitGame(FPSCounter,OBJCounter,SPRCounter,Engine);
 
     while(Engine->Running)
     {
@@ -495,46 +320,23 @@ int main(int argc, char* argv[])
             if(Engine->Events[i].type == SDL_QUIT)
             {
                 CleanupEngine(Engine);
-                free(Engine);
+                OSMemoryFree(Engine,sizeof(struct Engine));
                 return(0);
             }
-        }
-
-        RenderNumberWiregon((int)(Engine->Clock.FrameRate)/100,5,FPSCounter[0],Engine);
-        RenderNumberWiregon(((int)(Engine->Clock.FrameRate)/10)%10,5,FPSCounter[1],Engine);
-        RenderNumberWiregon((int)(Engine->Clock.FrameRate)%10,5,FPSCounter[2],Engine);
-        RenderNumberWiregon((int)(Engine->Resource.NumberOfActors)/10000,5,OBJCounter[0],Engine);
-        RenderNumberWiregon(((int)(Engine->Resource.NumberOfActors)/1000)%10,5,OBJCounter[1],Engine);
-        RenderNumberWiregon(((int)(Engine->Resource.NumberOfActors)/100)%10,5,OBJCounter[2],Engine);
-        RenderNumberWiregon(((int)(Engine->Resource.NumberOfActors)/10)%10,5,OBJCounter[3],Engine);
-        RenderNumberWiregon((int)(Engine->Resource.NumberOfActors)%10,5,OBJCounter[4],Engine);
-        if(Engine->Clock.FrameRate >= 1000)
-        {
-            RenderNumberWiregon(9,5,FPSCounter[0],Engine);
-            RenderNumberWiregon(9,5,FPSCounter[1],Engine);
-            RenderNumberWiregon(9,5,FPSCounter[2],Engine);
-        }
-        if(Engine->Resource.NumberOfActors > 99999)
-        {
-            RenderNumberWiregon(9,5,OBJCounter[0],Engine);
-            RenderNumberWiregon(9,5,OBJCounter[1],Engine);
-            RenderNumberWiregon(9,5,OBJCounter[2],Engine);
-            RenderNumberWiregon(9,5,OBJCounter[3],Engine);
-            RenderNumberWiregon(9,5,OBJCounter[4],Engine);
         }
 
         if(Engine->Input.KeysUp[K_ESCAPE])
         {
             CleanupEngine(Engine);
-            free(Engine);
+            OSMemoryFree(Engine,sizeof(struct Engine));
             return(0);
         }
         if(Engine->Input.KeysUp[K_R])
         {
             CleanupEngine(Engine);
-            free(Engine);
-            Engine = InitEngine("Config.ini","Monster","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL);
-            InitGame(FPSCounter,OBJCounter,Engine);
+            OSMemoryFree(Engine,sizeof(struct Engine));
+            Engine = InitEngine("Config.ini","MOBSCE Demo","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL);
+            InitGame(FPSCounter,OBJCounter,SPRCounter,Engine);
         }
         if(Engine->Input.KeysDown[K_S])
         {
@@ -545,22 +347,45 @@ int main(int argc, char* argv[])
             Sprite* Sprite = GetSpriteByName("Monster",Engine);
             if(Sprite)
             {
-                Actor* Actor = Sprite->Actor;
-                DestroySprite(Sprite,&CustomSpriteDataFreeFunction,Engine);
-                DestroyActor(Actor,&CustomActorDataFreeFunction,Engine);
+                Actor* Actor = Engine->ActorReferences[Sprite->ActorReferenceIndex];
+                if(Actor)
+                {
+                    PlaySound(SND_COUGH,-1,5,Actor->Position.X,Engine);
+                }
+                DestroySprite(Sprite,&SpriteFreeFunction,Engine);
+                DestroyActor(Actor,&ActorFreeFunction,Engine);   
             }
         }
 
         if(Engine->Input.KeysDown[K_LEFTCONTROL] || Engine->Input.KeysDown[K_RIGHTCONTROL])
         {
-            if(Engine->Input.KeysUp[K_S])
+            if(Engine->Input.KeysDown[K_S])
             {
-                for(int i = 0; i < 10000; i++)
+                for(int i = 0; i < 10; i++)
                 {
                     CreateMonsterGame(Engine);
                 }
             }
         }
+
+        UpdateDigit(FPSCounter[0],100000,Engine->Clock.FrameRate,Engine);
+        UpdateDigit(FPSCounter[1],10000,Engine->Clock.FrameRate,Engine);
+        UpdateDigit(FPSCounter[2],1000,Engine->Clock.FrameRate,Engine);
+        UpdateDigit(FPSCounter[3],100,Engine->Clock.FrameRate,Engine);
+        UpdateDigit(FPSCounter[4],10,Engine->Clock.FrameRate,Engine);
+        UpdateDigit(FPSCounter[5],1,Engine->Clock.FrameRate,Engine);
+        UpdateDigit(OBJCounter[0],100000,Engine->Resource.NumberOfActors,Engine);
+        UpdateDigit(OBJCounter[1],10000,Engine->Resource.NumberOfActors,Engine);
+        UpdateDigit(OBJCounter[2],1000,Engine->Resource.NumberOfActors,Engine);
+        UpdateDigit(OBJCounter[3],100,Engine->Resource.NumberOfActors,Engine);
+        UpdateDigit(OBJCounter[4],10,Engine->Resource.NumberOfActors,Engine);
+        UpdateDigit(OBJCounter[5],1,Engine->Resource.NumberOfActors,Engine);
+        UpdateDigit(SPRCounter[0],100000,Engine->Resource.NumberOfSprites,Engine);
+        UpdateDigit(SPRCounter[1],10000,Engine->Resource.NumberOfSprites,Engine);
+        UpdateDigit(SPRCounter[2],1000,Engine->Resource.NumberOfSprites,Engine);
+        UpdateDigit(SPRCounter[3],100,Engine->Resource.NumberOfSprites,Engine);
+        UpdateDigit(SPRCounter[4],10,Engine->Resource.NumberOfSprites,Engine);
+        UpdateDigit(SPRCounter[5],1,Engine->Resource.NumberOfSprites,Engine);
 
         RunEngine(Engine);
     }

@@ -1,6 +1,5 @@
 #define NOP __asm__("nop")
 
-
 /*
 Keep these delcarations, it's hacky, I know, and I'm sorry.
 You can change them as you wish, just dont remove them.
@@ -12,24 +11,23 @@ typedef struct CustomSpriteData {
 
 typedef struct CustomActorData {
     FVector2 Velocity;
-    Actor* Target;
-    Actor* Camera;
-    Vector4* World;
-    Wiregon* Wiregon;
-    float JumpForce;
+    Uint64 TargetID;
+    Uint32 TargetReferenceIndex;
     float Drag;
-    float Gravity;
 } CustomActorData;
 /***************************************************************************************/
 
 enum Textures {
     TXTR_BG,
     TXTR_PLAYER,
-    TXTR_MONSTER
+    TXTR_MONSTER,
+    TXTR_NUMBERS
 };
 
 enum Sounds {
     SND_COUGH
 };
 
-void ActorWorldCollide(Actor* Actor, Engine* Engine);
+enum Music {
+    MUS_WFRTP
+};

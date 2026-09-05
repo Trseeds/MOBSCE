@@ -24,43 +24,44 @@ int GetMouseInput(Engine* Engine)
 {
     if(Engine)
     {
-        if(Engine->Input.SDL_MouseState & SDL_BUTTON(SDL_BUTTON_LEFT))
+        Uint32 M = Engine->Input.SDL_MouseState;
+        if(M & SDL_BUTTON(SDL_BUTTON_LEFT))
         {
             Engine->Input.MouseDown[0] = true;
         }
-        if(Engine->Input.SDL_MouseState & SDL_BUTTON(SDL_BUTTON_RIGHT))
+        if(M & SDL_BUTTON(SDL_BUTTON_RIGHT))
         {
             Engine->Input.MouseDown[1] = true;
         }
-        if(Engine->Input.SDL_MouseState & SDL_BUTTON(SDL_BUTTON_MIDDLE))
+        if(M & SDL_BUTTON(SDL_BUTTON_MIDDLE))
         {
             Engine->Input.MouseDown[2] = true;
         }
-        if(Engine->Input.SDL_MouseState & SDL_BUTTON(SDL_BUTTON_X1))
+        if(M & SDL_BUTTON(SDL_BUTTON_X1))
         {
             Engine->Input.MouseDown[3] = true;
         }
-        if(Engine->Input.SDL_MouseState & SDL_BUTTON(SDL_BUTTON_X2))
+        if(M & SDL_BUTTON(SDL_BUTTON_X2))
         {
             Engine->Input.MouseDown[4] = true;
         }
-        if(!(Engine->Input.SDL_MouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) && (Engine->Input.SDL_PreviousMouseState & SDL_BUTTON(SDL_BUTTON_LEFT)))
+        if(!(M & SDL_BUTTON(SDL_BUTTON_LEFT)) && (Engine->Input.SDL_PreviousMouseState & SDL_BUTTON(SDL_BUTTON_LEFT)))
         {
             Engine->Input.MouseUp[0] = true;
         }
-        if(!(Engine->Input.SDL_MouseState & SDL_BUTTON(SDL_BUTTON_RIGHT)) && (Engine->Input.SDL_PreviousMouseState & SDL_BUTTON(SDL_BUTTON_RIGHT)))
+        if(!(M & SDL_BUTTON(SDL_BUTTON_RIGHT)) && (Engine->Input.SDL_PreviousMouseState & SDL_BUTTON(SDL_BUTTON_RIGHT)))
         {
             Engine->Input.MouseUp[1] = true;
         }
-        if(!(Engine->Input.SDL_MouseState & SDL_BUTTON(SDL_BUTTON_MIDDLE)) && (Engine->Input.SDL_PreviousMouseState & SDL_BUTTON(SDL_BUTTON_MIDDLE)))
+        if(!(M & SDL_BUTTON(SDL_BUTTON_MIDDLE)) && (Engine->Input.SDL_PreviousMouseState & SDL_BUTTON(SDL_BUTTON_MIDDLE)))
         {
             Engine->Input.MouseUp[2] = true;
         }
-        if(!(Engine->Input.SDL_MouseState & SDL_BUTTON(SDL_BUTTON_X1)) && (Engine->Input.SDL_PreviousMouseState & SDL_BUTTON(SDL_BUTTON_X1)))
+        if(!(M & SDL_BUTTON(SDL_BUTTON_X1)) && (Engine->Input.SDL_PreviousMouseState & SDL_BUTTON(SDL_BUTTON_X1)))
         {
             Engine->Input.MouseUp[3] = true;
         }
-        if(!(Engine->Input.SDL_MouseState & SDL_BUTTON(SDL_BUTTON_X2)) && (Engine->Input.SDL_PreviousMouseState & SDL_BUTTON(SDL_BUTTON_X2)))
+        if(!(M & SDL_BUTTON(SDL_BUTTON_X2)) && (Engine->Input.SDL_PreviousMouseState & SDL_BUTTON(SDL_BUTTON_X2)))
         {
             Engine->Input.MouseUp[4] = true;
         }
