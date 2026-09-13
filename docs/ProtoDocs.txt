@@ -2,9 +2,9 @@ MOBSCE_VERSION_RELEASE - 0 - The current major release version of MOBSCE.
 
 MOBSCE_VERSION_FEATURE - 23 - The current feature release of MOBSCE.
 
-MOBSCE_VERSION_PATCH - 0 - The current patch of MOBSCE.
+MOBSCE_VERSION_PATCH - 1 - The current patch of MOBSCE.
 
-MOBSCE_VERSION - "0.23.0" - The current version of MOBSCE in string from.
+MOBSCE_VERSION - "0.23.1" - The current version of MOBSCE in string from.
 
 OBJECT_USED - 1 - Constant that determines if an actor or sprite in a given slot is alive.
 

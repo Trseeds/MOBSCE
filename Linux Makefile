@@ -1,6 +1,6 @@
 Compiler = gcc
 IncludeFlags = -I Source -I Libraries/SDL2/include -I Libraries/INIH
-LinkerFlags = -L Libraries/SDL2/lib/x64 -L Libraries/INIH -lSDL2main -lSDL2 -lSDL2_mixer -lSDL2_image -lINIH
+LinkerFlags = -L Libraries/INIH/Linux -lSDL2main -lSDL2 -lSDL2_mixer -lSDL2_image -lINIH -lm
 DebugFlags = -g3 -O0
 ReleaseFlags = -g0 -O2 -s -flto -std=c11
 TestFlags = -g0 -O0 -s -flto -std=c11 -march=native -mtune=native
