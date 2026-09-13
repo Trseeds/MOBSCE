@@ -13,7 +13,6 @@ typedef struct CustomActorData {
     FVector2 Velocity;
     Uint64 TargetID;
     Uint32 TargetReferenceIndex;
-    float Drag;
 } CustomActorData;
 /***************************************************************************************/
 

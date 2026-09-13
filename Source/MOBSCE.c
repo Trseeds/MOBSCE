@@ -53,11 +53,10 @@ void ThrowWarning(char* Message, char* Thrower, Engine* Engine)
 
 Uint64 GetNewObjectID(Engine* Engine)
 {
-    Engine->IDCounter++;
-    return(Engine->IDCounter-1);
+    return(++Engine->IDCounter); //never return id 0.
 }
 
-int CompactArray(const void* X, const void* Y)
+int QSCompactPointerPool(const void* X, const void* Y)
 {
     const void* NX = *(const void**)X;
     const void* NY = *(const void**)Y;
@@ -80,10 +79,10 @@ int CompactArray(const void* X, const void* Y)
     return(0);
 }
 
-int CompactArrayOfObjects(const void* X, const void* Y)
+int QSCompactObjectPool(const void* X, const void* Y)
 {
-    const byte NX = *(byte*)X;
-    const byte NY = *(byte*)Y;
+    const ubyte NX = *(ubyte*)X;
+    const ubyte NY = *(ubyte*)Y;
     if(NX == false && NY == false)
     {
         return(0);
@@ -103,10 +102,10 @@ int CompactArrayOfObjects(const void* X, const void* Y)
     return(0);
 }
 
-int SortSpritesByZ(const void* X, const void* Y)
+int QSSortSpritesByZ(const void* X, const void* Y)
 {
-    const byte NX = *(byte*)X;
-    const byte NY = *(byte*)Y;
+    const ubyte NX = *(ubyte*)X;
+    const ubyte NY = *(ubyte*)Y;
     const int SPR1Z = ((Sprite*)X)->RenderParameters.Position.Z;
     const int SPR2Z = ((Sprite*)Y)->RenderParameters.Position.Z;
     if(NX == false && NY == false)
@@ -204,15 +203,16 @@ int GetSDLEvents(Engine* Engine)
 {
     if(Engine)
     {
-        memset(Engine->Events,-1,sizeof(Engine->Events));
+        SDL_Event* EE = Engine->Events;
+        memset(EE,0,EVENT_QUEUE_SIZE*sizeof(SDL_Event));
         int i = 0;
         SDL_Event Event;
         while(SDL_PollEvent(&Event))
         {
             if(i < EVENT_QUEUE_SIZE)
             {
-                Engine->Events[i] = Event;
-            i++;
+                EE[i] = Event;
+                i++;
             }
         }
         return(RETURN_SUCCESS);
@@ -232,13 +232,14 @@ int GetBasePath(Engine* Engine)
             ThrowError("Failed to get base path!",Traceback,Engine);
             return(ERROR_SDL_FAILURE);
         }
-        strncpy(Engine->BasePath,Result,STRING_BUFFER_SIZE);
+        char* EBP = Engine->BasePath;
+        strncpy(EBP,Result,STRING_BUFFER_SIZE);
 
         for(int i = 0; i < STRING_BUFFER_SIZE; i++)
         {
-            if(Engine->BasePath[i] == '\\')
+            if(EBP[i] == '\\')
             {
-                Engine->BasePath[i] = '/';
+                EBP[i] = '/';
             }
         }
 
@@ -267,7 +268,6 @@ int KeepTime(Engine* Engine)
         C->PreviousTime = C->CurrentTime;
         C->CurrentTime = SDL_GetPerformanceCounter();
         C->DeltaTime = (double)((C->CurrentTime-C->PreviousTime)/(double)SDL_GetPerformanceFrequency());
-        C->TotalTime += (C->CurrentTime-C->PreviousTime);
         C->TotalFrames++;
         C->RealTime = time(NULL);
         C->FrameRate = (double)(1/C->DeltaTime);
@@ -384,7 +384,8 @@ int RunEngine(Engine* Engine)
         Render(Engine);
         return(RETURN_SUCCESS);
         //Clock a = Engine->Clock;
-        //printf("Current Time: %lu\nPrevious Time: %lu\nDelta Time: %f\nTotal Time: %lu\nTotal Frames: %lu\nReal Time: %lu\nFramerate: %f\033[6A\r",a.CurrentTime,a.PreviousTime,a.DeltaTime,a.TotalTime,a.TotalFrames,a.RealTime,a.FrameRate);
+        //printf("Current Time: %lu\nPrevious Time: %lu\nDelta Time: %f\nTotal Frames: %lu\nReal Time: %lu\nFramerate: %f\033[6A\r",a.CurrentTime,a.PreviousTime,a.DeltaTime,a.TotalFrames,a.RealTime,a.FrameRate);
+        //return(RETURN_SUCCESS);
     }
     return(ERROR_INVALID_ENGINE);
 }

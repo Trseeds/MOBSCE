@@ -4,15 +4,20 @@ int GetKeyboardInput(Engine* Engine)
 {
     if(Engine)
     {
+        Uint8* KS = Engine->Input.SDL_Keystate;
+        Uint8* PKS = Engine->Input.SDL_PreviousKeystate;
+        ubyte* EKD = Engine->Input.KeysDown;
+        ubyte* EKU = Engine->Input.KeysUp;
+
         for(int i = 0; i < SDL_NUM_SCANCODES; i++)
         {
-            if(Engine->Input.SDL_Keystate[i])
+            if(KS[i])
             {
-                Engine->Input.KeysDown[i] = true;
+                EKD[i] = true;
             }
-            if(Engine->Input.SDL_PreviousKeystate[i] && !Engine->Input.SDL_Keystate[i])
+            if(PKS[i] && !KS[i])
             {
-                Engine->Input.KeysUp[i] = true;
+                EKU[i] = true;
             }
         }
         return(RETURN_SUCCESS);
@@ -24,66 +29,73 @@ int GetMouseInput(Engine* Engine)
 {
     if(Engine)
     {
+        SDL_Event* EE = Engine->Events;
         Uint32 M = Engine->Input.SDL_MouseState;
+        Uint32 PM = Engine->Input.SDL_PreviousMouseState;
+        ubyte* EMD = Engine->Input.MouseDown;
+        ubyte* EMU = Engine->Input.MouseUp;
+        ubyte* EMHS = &Engine->Input.HorizontalMouseScroll;
+        ubyte* EMVS = &Engine->Input.VerticalMouseScroll;
         if(M & SDL_BUTTON(SDL_BUTTON_LEFT))
         {
-            Engine->Input.MouseDown[0] = true;
+            EMD[0] = true;
         }
         if(M & SDL_BUTTON(SDL_BUTTON_RIGHT))
         {
-            Engine->Input.MouseDown[1] = true;
+            EMD[1] = true;
         }
         if(M & SDL_BUTTON(SDL_BUTTON_MIDDLE))
         {
-            Engine->Input.MouseDown[2] = true;
+            EMD[2] = true;
         }
         if(M & SDL_BUTTON(SDL_BUTTON_X1))
         {
-            Engine->Input.MouseDown[3] = true;
+            EMD[3] = true;
         }
         if(M & SDL_BUTTON(SDL_BUTTON_X2))
         {
-            Engine->Input.MouseDown[4] = true;
+            EMD[4] = true;
         }
-        if(!(M & SDL_BUTTON(SDL_BUTTON_LEFT)) && (Engine->Input.SDL_PreviousMouseState & SDL_BUTTON(SDL_BUTTON_LEFT)))
+        if(!(M & SDL_BUTTON(SDL_BUTTON_LEFT)) && (PM & SDL_BUTTON(SDL_BUTTON_LEFT)))
         {
-            Engine->Input.MouseUp[0] = true;
+            EMU[0] = true;
         }
-        if(!(M & SDL_BUTTON(SDL_BUTTON_RIGHT)) && (Engine->Input.SDL_PreviousMouseState & SDL_BUTTON(SDL_BUTTON_RIGHT)))
+        if(!(M & SDL_BUTTON(SDL_BUTTON_RIGHT)) && (PM & SDL_BUTTON(SDL_BUTTON_RIGHT)))
         {
-            Engine->Input.MouseUp[1] = true;
+            EMU[1] = true;
         }
-        if(!(M & SDL_BUTTON(SDL_BUTTON_MIDDLE)) && (Engine->Input.SDL_PreviousMouseState & SDL_BUTTON(SDL_BUTTON_MIDDLE)))
+        if(!(M & SDL_BUTTON(SDL_BUTTON_MIDDLE)) && (PM & SDL_BUTTON(SDL_BUTTON_MIDDLE)))
         {
-            Engine->Input.MouseUp[2] = true;
+            EMU[2] = true;
         }
-        if(!(M & SDL_BUTTON(SDL_BUTTON_X1)) && (Engine->Input.SDL_PreviousMouseState & SDL_BUTTON(SDL_BUTTON_X1)))
+        if(!(M & SDL_BUTTON(SDL_BUTTON_X1)) && (PM & SDL_BUTTON(SDL_BUTTON_X1)))
         {
-            Engine->Input.MouseUp[3] = true;
+            EMU[3] = true;
         }
-        if(!(M & SDL_BUTTON(SDL_BUTTON_X2)) && (Engine->Input.SDL_PreviousMouseState & SDL_BUTTON(SDL_BUTTON_X2)))
+        if(!(M & SDL_BUTTON(SDL_BUTTON_X2)) && (PM & SDL_BUTTON(SDL_BUTTON_X2)))
         {
-            Engine->Input.MouseUp[4] = true;
+            EMU[4] = true;
         }
+        
         for(int i = 0; i < EVENT_QUEUE_SIZE; i++)
         {
-            if(Engine->Events[i].type == SDL_MOUSEWHEEL)
+            if(EE[i].type == SDL_MOUSEWHEEL)
             {
-                if(Engine->Events[i].wheel.y > 0)
+                if(EE[i].wheel.y > 0)
                 {
-                    Engine->Input.VerticalMouseScroll = 1; //scroll up
+                    *EMVS = SCROLL_UP; //scroll up
                 }
-                if(Engine->Events[i].wheel.y < 0)
+                if(EE[i].wheel.y < 0)
                 {
-                    Engine->Input.VerticalMouseScroll = -1; //scroll down
+                    *EMVS = SCROLL_DOWN; //scroll down
                 }
-                if(Engine->Events[i].wheel.x > 0)
+                if(EE[i].wheel.x > 0)
                 {
-                    Engine->Input.HorizontalMouseScroll = 1; //scroll right
+                    *EMHS = SCROLL_RIGHT; //scroll right
                 }
-                if(Engine->Events[i].wheel.x < 0)
+                if(EE[i].wheel.x < 0)
                 {
-                    Engine->Input.HorizontalMouseScroll = -1; //scroll left
+                    *EMHS = SCROLL_LEFT; //scroll left
                 }
             }
         }
@@ -92,7 +104,7 @@ int GetMouseInput(Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
-int GetGamepadInput(Engine* Engine)
+int GetGamepadInput(Engine* Engine) //i would fix this but its going to be demolished soon
 {
     if(Engine)
     {
@@ -166,26 +178,27 @@ int GetInput(Engine* Engine)
 {
     if(Engine)
     {
-        Engine->Input.SDL_Keystate = (Uint8*)SDL_GetKeyboardState(NULL);
-        Engine->Input.SDL_MouseState = SDL_GetMouseState(&Engine->Input.MousePosition.X,&Engine->Input.MousePosition.Y);
-        Engine->Input.VerticalMouseScroll = 0;
-        Engine->Input.HorizontalMouseScroll = 0;
-        memset(Engine->Input.KeysUp,0,sizeof(Engine->Input.KeysUp));
-        memset(Engine->Input.KeysDown,0,sizeof(Engine->Input.KeysDown));
-        memset(Engine->Input.MouseUp,0,sizeof(Engine->Input.MouseUp));
-        memset(Engine->Input.MouseDown,0,sizeof(Engine->Input.MouseDown));
-        memset(Engine->Input.GamepadButtonsUp,0,sizeof(Engine->Input.GamepadButtonsUp));
-        memset(Engine->Input.GamepadButtonsDown,0,sizeof(Engine->Input.GamepadButtonsDown));
-        memset(Engine->Input.GamepadTriggersUp,0,sizeof(Engine->Input.GamepadTriggersUp));
+        Input* EI = &Engine->Input;
+        EI->SDL_Keystate = (Uint8*)SDL_GetKeyboardState(NULL);
+        EI->SDL_MouseState = SDL_GetMouseState(&EI->MousePosition.X,&EI->MousePosition.Y);
+        EI->VerticalMouseScroll = 0;
+        EI->HorizontalMouseScroll = 0;
+        memset(EI->KeysUp,0,sizeof(EI->KeysUp));
+        memset(EI->KeysDown,0,sizeof(EI->KeysDown));
+        memset(EI->MouseUp,0,sizeof(EI->MouseUp));
+        memset(EI->MouseDown,0,sizeof(EI->MouseDown));
+        memset(EI->GamepadButtonsUp,0,sizeof(EI->GamepadButtonsUp));
+        memset(EI->GamepadButtonsDown,0,sizeof(EI->GamepadButtonsDown));
+        memset(EI->GamepadTriggersUp,0,sizeof(EI->GamepadTriggersUp));
 
         GetKeyboardInput(Engine);
         GetMouseInput(Engine);
         GetGamepadInput(Engine);
 
-        memcpy(Engine->Input.GamepadPreviousState,Engine->Input.GamepadButtonsDown,sizeof(Engine->Input.GamepadPreviousState));
-        memcpy(Engine->Input.GamepadPreviousTriggersState,Engine->Input.GamepadTriggers,sizeof(Engine->Input.GamepadPreviousTriggersState));
-        memcpy(Engine->Input.SDL_PreviousKeystate,Engine->Input.SDL_Keystate,sizeof(Engine->Input.SDL_PreviousKeystate));
-        Engine->Input.SDL_PreviousMouseState = Engine->Input.SDL_MouseState;
+        memcpy(EI->GamepadPreviousState,EI->GamepadButtonsDown,sizeof(EI->GamepadPreviousState));
+        memcpy(EI->GamepadPreviousTriggersState,EI->GamepadTriggers,sizeof(EI->GamepadPreviousTriggersState));
+        memcpy(EI->SDL_PreviousKeystate,EI->SDL_Keystate,sizeof(EI->SDL_PreviousKeystate));
+        EI->SDL_PreviousMouseState = EI->SDL_MouseState;
         return(RETURN_SUCCESS);
     }
     return(ERROR_INVALID_ENGINE);
@@ -212,7 +225,7 @@ int RumbleGamepad(int Strength, int Duration, Engine* Engine)
             if(Result < 0)
             {
                 char Traceback[STRING_BUFFER_SIZE];
-                snprintf(Traceback,STRING_BUFFER_SIZE,"RumbleGamepad(%d, %d, 0x%X)",Strength,Duration,Engine);
+                snprintf(Traceback,STRING_BUFFER_SIZE,"RumbleGamepad(%d, %d, %p)",Strength,Duration,Engine);
                 ThrowWarning("Controller does not support rumble.",Traceback,Engine);
                 return(WARNING_IGNORABLE_FAILURE);
             }

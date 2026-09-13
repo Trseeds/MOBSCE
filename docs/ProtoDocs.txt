@@ -1,0 +1,213 @@
+MOBSCE_VERSION_RELEASE - 0 - The current major release version of MOBSCE.
+
+MOBSCE_VERSION_FEATURE - 23 - The current feature release of MOBSCE.
+
+MOBSCE_VERSION_PATCH - 0 - The current patch of MOBSCE.
+
+MOBSCE_VERSION - "0.23.0" - The current version of MOBSCE in string from.
+
+OBJECT_USED - 1 - Constant that determines if an actor or sprite in a given slot is alive.
+
+STRING_BUFFER_SIZE - 5120 - The maximum size of a path string.
+
+OBJECT_NAME_SIZE - 128 - The maximum size of an actor or sprite name.
+
+MIN_ALLOCATE - 1000 - The minimum number of resources to allocate or deallocate in a given pool. Change at will.
+
+EVENT_QUEUE_SIZE - 512 - The size of the event queue.
+
+TINT_NOCHANGE - 255 - If used in a sprite tint, the value for that channel will not change.
+
+ERROR_SHOW_ALL - 2 - Checked when throwing errors. Using this value when creating an engine will cause the full error message to be shown.
+
+ERROR_SHOW_MESSAGE - 1 - Checked when throwing errors. Using this value when creating an engine will cause a partial error message to be shown.
+
+ERROR_SHOW - 0 - Checked when throwing errors. Using this value when creating an engine will cause a generic error message to be show.
+
+ERROR_DISABLE - -1 - Checked when throwing errors. Using this value when creating an engine will cause no error to be shown.
+
+WARNING_SHOW_ALL - 2 - Checked when throwing warnings. Using this value when creating an engine will cause the full warning message to be shown.
+
+WARNING_SHOW_MESSAGE - 1 - Checked when throwing warnings. Using this value when creating an engine will cause a partial warning message to be shown.
+
+WARNING_DISABLE - 0 - Checked when throwing warnings. Using this value when creating an engine will cause no warning message to be shown.
+
+ERROR_INVALID_ENGINE - -1 - Returned if the engine pointer passed is NULL.
+
+ERROR_SDL_FAILURE - 11 - Returned if a critical SDL failure occurs.
+
+ERROR_MEMORY - 12 - Returned if a memory error occurs.
+
+ERROR_INVALID_PARAMETER - 13 - Returned if an invalid parameter is passed.
+
+WARNING_SDL_FAILURE - 21 - Returned if a non critical SDL faulure occurs.
+
+WARNING_INVALID_PARAMETER - 22 - Returned if an invalid parameter is passed but execution may continue.
+
+WARNING_INIH_FAILURE - 23 - Returned if a non critical INIH failure occurs.
+
+WARNING_NULL - NULL - I don't even remember why this exists.
+
+RETURN_SUCCESS - 0 - Returned if everything goes well.
+
+enum Flip - Contains values used to flip sprites.
+	FLIP_H - Flip sprites across the X axis.
+	FLIP_V - Flip sprites along the Y axis.
+	FLIP_NONE - Does not flip sprites.
+
+byte - unsigned char - 8 bits. Used occasionally.
+
+struct Vector2 - Two integers.
+	int X
+	int Y
+
+struct Vector3 - Three integers.
+	int X
+	int Y
+	int Z
+
+struct Vector4 - Four integers.
+	int X
+	int Y
+	int Z
+	int W
+
+struct FVector 2 - Two doubles.
+	double X
+	double Y
+
+struct FVector 3 - Three doubles.
+	double X
+	double Y
+	double Z
+
+struct FVector4 - Four doubles.
+	double X
+	double Y
+	double Z
+	double W
+
+struct CustomSpriteData - Opaque pointer. This struct is user defined in GAME.h.
+
+struct CustomActorData - Opaque pointer. This struct is user defined in GAME.h.
+
+struct Config - This struct is filled by INIH's parser and read by various intilization functions.
+	int Samplerate - The audio sample rate that will be used by SDL.
+	int Channels - The amount of audio channels that will be used by SDL.
+	int Chunksize - The size of audio chunks that will be used by SDL. Smaller chunks incur less latency as well as lesser performance.
+	int Voices - The amount of voices that SDL will have available. The official term is "Channels", but I find this ambiguous and will refer to them as voices.
+	int MusicVolume - 0-100 value that controls the volume of music played.
+	int SoundVolume - 0-100 value that controls the volume of sound played.
+	int Muted - boolean value that prevents playback of any sound or music if set.
+	int LogicalX - The horizontal screen resolution in pixels.
+	int LogicayY - The vertical screen resolution in pixels.
+	int WindowFlags - Integer value used by SDL to initialize the window. Look it up in the SDL docs.
+	int RendererFlags - Integer value used by SDL to initialized the renderer. Look it up in the SDL docs.
+	int Codecs - Integer value that determines which audio codecs will be initialized by SDL. Look it up in the SDL docs.
+
+struct SpriteRenderparameters - This struct is included in every sprite and is used to tell SDL how to render the sprite.
+	SDL_Texture* Texture - Texture used for rendering.
+	Vector3 Position - X and Y are screen coordinates in pixels. Z is the depth value. Higher values are rendered on top.
+	Vector4 Origin - Forms a box within the texture from which the sprite will be rendered. X and Y are the origin point. Z and W are the width and height.
+	Vector2 Dimensions - X and Y are sizes in pixels.
+	int Transparency - 0-255 with 0 being invisible and 255 being opaque.
+	double Angle - 0-359. 0 and every multiple of 360 renders as normal.
+	int Flip - Flip value. See enum Flip.
+	Vector3 Tint - Each color channel will be set to it's respective value in this struct. Assume each channel starts at 255 and can only decrease in value. X is red, Y is green, Z is blue.
+	int Visible - boolean value that prevents the sprite from rendering if not set.
+
+struct Actor - A generic object. Is not rendered or processed meaningfully by the engine. Anything marked as "arbitrary values" is completely meaningless to the engine and is only there for your convenience.
+	byte IsUsed - Boolean value that signals if the actor is alive. Do not set to 0 unless you want to kill the actor manually.
+	Uint64 ID - A unique 64-bit ID assigned to every object. Never duplicates.
+	Uint32 ReferenceIndex - An index directly into the ActorReferences array, which points back to this actor. Treat like a handle.
+	char Name - Name of the actor.
+	FVector2 Position - Arbitrary values.
+	Vector2 Dimensions - Arbitrary values.
+	int Voice - Arbitrary values.
+	void (*Routine)(struct Actor*, Engine*) - Routine. Engine will call each actors routine once per tick with a pointer to the actor itself and a pointer to the engine passed in. This can be NULL and will be skipped if that is the case.
+	CustomActorData* CustomData - See struct CustomActorData.
+
+struct Sprite - A sprite object. Similar to an actor, but is rendered to the screen. All members are identical to that of an actor except those specified below.
+	int TextureID - The index of the sprite's texture. Textures are indexed in the order they are created. I reccomend using an enum for this.
+	SpriteRenderParameters RenderParameters - see struct SpriteRenderParameters.
+	Uint32 ActorReferenceIndex - Index directly into the ActorReferences pool. Only used if an actor is provided upon creation.
+	Uint64 ExpectedActorID - ID of the provided actor. Use for checking ActorReferences as they may become stale.
+	
+struct Audio - See struct Config.
+
+struct Video - Video related data.
+	SDL_Window* Window - The currently active window.
+	SDL_Renderer* Renderer - The currently active renderer.
+	Vector2 LogicalDimensions - See struct Config.
+	Vector4 WindowBounds - Unused.
+	int WindowFocused - Unused.
+	int RendererFlags - See struct Config.
+	char WindowTitle - Title that the window will be assigned.
+	char WindowIconPath - Path to icon file that window will be assigned.
+
+struct Input - Struct containing all things related to physical inputs.
+	Uint8* SDL_Keystate - Pointer to SDL's keystate.
+	Uint8 SDL_PreviousKeystate - Copy of SDL's keystate, one generation behind.
+	Uint32 SDL_MouseState - SDL's mousestate.
+	Uint32 SDL_PreviousMouseState - Copy of SDL's mousestate, one generation behind.
+	byte KeysDown - A boolean array of which keys are currently pressed. Check a key with KeysDown[key enum].
+	byte KeysUp - A boolean array of which keys were just released.
+	Vector2 MousePosition - X and Y are the mouse's coordinates in pixels.
+	byte MouseDown - A boolean array of which mouse buttons are currently pressed.
+	byte MouseUp - A boolean array of which mouse buttons were just released.
+	byte VerticalMouseScroll - 
+	byte HorizontalMouseScroll - 
+	SDL_GameController* Gamepad - Pointer to SDL's gamepad struct.
+	byte GamepadIsConnected - A boolean value that determines if a gamepad is connected.
+	byte GamepadPreviousState - Copy of the gamepad's state, one generation behind.
+	double GamepadPreviousTriggersState - Copy of the gamepad's trigger state, one generation behind.
+	byte GamepadButtonsUp - A boolean array of gamepad buttons that were just released.
+	byte GamepadButtonsDown - A boolean array of which gamepad buttons are currently pressed.
+	double GamepadTriggers - The state of the gamepad's triggers from 0-1.
+	byte GamepadTriggersUp - A boolean array of which gamepad triggers were just released.
+	double GamepadSticks - The state of the gamepad's sticks, with indecies 0 and 1 being the X and Y of the left stick, and indecies 2 and 3 being the X and Y of the right stick.
+
+struct Clock - Struct containing various keepings of time.
+	double DeltaTime - The time it took to complete the previous frame.
+	Uint64 CurrentTime - A high resolution counter of real time.
+	Uint64 PreviousTime - A one generation old copy of CurrentTime.
+	Uint64 TotalFrames - Total amount of elapsed frames. Increments once per tick.
+	Uint64 RealTime - Real time.
+	double FrameRate - The current framerate.
+
+struct Resource - Contains data related to memory management.
+	SDL_Texture** Textures - Pointer pool of textures. Each element is an SDL_Texture*.
+	Mix_Chunk** Sounds / Mix_Music** - See above.
+	int NumberOfXXXs - The amount of used slots in each pool.
+	int AllocatedXXXMemory - The amount of memory allocated for each pool, counted in pool units, not bytes.
+	
+struct Engine - The god object. Contains all state.
+	char BasePath - The path to the binary file that is currently running.
+	char Configpath - The path to the config file that is being used.
+	Config Config
+	Audio Audio
+	Video Video
+	Input Input
+	Clock Clock
+	Resource Resource
+	Actor* Actors - Pointer to the actor pool.
+	Actor** ActorReferences - Pointer to the actor references pool. 
+	Sprite* Sprites - See above.
+	Sprite** SpriteReferences - See above.
+	SDL_Event Events - Array of SDL events.
+	Uint64 IDCounter - The amount of times a new ID has been generated. Only counts up.
+	byte Running - Boolean flag that determines if the engine is running.
+	byte SpriteZResortNeeded - Boolean flag that determines if the sprite pool will be sorted at render time.
+	byte ERROR_LEVEL - Error level used when generating errors.
+	byte WARNING_LEVEL - Warning level used when generating warnings.
+
+struct ResourceInfo - Used when performing any action on a pool. Contains information about the pool and it's elements.
+	void* Pointer - Pointer to the pool.
+	int SizeOfResource - Size of each element.
+	void (*FreeFunction)(void*) - Pointer to function that frees each element. (if applicable)
+	int* AllocatedResourceMemory - Pointer to the Pools AllocatedXXXMemory member in the Resource struct.
+	int* NumberOfResources - See above.
+	byte IsPointerArray - Boolean flag that determines if the pool contains structs or pointers. Triggers slightly different behavior.
+
+
+	

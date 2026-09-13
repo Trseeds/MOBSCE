@@ -98,7 +98,7 @@ int UpdateConfig(char* File, Config* Config, Engine* Engine)
     if(Result < 0)
     {
         char Traceback[STRING_BUFFER_SIZE];
-        snprintf(Traceback,STRING_BUFFER_SIZE,"UpdateConfig(%s, 0x%X)",File,Config);
+        snprintf(Traceback,STRING_BUFFER_SIZE,"UpdateConfig(%s, 0x%p)",File,Config);
         ThrowWarning("Failed to load config file.",Traceback,Engine);
         return(WARNING_INIH_FAILURE);
     }

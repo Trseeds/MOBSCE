@@ -1,45 +1,36 @@
 Compiler = gcc
 IncludeFlags = -I Source -I Libraries/SDL2/Include -I Libraries/INIH
 LinkerFlags = -L Libraries/SDL2/lib/x64 -L Libraries/INIH -lSDL2main -lSDL2 -lSDL2_mixer -lSDL2_image -lINIH
-TestFlags = -o3 -march=native
-DebugFlags = -g3 -o0
-ReleaseFlags = -g0 -o3 -s -flto -std=c11
-SOURCES = Source/MOBSCE.c Source/CONFIG.c Source/INPUT.c Source/RESOURCE.c Source/VIDEO.c Source/AUDIO.c
-OBJECTS = $(SOURCES:Source/%.c=Binaries/%.o)
-Target = GAME
+DebugFlags = -g3 -O0
+ReleaseFlags = -g0 -O2 -s -flto -std=c11
+TestFlags = -g0 -O0 -s -flto -std=c11 -march=native -mtune=native
+SOURCES := $(wildcard Source/*.c)
+GAMESOURCES := $(wildcard Source/Non-Engine/*.c)
+Objects = $(SOURCES:Source/%.c=Binaries/%.o)
+GameObjects = $(GAMESOURCES:Source/Non-Engine/%.c=Binaries/Non-Engine/%.o)
+ObjectsDebug = $(SOURCES:Source/%.c=Binaries/D%.o)
+GameObjectsDebug = $(GAMESOURCES:Source/Non-Engine/%.c=Binaries/Non-Engine/D%.o)
+Target = Binaries/GAME
 
 all: Test
 
-Test:
-	cls
-	$(Compiler) $(TestFlags) Source/*.c Source/Non-Engine/*.c -o Binaries/$(Target)_Test.exe $(IncludeFlags) $(LinkerFlags)
-	Binaries/$(Target)_Test
-Debug:
-	cls
-	$(Compiler) $(DebugFlags) Source/*.c Source/Non-Engine/*.c -o Binaries/$(Target)_Debug.exe $(IncludeFlags) $(LinkerFlags)
-	gdb Binaries/$(Target)_Debug
-Release:
-	cls
-	windres resources.rc -O coff -o resources.res
-	$(Compiler) $(ReleaseFlags) resources.res Source/*.c Source/Non-Engine/*.c -o Binaries/$(Target).exe $(IncludeFlags) $(LinkerFlags) 
+Binaries/%.o: Source/%.c
+	$(Compiler) $(TestFlags) $(IncludeFlags) -c $< -o $@
 
-$(OBJECTS): Binaries/%.o: Source/%.c
-	$(Compiler) $(ReleaseFlags) $(IncludeFlags) -c $< -o $@
+Binaries/%D.o: Source/%.c
+	$(Compiler) $(DebugFlags) $(IncludeFlags) -c $< -o $@
 
-StaticLibrary: $(OBJECTS)
-	ar rcs Binaries/libMOBSCE.a $(OBJECTS)
-	del Binaries\*.o
-	rm Binaries/*.o
+Binaries/Non-Engine/%.o: Source/Non-Engine/%.c
+	$(Compiler) $(TestFlags) $(IncludeFlags) -c $< -o $@
 
-StaticTest:
-	cls
-	$(Compiler) $(TestFlags) Source/Non-Engine/*.c -o Binaries/$(Target)_Test.exe $(IncludeFlags) -L Binaries $(LinkerFlags) -lMOBSCE
-	Binaries/$(Target)_Test
-StaticDebug:
-	cls
-	$(Compiler) $(DebugFlags) Source/Non-Engine/*.c -o Binaries/$(Target)_Debug.exe $(IncludeFlags) -L Binaries $(LinkerFlags) -lMOBSCE
-	gdb Binaries/$(Target)_Debug
-StaticRelease:
-	cls
-	windres resources.rc -O coff -o resources.res
-	$(Compiler) $(ReleaseFlags) resources.res Source/Non-Engine/*.c -o Binaries/$(Target).exe $(IncludeFlags) -L Binaries $(LinkerFlags) -lMOBSCE
+Binaries/Non-Engine/D%.o: Source/Non-Engine/%.c
+	$(Compiler) $(DebugFlags) $(IncludeFlags) -c $< -o $@
+
+Test: $(Objects) $(GameObjects)
+	$(Compiler) $(TestFlags) $(Objects) $(GameObjects) $(LinkerFlags) -o $(Target)
+
+Debug: $(ObjectsDebug) $(GameObjectsDebug)
+	$(Compiler) $(DebugFlags) $(ObjectsDebug) $(GameObjectsDebug) $(LinkerFlags) -o $(Target)
+
+Library: $(Objects)
+	ar rcs Binaries/libMOBSCE.a $(Objects)

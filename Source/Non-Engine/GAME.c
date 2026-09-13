@@ -58,41 +58,8 @@ void ActorScreenWrap(Actor* Actor, Engine* Engine)
 void ApplyPhysics(Actor* Actor)
 {
     CustomActorData* PhysProps = Actor->CustomData;
-    //x drag
-    if(PhysProps->Velocity.X > PhysProps->Drag)
-    {
-        PhysProps->Velocity.X -= PhysProps->Drag;
-    }
-    if(PhysProps->Velocity.X < PhysProps->Drag*-1)
-    {
-        PhysProps->Velocity.X += PhysProps->Drag;
-    }
-    if((PhysProps->Velocity.X < PhysProps->Drag) && PhysProps->Velocity.X > 0)
-    {
-        PhysProps->Velocity.X = 0;
-    }
-    if((PhysProps->Velocity.X > PhysProps->Drag*-1) && PhysProps->Velocity.X < 0)
-    {
-        PhysProps->Velocity.X = 0;
-    }
-    //y drag
-    if(PhysProps->Velocity.Y > PhysProps->Drag)
-    {
-        PhysProps->Velocity.Y -= PhysProps->Drag;
-    }
-    if(PhysProps->Velocity.Y < PhysProps->Drag*-1)
-    {
-        PhysProps->Velocity.Y += PhysProps->Drag;
-    }
-    if((PhysProps->Velocity.Y < PhysProps->Drag) && PhysProps->Velocity.Y > 0)
-    {
-        PhysProps->Velocity.Y = 0;
-    }
-    if((PhysProps->Velocity.Y > PhysProps->Drag*-1) && PhysProps->Velocity.Y < 0)
-    {
-        PhysProps->Velocity.Y = 0;
-    }
-
+    PhysProps->Velocity.X *= 0.99;
+    PhysProps->Velocity.Y *= 0.99;
     Actor->Position.X += PhysProps->Velocity.X;
     Actor->Position.Y += PhysProps->Velocity.Y;
 }
@@ -101,21 +68,38 @@ void PlayerRoutine(Actor* Player, Engine* Engine)
 {
     ActorScreenWrap(Player,Engine);
     ApplyPhysics(Player);
-    if(Engine->Input.KeysDown[K_UP])
+    if(Engine->Input.KeysDown[K_UP] || Engine->Input.GamepadButtonsDown[GP_DP_UP])
     {
         Player->CustomData->Velocity.Y -= 0.5;
     }
-    if(Engine->Input.KeysDown[K_DOWN])
+    if(Engine->Input.KeysDown[K_DOWN]|| Engine->Input.GamepadButtonsDown[GP_DP_DOWN])
     {
         Player->CustomData->Velocity.Y += 0.5;
     }
-    if(Engine->Input.KeysDown[K_LEFT])
+    if(Engine->Input.KeysDown[K_LEFT]|| Engine->Input.GamepadButtonsDown[GP_DP_LEFT])
     {
         Player->CustomData->Velocity.X -= 0.5;
     }
-    if(Engine->Input.KeysDown[K_RIGHT])
+    if(Engine->Input.KeysDown[K_RIGHT]|| Engine->Input.GamepadButtonsDown[GP_DP_RIGHT])
     {
         Player->CustomData->Velocity.X += 0.5;
+    }
+    Player->Position.Y += Engine->Input.VerticalMouseScroll;
+    Player->Position.X += Engine->Input.HorizontalMouseScroll;
+    if(Engine->Input.MouseDown[MB_LEFT])
+    {
+        Player->Position.X = Engine->Input.MousePosition.X;
+        Player->Position.Y = Engine->Input.MousePosition.Y;
+    }
+    if(Engine->Input.MouseDown[MB_RIGHT])
+    {
+        Player->Position.X = Engine->Input.MousePosition.Y;
+        Player->Position.Y = Engine->Input.MousePosition.X;
+    }
+    if(Engine->Input.MouseDown[MB_MIDDLE])
+    {
+        Player->Position.X = GetRandomNumber(0,640);
+        Player->Position.Y = GetRandomNumber(0,480);
     }
 }
 
@@ -250,7 +234,6 @@ void CreatePlayerGame(Engine* Engine)
     Vector2 ActorDimensions;
     int Voice = 0;
     CustomActorData* ActorData = calloc(1,sizeof(CustomActorData));
-    ActorData->Drag = 0.01;
     ActorPosition.X = 100; ActorPosition.Y = 100;
     ActorDimensions.X = 16; ActorDimensions.Y = 16;
     Actor* Actor = CreateActor("Player",ActorPosition,ActorDimensions,Voice,ActorData,&PlayerRoutine,Engine);
@@ -271,7 +254,6 @@ void CreateMonsterGame(Engine* Engine)
     Vector2 ActorDimensions;
     int Voice = 1;
     CustomActorData* ActorData = malloc(sizeof(CustomActorData));
-    ActorData->Drag = 0.01;
     ActorPosition.X = 300; ActorPosition.Y = 300;
     ActorDimensions.X = GetRandomNumber(8,64); ActorDimensions.Y = GetRandomNumber(8,64);
     Actor* Actor = CreateActor("Monster",ActorPosition,ActorDimensions,Voice,ActorData,&MonsterRoutine,Engine);
@@ -368,6 +350,11 @@ int main(int argc, char* argv[])
             }
         }
 
+        if(Engine->Input.KeysUp[K_M])
+        {
+            Engine->Audio.Muted =! Engine->Audio.Muted;
+        }
+
         UpdateDigit(FPSCounter[0],100000,Engine->Clock.FrameRate,Engine);
         UpdateDigit(FPSCounter[1],10000,Engine->Clock.FrameRate,Engine);
         UpdateDigit(FPSCounter[2],1000,Engine->Clock.FrameRate,Engine);
@@ -386,6 +373,12 @@ int main(int argc, char* argv[])
         UpdateDigit(SPRCounter[3],100,Engine->Resource.NumberOfSprites,Engine);
         UpdateDigit(SPRCounter[4],10,Engine->Resource.NumberOfSprites,Engine);
         UpdateDigit(SPRCounter[5],1,Engine->Resource.NumberOfSprites,Engine);
+
+        if(Engine->Clock.TotalFrames%10000 == 0)
+        {
+            //printf("%f\r",Engine->Clock.FrameRate);
+            NOP;
+        }
 
         RunEngine(Engine);
     }

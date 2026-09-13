@@ -23,8 +23,12 @@ Engine
 #include <time.h>
 #include "BUTTONS.h"
 
+#define MOBSCE_VERSION_RELEASE 0
+#define MOBSCE_VERSION_FEATURE 23
+#define MOBSCE_VERSION_PATCH 0
+#define MOBSCE_VERSION "0.23.0"
+
 #define OBJECT_USED 1
-#define OBJECT_DIRTY 2
 
 #define STRING_BUFFER_SIZE 5120
 #define OBJECT_NAME_SIZE 128
@@ -58,7 +62,8 @@ enum Flip {
 };
 
 //basic data types
-typedef unsigned char byte;
+typedef unsigned char ubyte;
+typedef signed char sbyte;
 
 typedef struct Vector2 {
 	int X;
@@ -131,7 +136,7 @@ typedef struct SpriteRenderParameters {
 
 //objects
 typedef struct Actor {
-	byte IsUsed;
+	ubyte IsUsed;
 	Uint64 ID;
 	Uint32 ReferenceIndex;
 	char Name[OBJECT_NAME_SIZE];
@@ -143,7 +148,7 @@ typedef struct Actor {
 } Actor;
 
 typedef struct Sprite {
-	byte IsUsed;
+	ubyte IsUsed;
 	Uint64 ID;
 	Uint32 ReferenceIndex;
 	char Name[OBJECT_NAME_SIZE];
@@ -184,22 +189,22 @@ typedef struct Input {
 	Uint8 SDL_PreviousKeystate[SDL_NUM_SCANCODES];
 	Uint32 SDL_MouseState;
 	Uint32 SDL_PreviousMouseState;
-	int KeysDown[SDL_NUM_SCANCODES];
-	int KeysUp[SDL_NUM_SCANCODES];
+	ubyte KeysDown[SDL_NUM_SCANCODES];
+	ubyte KeysUp[SDL_NUM_SCANCODES];
 	Vector2 MousePosition;
-	int MouseDown[5];
-	int MouseUp[5];
-	int VerticalMouseScroll;
-	int HorizontalMouseScroll;
+	ubyte MouseDown[5];
+	ubyte MouseUp[5];
+	sbyte VerticalMouseScroll;
+	sbyte HorizontalMouseScroll;
 	//controller stuff
 	SDL_GameController* Gamepad;
-	int GamepadIsConnected;
-	int GamepadPreviousState[14];
+	ubyte GamepadIsConnected;
+	ubyte GamepadPreviousState[14];
 	double GamepadPreviousTriggersState[2];
-	int GamepadButtonsUp[14];
-	int GamepadButtonsDown[14];
+	ubyte GamepadButtonsUp[14];
+	ubyte GamepadButtonsDown[14];
 	double GamepadTriggers[2];
-	int GamepadTriggersUp[2];
+	ubyte GamepadTriggersUp[2];
 	double GamepadSticks[4];
 } Input;
 
@@ -207,7 +212,6 @@ typedef struct Clock {
 	double DeltaTime;
 	Uint64 CurrentTime;
 	Uint64 PreviousTime;
-	Uint64 TotalTime;
 	Uint64 TotalFrames;
 	Uint64 RealTime;
 	double FrameRate;
@@ -248,10 +252,10 @@ typedef struct Engine {
 	Sprite** SpriteReferences;
 	SDL_Event Events[EVENT_QUEUE_SIZE];
 	Uint64 IDCounter;
-	int Running;
-	int SpriteZResortNeeded;
-	int ERROR_LEVEL;
-	int WARNING_LEVEL;
+	ubyte Running;
+	ubyte SpriteZResortNeeded;
+	ubyte ERROR_LEVEL;
+	ubyte WARNING_LEVEL;
 } Engine;
 
 typedef struct ResourceInfo {
@@ -260,7 +264,7 @@ typedef struct ResourceInfo {
 	void (*FreeFunction)(void*);
 	int* AllocatedResourceMemory;
 	int* NumberOfResources;
-	byte IsPointerArray;
+	ubyte IsPointerArray;
 } ResourceInfo;
 
 //engine stuff
@@ -268,9 +272,9 @@ int IsZero(void* Pointer, int Size);
 void ThrowError(char* Message, char* Thrower, Engine* Engine);
 void ThrowWarning(char* Message, char* Thrower, Engine* Engine);
 Uint64 GetNewObjectID(Engine* Engine);
-int CompactArray(const void* X, const void* Y);
-int CompactArrayOfObjects(const void* X, const void* Y);
-int SortSpritesByZ(const void* X, const void* Y);
+int QSCompactPointerPool(const void* X, const void* Y);
+int QSCompactObjectPool(const void* X, const void* Y);
+int QSSortSpritesByZ(const void* X, const void* Y);
 int PoolCanBeShrunk(void* Pool, int AllocatedElements, int AllocatedSize);
 int LinearMap(int Number, int NumberMax, int RangeMax, int RangeMin);
 void SeedRNG();
@@ -319,7 +323,7 @@ int InitResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
 int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
 int ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
 int CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
-void* FindOpenObjectSpace(void* Pool, int PoolSize, int Size);
+void* FindOpenResourceSpace(void* Pool, int PoolSize, int Size);
 Uint32 FindOpenReferenceSpace(void* Pool, int AllocatedReferenceMemory);
 void SpriteFreeFunction(void* SpritePtr);
 void ActorFreeFunction(void* ActorPtr);

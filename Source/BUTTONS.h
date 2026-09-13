@@ -9,8 +9,8 @@ enum MouseButtons {
 };
 
 enum MouseScroll {
-    SCROLL_UP = 1,
-    SCROLL_DOWN = -1,
+    SCROLL_UP = -1,
+    SCROLL_DOWN = 1,
     SCROLL_RIGHT = 1,
     SCROLL_LEFT = -1
 };
