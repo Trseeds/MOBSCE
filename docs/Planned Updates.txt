@@ -4,22 +4,14 @@ Feature - Multiple gamepads
 Implementation - Resource pool of a gamepad object which contains all of the gamepad related states in Input.
 API Impact - Major
 
-Feature - Embedded configs
-Implementation - InitEngine flag and config parameter.
-API Impact - Minor
-
-Feature - Get objects by property
-Implementation - Pass a byte offset into the struct as well as a size (essentially a member). Search all objects until match is found.
-API Impact - Optional
-
-Feature - Object getters return indicies instead of pointers.
-Implementation - Self explanatory.
-API Impact - Major
-
 Feature - Fix This (//Result = ImgInit(Engine->Video.) bleh) line in MOBSCE.C
 Implementation - More config stuff. 
 API Impact - None
 
-Feature - Decoupling of rendering and audio from engine tick.
-Implementation - InitEngine flag and flags in Engine.
-API Impact - Minor
+Feature - Improve window handling. Allow smooth resizing and fullscreening.
+Implementation - Cry.
+API Impact - TBD
+
+Feature - Create a public header and a private header.
+Implementation - Self explanatory.
+API Impact - Major.

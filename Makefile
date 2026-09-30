@@ -3,13 +3,13 @@ IncludeFlags = -I Source -I Libraries/SDL2/include -I Libraries/INIH
 LinkerFlags = -L Libraries/SDL2/lib/x64 -L Libraries/INIH -lSDL2main -lSDL2 -lSDL2_mixer -lSDL2_image -lINIH
 DebugFlags = -g3 -O0
 ReleaseFlags = -g0 -O2 -s -flto -std=c11
-TestFlags = -g0 -O0 -s -flto -std=c11 -march=native -mtune=native
+TestFlags = -g0 -Ofast -s -flto -std=c11 -march=native -mtune=native
 SOURCES := $(wildcard Source/*.c)
 GAMESOURCES := $(wildcard Source/Non-Engine/*.c)
 Objects = $(SOURCES:Source/%.c=Binaries/%.o)
 GameObjects = $(GAMESOURCES:Source/Non-Engine/%.c=Binaries/Non-Engine/%.o)
-ObjectsDebug = $(SOURCES:Source/%.c=Binaries/D%.o)
-GameObjectsDebug = $(GAMESOURCES:Source/Non-Engine/%.c=Binaries/Non-Engine/D%.o)
+ObjectsDebug = $(SOURCES:Source/%.c=Binaries/%D.o)
+GameObjectsDebug = $(GAMESOURCES:Source/Non-Engine/%.c=Binaries/Non-Engine/%D.o)
 Target = Binaries/GAME
 
 all: Test
@@ -23,7 +23,7 @@ Binaries/%D.o: Source/%.c
 Binaries/Non-Engine/%.o: Source/Non-Engine/%.c
 	$(Compiler) $(TestFlags) $(IncludeFlags) -c $< -o $@
 
-Binaries/Non-Engine/D%.o: Source/Non-Engine/%.c
+Binaries/Non-Engine/%D.o: Source/Non-Engine/%.c
 	$(Compiler) $(DebugFlags) $(IncludeFlags) -c $< -o $@
 
 Test: $(Objects) $(GameObjects)

@@ -7,27 +7,30 @@ int InitVideo(Engine* Engine)
         Engine->Video.Window = SDL_CreateWindow(Engine->Video.WindowTitle,SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,Engine->Video.LogicalDimensions.X,Engine->Video.LogicalDimensions.Y,Engine->Video.WindowFlags);
         if(!Engine->Video.Window)
         {
-            char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"InitVideo(%p)",Engine);
-            ThrowError("Failed to create window!",Traceback,Engine);
+            Error Error = {ERROR_SDL_FAILURE,"InitVideo","Failed to create window!","\0","\0"};
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(Engine* Engine: 0x%p)",Engine);
+            snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_CreateWindow failed and returned 0x%p",Engine->Video.Window);
+            ThrowError(&Error,Engine);
             return(ERROR_SDL_FAILURE);
         }
 
         Engine->Video.Renderer = SDL_CreateRenderer(Engine->Video.Window,-1,Engine->Video.RendererFlags);
         if(!Engine->Video.Renderer)
         {
-            char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"InitVideo(%p)",Engine);
-            ThrowError("Failed to create renderer!",Traceback,Engine);
+            Error Error = {ERROR_SDL_FAILURE,"InitVideo","Failed to create renderer!","\0","\0"};
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(Engine* Engine: 0x%p)",Engine);
+            snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_CreateRenderer failed and returned 0x%p",Engine->Video.Renderer);
+            ThrowError(&Error,Engine);
             return(ERROR_SDL_FAILURE);
         }
 
         SDL_Surface* Icon = IMG_Load(Engine->Video.WindowIconPath);
         if(!Icon)
         {
-            char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"InitVideo(%p)",Engine);
-            ThrowWarning("Failed to create window icon.",Traceback,Engine);
+            Error Error = {WARNING_SDL_FAILURE,"InitVideo","Failed to create window icon.","\0","\0"};
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(Engine* Engine: 0x%p)",Engine);
+            snprintf(Error.Description,STRING_BUFFER_SIZE,"IMG_Load failed and returned 0x%p",Icon);
+            ThrowWarning(&Error,Engine);
         }
         if(Icon)
         {
@@ -79,62 +82,16 @@ int CleanupVideo(Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
-int DrawTexture(SDL_Texture* Texture, Vector2 Position, Vector2 Origin, Engine* Engine)
-{
-    if(Engine)
-    {
-        if(!Texture)
-        {
-            char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawTexture(%p, %p, %p, %p)",Texture,Position,Origin,Engine);
-            ThrowWarning("Invalid texture.",Traceback,Engine);
-            return(WARNING_INVALID_PARAMETER);
-        }
-
-        Vector2 Dimensions;
-        int Result = SDL_QueryTexture(Texture,NULL,NULL,&Dimensions.X,&Dimensions.Y);
-        if(Result != 0)
-        {
-            char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawTexture(%p, %p, %p, %p)",Texture,Position,Origin,Engine);
-            ThrowWarning("Could not query texture information.",Traceback,Engine);
-            return(WARNING_SDL_FAILURE);
-        }
-
-        SDL_Rect Source;
-        SDL_Rect Destination;
-        Source.x = Origin.X;
-        Source.y = Origin.Y;
-        Source.w = Dimensions.X;
-        Source.h = Dimensions.Y;
-        Destination.x = Position.X;
-        Destination.y = Position.Y;
-        Destination.w = Dimensions.X;
-        Destination.h = Dimensions.Y;
-        
-        Result = SDL_RenderCopy(Engine->Video.Renderer,Texture,&Source,&Destination);
-        if(Result != 0)
-        {
-            char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawTexture(%p, %p, %p, %p)",Texture,Position,Origin,Engine);
-            ThrowWarning("Could not draw texture.",Traceback,Engine);
-            return(3);
-        }
-
-        return(RETURN_SUCCESS);
-    }
-    return(ERROR_INVALID_ENGINE);
-}
-
 int DrawSprite(Sprite* Sprite, Engine* Engine)
 {
     if(Engine)
     {
         if(!Sprite)
         {
-            char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawSprite(%p, %p)",Sprite,Engine);
-            ThrowWarning("Invalid sprite.",Traceback,Engine);
+            Error Error = {WARNING_INVALID_PARAMETER,"DrawSprite","Invalid sprite.","\0","\0"};
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(Sprite* Sprite: 0x%p, Engine* Engine: 0x%p)",Sprite,Engine);
+            snprintf(Error.Description,STRING_BUFFER_SIZE,"Sprite is NULL.");
+            ThrowWarning(&Error,Engine);
             return(WARNING_INVALID_PARAMETER);
         }
 
@@ -150,7 +107,7 @@ int DrawSprite(Sprite* Sprite, Engine* Engine)
         Destination.w = RP->Dimensions.X;
         Destination.h = RP->Dimensions.Y;
         
-        Uint8 RealAlpha = LinearMap(RP->Transparency,100,255,0);
+        Uint8 RealAlpha = LinearMap(RP->Transparency,0,100,0,255);
         int ResultA = SDL_SetTextureAlphaMod(RP->Texture,RealAlpha);
         int ResultC = SDL_SetTextureColorMod(RP->Texture,RP->Tint.X,RP->Tint.Y,RP->Tint.Z);
 
@@ -163,16 +120,18 @@ int DrawSprite(Sprite* Sprite, Engine* Engine)
             RP->Flip);
         if(ResultR != 0)
         {
-            char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawSprite(%p, %p)",Sprite,Engine);
-            ThrowWarning("Could not draw sprite.",Traceback,Engine);
+            Error Error = {WARNING_SDL_FAILURE,"DrawSprite","Could not draw sprite.","\0","\0"};
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(Sprite* Sprite: 0x%p, Engine* Engine: 0x%p)",Sprite,Engine);
+            snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_RenderCopyEX failed and returned %d.",ResultR);
+            ThrowWarning(&Error,Engine);
             return(WARNING_SDL_FAILURE);
         }
         if(ResultA != 0 || ResultC != 0)
         {
-            char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"DrawSprite(%p, %p)",Sprite,Engine);
-            ThrowWarning("Special sprite effects failed to render.",Traceback,Engine);
+            Error Error = {WARNING_SDL_FAILURE,"DrawSprite","Special sprite effects failed to render.","\0","\0"};
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(Sprite* Sprite: 0x%p, Engine* Engine: 0x%p)",Sprite,Engine);
+            snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_SetTextureAlphaMod returned %d and SDL_SetTextureColorMod returned %d.",ResultA,ResultC);
+            ThrowWarning(&Error,Engine);
             return(WARNING_SDL_FAILURE);
         }
         return(RETURN_SUCCESS);
@@ -184,34 +143,38 @@ int Render(Engine* Engine)
 {
     if(Engine)
     {
-        Sprite* S = Engine->Sprites;
-        int ASM = Engine->Resource.AllocatedSpriteMemory;
-        Sprite** SR = Engine->SpriteReferences;
-        SDL_RenderClear(Engine->Video.Renderer);
-        if(Engine->SpriteZResortNeeded)
+        if(Engine->Config.Render)
         {
-            qsort(S, ASM, sizeof(Sprite), QSSortSpritesByZ);
+            Sprite* S = Engine->Sprites;
+            int ASM = Engine->Resource.AllocatedSpriteMemory;
+            Sprite** SR = Engine->SpriteReferences;
+            SDL_RenderClear(Engine->Video.Renderer);
+            if(Engine->SpriteZResortNeeded)
+            {
+                qsort(S, ASM, sizeof(Sprite), QSSortSpritesByZ);
+                for(int i = 0; i < ASM; i++)
+                {
+                    if(S[i].IsUsed)
+                    {
+                        SR[S[i].ReferenceIndex] = &S[i];
+                    }
+                }
+                Engine->SpriteZResortNeeded = false;
+            }
+
             for(int i = 0; i < ASM; i++)
             {
                 if(S[i].IsUsed)
                 {
-                    SR[S[i].ReferenceIndex] = &S[i];
+                    if(S[i].RenderParameters.Visible)
+                    {
+                        DrawSprite(&S[i],Engine);
+                    }
                 }
             }
-            Engine->SpriteZResortNeeded = false;
-        }
 
-        for(int i = 0; i < ASM; i++)
-        {
-            if(S[i].IsUsed)
-            {
-                if(S[i].RenderParameters.Visible)
-                {
-                    DrawSprite(&S[i],Engine);
-                }
-            }
+            SDL_RenderPresent(Engine->Video.Renderer);
         }
-        SDL_RenderPresent(Engine->Video.Renderer);
         return(RETURN_SUCCESS);
     }
     return(ERROR_INVALID_ENGINE);

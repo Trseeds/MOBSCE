@@ -79,7 +79,7 @@ int handler(void* user, const char* section, const char* name, const char* value
     return(RETURN_SUCCESS);
 }
 
-int UpdateConfig(char* File, Config* Config, Engine* Engine)
+int8 UpdateConfig(char* File, Config* Config, Engine* Engine)
 {
     Config->Samplerate = 48000;
     Config->Channels = 2;
@@ -97,16 +97,17 @@ int UpdateConfig(char* File, Config* Config, Engine* Engine)
     int Result = ini_parse(File,handler,Config);
     if(Result < 0)
     {
-        char Traceback[STRING_BUFFER_SIZE];
-        snprintf(Traceback,STRING_BUFFER_SIZE,"UpdateConfig(%s, 0x%p)",File,Config);
-        ThrowWarning("Failed to load config file.",Traceback,Engine);
+        Error Error = {WARNING_INIH_FAILURE,"UpdateConfig","Failed to load config file.","\0","\0"};
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(char* File: %s, Config* Config: 0x%p, Engine* Engine: 0x%p)",File,Config,Engine);
+        snprintf(Error.Description,STRING_BUFFER_SIZE,"ini_parse failed and returned %d.",Result);
+        ThrowWarning(&Error,Engine);
         return(WARNING_INIH_FAILURE);
     }
     
     return(RETURN_SUCCESS);
 }
 
-int LoadEngineConfig(Engine* Engine)
+int8 LoadEngineConfig(Engine* Engine)
 {
     if(Engine)
     {

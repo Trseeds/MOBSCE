@@ -66,7 +66,7 @@ void ApplyPhysics(Actor* Actor)
 
 void PlayerRoutine(Actor* Player, Engine* Engine)
 {
-    ActorScreenWrap(Player,Engine);
+    //ActorScreenWrap(Player,Engine);
     ApplyPhysics(Player);
     if(Engine->Input.KeysDown[K_UP] || Engine->Input.GamepadButtonsDown[GP_DP_UP])
     {
@@ -134,7 +134,7 @@ void MonsterRoutine(Actor* Monster, Engine* Engine)
 void UpdateDigit(int Reference, int Divisor, int Data, Engine* Engine)
 {
     Sprite* Digit = Engine->SpriteReferences[Reference];
-    Digit->RenderParameters.Origin.X = 32 * ((Data / Divisor) % 10);
+    Digit->RenderParameters.Origin.X = (32 * ((Data / Divisor) % 10) + 1536);
 }
 /*SPRITE AND ACTOR ROUTINES END*********************************************************/
 
@@ -143,17 +143,17 @@ void CreateFPSCounter(int* References, Engine* Engine)
     Vector3 Position = {0,0,1000};
     Vector4 Origin = {0,0,32,32};
     Vector2 Dimensions = {32,32};
-    References[0] = CreateSprite("FPS Digit 100,000",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    References[0] = CreateSprite("FPS Digit 100,000",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
     Position.X += 32;
-    References[1] = CreateSprite("FPS Digit 10,000",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    References[1] = CreateSprite("FPS Digit 10,000",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
     Position.X += 32;
-    References[2] = CreateSprite("FPS Digit 1,000",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    References[2] = CreateSprite("FPS Digit 1,000",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
     Position.X += 32;
-    References[3] = CreateSprite("FPS Digit 100",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    References[3] = CreateSprite("FPS Digit 100",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
     Position.X += 32;
-    References[4] = CreateSprite("FPS Digit 10",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    References[4] = CreateSprite("FPS Digit 10",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
     Position.X += 32;
-    References[5] = CreateSprite("FPS Digit 1",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    References[5] = CreateSprite("FPS Digit 1",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
 }
 
 void CreateObjectCounter(int* References, Engine* Engine)
@@ -161,17 +161,17 @@ void CreateObjectCounter(int* References, Engine* Engine)
     Vector3 Position = {0,32,1000};
     Vector4 Origin = {0,0,32,32};
     Vector2 Dimensions = {32,32};
-    References[0] = CreateSprite("OBJ Digit 100,000",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    References[0] = CreateSprite("OBJ Digit 100,000",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
     Position.X += 32;
-    References[1] = CreateSprite("OBJ Digit 10,000",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    References[1] = CreateSprite("OBJ Digit 10,000",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
     Position.X += 32;
-    References[2] = CreateSprite("OBJ Digit 1,000",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    References[2] = CreateSprite("OBJ Digit 1,000",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
     Position.X += 32;
-    References[3] = CreateSprite("OBJ Digit 100",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    References[3] = CreateSprite("OBJ Digit 100",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
     Position.X += 32;
-    References[4] = CreateSprite("OBJ Digit 10",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    References[4] = CreateSprite("OBJ Digit 10",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
     Position.X += 32;
-    References[5] = CreateSprite("OBJ Digit 1",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    References[5] = CreateSprite("OBJ Digit 1",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
 }
 
 void CreateSpriteCounter(int* References, Engine* Engine)
@@ -179,17 +179,17 @@ void CreateSpriteCounter(int* References, Engine* Engine)
     Vector3 Position = {0,64,1000};
     Vector4 Origin = {0,0,32,32};
     Vector2 Dimensions = {32,32};
-    References[0] = CreateSprite("SPR Digit 100,000",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    References[0] = CreateSprite("SPR Digit 100,000",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
     Position.X += 32;
-    References[1] = CreateSprite("SPR Digit 10,000",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    References[1] = CreateSprite("SPR Digit 10,000",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
     Position.X += 32;
-    References[2] = CreateSprite("SPR Digit 1,000",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    References[2] = CreateSprite("SPR Digit 1,000",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
     Position.X += 32;
-    References[3] = CreateSprite("SPR Digit 100",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    References[3] = CreateSprite("SPR Digit 100",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
     Position.X += 32;
-    References[4] = CreateSprite("SPR Digit 10",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    References[4] = CreateSprite("SPR Digit 10",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
     Position.X += 32;
-    References[5] = CreateSprite("SPR Digit 1",Position,Origin,Dimensions,TXTR_NUMBERS,NULL,NULL,NULL,Engine)->ReferenceIndex;
+    References[5] = CreateSprite("SPR Digit 1",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
 }
 
 void CacheTexturesGame(Engine* Engine)
@@ -198,7 +198,7 @@ void CacheTexturesGame(Engine* Engine)
     CacheTexture(GetAssetPath("Assets/Images/Backgrounds/TestBG.png",Buffer,Engine),Engine);
     CacheTexture(GetAssetPath("Assets/Images/Sprites/Player.png",Buffer,Engine),Engine);
     CacheTexture(GetAssetPath("Assets/Images/Sprites/Monster.png",Buffer,Engine),Engine);
-    CacheTexture(GetAssetPath("Assets/Images/Sprites/Numbers.png",Buffer,Engine),Engine);
+    CacheTexture(GetAssetPath("Assets/Images/Sprites/Font.png",Buffer,Engine),Engine);
 }
 
 void CacheSoundsAndMusicGame(Engine* Engine)
@@ -216,7 +216,12 @@ void CreateBGGame(Engine* Engine)
     CustomActorData* ActorData = calloc(1,sizeof(CustomActorData));
     ActorPosition.X = 0; ActorPosition.Y = 0;
     ActorDimensions.X = 1280; ActorDimensions.Y = 960;
-    Actor* Actor = CreateActor("Background",ActorPosition,ActorDimensions,Voice,ActorData,NULL,Engine);
+    uint32 AR = CreateActor("Background",ActorPosition,ActorDimensions,Voice,ActorData,NULL,Engine);
+    Actor* Actor;
+    if(AR != SENTINEL_OBJECT)
+    {
+        Actor = Engine->ActorReferences[AR];
+    }
     /***********************************************************************************/
     Vector3 Position;
     Vector4 Origin;
@@ -236,7 +241,12 @@ void CreatePlayerGame(Engine* Engine)
     CustomActorData* ActorData = calloc(1,sizeof(CustomActorData));
     ActorPosition.X = 100; ActorPosition.Y = 100;
     ActorDimensions.X = 16; ActorDimensions.Y = 16;
-    Actor* Actor = CreateActor("Player",ActorPosition,ActorDimensions,Voice,ActorData,&PlayerRoutine,Engine);
+    uint32 AR = CreateActor("Player",ActorPosition,ActorDimensions,Voice,ActorData,&PlayerRoutine,Engine);
+    Actor* Actor;
+    if(AR != SENTINEL_OBJECT)
+    {
+        Actor = Engine->ActorReferences[AR];
+    }
     /***********************************************************************************/
     Vector3 SpritePosition;
     Vector4 SpriteOrigin;
@@ -252,22 +262,32 @@ void CreateMonsterGame(Engine* Engine)
 {
     Vector2 ActorPosition;
     Vector2 ActorDimensions;
-    int Voice = 1;
-    CustomActorData* ActorData = malloc(sizeof(CustomActorData));
+    int Voice = Engine->IDCounter + 1;
+    CustomActorData* ActorData = calloc(1,sizeof(CustomActorData));
     ActorPosition.X = 300; ActorPosition.Y = 300;
     ActorDimensions.X = GetRandomNumber(8,64); ActorDimensions.Y = GetRandomNumber(8,64);
-    Actor* Actor = CreateActor("Monster",ActorPosition,ActorDimensions,Voice,ActorData,&MonsterRoutine,Engine);
-    Actor->CustomData->TargetReferenceIndex = GetActorByName("Player",Engine)->ReferenceIndex;
-    Actor->CustomData->TargetID = Engine->ActorReferences[Actor->CustomData->TargetReferenceIndex]->ID;
+    uint32 AR = CreateActor("Monster",ActorPosition,ActorDimensions,Voice,ActorData,&MonsterRoutine,Engine);
+    Actor* Actor;
+    if(AR != SENTINEL_OBJECT)
+    {
+        Actor = Engine->ActorReferences[AR];
+        Actor->CustomData->TargetReferenceIndex = GetActorByName("Player",Engine);
+        Actor->CustomData->TargetID = Engine->ActorReferences[Actor->CustomData->TargetReferenceIndex]->ID;
+    }
     /***********************************************************************************/
     Vector3 SpritePosition;
     Vector4 SpriteOrigin;
     Vector2 SpriteDimensions;
-    CustomSpriteData* SpriteData = malloc(sizeof(CustomSpriteData));
+    CustomSpriteData* SpriteData = calloc(1,sizeof(CustomSpriteData));
     SpritePosition.X = 0; SpritePosition.Y = 0; SpritePosition.Z = 1;
     SpriteOrigin.X = 0; SpriteOrigin.Y = GetRandomNumber(0,4)*32; SpriteOrigin.Z = 32; SpriteOrigin.W = 32;
     SpriteDimensions.X = ActorDimensions.X; SpriteDimensions.Y = ActorDimensions.Y;
-    Sprite* Sprite = CreateSprite("Monster",SpritePosition,SpriteOrigin,SpriteDimensions,TXTR_MONSTER,SpriteData,Actor,&AlignSpriteToActor,Engine);
+    uint32 SR = CreateSprite("Monster",SpritePosition,SpriteOrigin,SpriteDimensions,TXTR_MONSTER,SpriteData,Actor,&AlignSpriteToActor,Engine);
+    Sprite* Sprite;
+    if(SR != SENTINEL_OBJECT)
+    {
+        Sprite = Engine->SpriteReferences[SR];
+    }
     Sprite->RenderParameters.Tint.X = GetRandomNumber(0,255);
     Sprite->RenderParameters.Tint.Y = GetRandomNumber(0,255);
     Sprite->RenderParameters.Tint.Z = GetRandomNumber(0,255);
@@ -288,7 +308,7 @@ void InitGame(int* FPS, int* OBJ, int* SPR, Engine* Engine)
 
 int main(int argc, char* argv[])
 {
-    Engine* Engine = InitEngine("Config.ini","MOBSCE Demo","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL);
+    Engine* Engine = InitEngine("Config.ini","MOBSCE Demo","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL,true,true,false,NULL);
 
     int FPSCounter[6];
     int OBJCounter[6];
@@ -317,7 +337,8 @@ int main(int argc, char* argv[])
         {
             CleanupEngine(Engine);
             OSMemoryFree(Engine,sizeof(struct Engine));
-            Engine = InitEngine("Config.ini","MOBSCE Demo","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL);
+            Config c = {44100,2,1024,32760,100,100,false,1920,1080,4,0,0,true,true};
+            Engine = InitEngine(NULL,"MOBSCE Demo","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL,true,true,true,&c);
             InitGame(FPSCounter,OBJCounter,SPRCounter,Engine);
         }
         if(Engine->Input.KeysDown[K_S])
@@ -326,16 +347,21 @@ int main(int argc, char* argv[])
         }
         if(Engine->Input.KeysDown[K_K])
         {
-            Sprite* Sprite = GetSpriteByName("Monster",Engine);
-            if(Sprite)
+            uint32 SR = GetSpriteByName("Monster",Engine);
+            Sprite* Sprite;
+            if(SR != SENTINEL_OBJECT)
             {
-                Actor* Actor = Engine->ActorReferences[Sprite->ActorReferenceIndex];
-                if(Actor)
+                Sprite = Engine->SpriteReferences[SR];
+                if(Sprite && (Sprite->ActorReferenceIndex != SENTINEL_OBJECT))
                 {
-                    PlaySound(SND_COUGH,-1,5,Actor->Position.X,Engine);
+                    Actor* Actor = Engine->ActorReferences[Sprite->ActorReferenceIndex];
+                    if(Actor)
+                    {
+                        PlaySound(SND_COUGH,Actor->Voice,ScreenVolume(Actor->Position.X,10,Engine),ScreenPan(Actor->Position.X,10,Engine),Engine);
+                    }
+                    DestroySprite(Sprite,&SpriteFreeFunction,Engine);
+                    DestroyActor(Actor,&ActorFreeFunction,Engine);   
                 }
-                DestroySprite(Sprite,&SpriteFreeFunction,Engine);
-                DestroyActor(Actor,&ActorFreeFunction,Engine);   
             }
         }
 
@@ -343,14 +369,20 @@ int main(int argc, char* argv[])
         {
             if(Engine->Input.KeysDown[K_S])
             {
-                for(int i = 0; i < 10; i++)
+                for(int i = 0; i < 100; i++)
                 {
                     CreateMonsterGame(Engine);
                 }
             }
         }
 
-        if(Engine->Input.KeysUp[K_M])
+        if(Engine->Input.KeysUp[K_P])
+        {
+            Actor* A = Engine->ActorReferences[GetActorByName("Player",Engine)];
+            PlaySound(SND_COUGH,A->Voice,ScreenVolume(A->Position.X,500,Engine),ScreenPan(A->Position.X,500,Engine),Engine);
+        }
+
+        if(Engine->Input.KeysDown[K_M])
         {
             Engine->Audio.Muted =! Engine->Audio.Muted;
         }
@@ -373,12 +405,6 @@ int main(int argc, char* argv[])
         UpdateDigit(SPRCounter[3],100,Engine->Resource.NumberOfSprites,Engine);
         UpdateDigit(SPRCounter[4],10,Engine->Resource.NumberOfSprites,Engine);
         UpdateDigit(SPRCounter[5],1,Engine->Resource.NumberOfSprites,Engine);
-
-        if(Engine->Clock.TotalFrames%10000 == 0)
-        {
-            //printf("%f\r",Engine->Clock.FrameRate);
-            NOP;
-        }
 
         RunEngine(Engine);
     }

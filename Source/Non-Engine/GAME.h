@@ -20,7 +20,7 @@ enum Textures {
     TXTR_BG,
     TXTR_PLAYER,
     TXTR_MONSTER,
-    TXTR_NUMBERS
+    TXTR_FONT
 };
 
 enum Sounds {

@@ -1,10 +1,10 @@
 #include "MOBSCE.h"
 
-int IsZero(void* Pointer, int Size)
+bool IsZero(void* Pointer, int32 Size)
 {
     for(int i = 0; i < Size; i++)
     {
-        if(*(unsigned char*)(Pointer+i))
+        if(*(bytepointer)(Pointer+i))
         {
             return(false);
         }
@@ -12,41 +12,41 @@ int IsZero(void* Pointer, int Size)
     return(true);
 }
 
-void ThrowError(char* Message, char* Thrower, Engine* Engine)
+void ThrowError(Error* Error, Engine* Engine)
 {
     char BoxErrorMessage[STRING_BUFFER_SIZE];
-    int EL = Engine->ERROR_LEVEL;
-    if(EL != -1)
+    uint8 EL = Engine->ERROR_LEVEL;
+    if(EL != ERROR_DISABLE)
     {
-        if(EL == 0)
+        if(EL == ERROR_SHOW)
         {
             snprintf(BoxErrorMessage,STRING_BUFFER_SIZE,"An error has occurred.");
         }
-        if(EL == 1)
+        if(EL == ERROR_SHOW_MESSAGE)
         {
-            snprintf(BoxErrorMessage,STRING_BUFFER_SIZE,"Error Message: %s",Message);
+            snprintf(BoxErrorMessage,STRING_BUFFER_SIZE,"Error Message: %s",Error->Message);
         }
-        if(EL == 2)
+        if(EL == ERROR_SHOW_ALL)
         {
-            snprintf(BoxErrorMessage,STRING_BUFFER_SIZE,"Error Message: %s\nThrower: %s",Message,Thrower);
+            snprintf(BoxErrorMessage,STRING_BUFFER_SIZE,"Error Message: %s\nThrower: %s%s\nDescription: %s",Error->Message,Error->Thrower,Error->Parameters,Error->Description);
         }
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR,"Fatal Error!",BoxErrorMessage,NULL);
     }
     CleanupEngine(Engine);
 }
 
-void ThrowWarning(char* Message, char* Thrower, Engine* Engine)
+void ThrowWarning(Error* Warning, Engine* Engine)
 {
-    int WL = Engine->WARNING_LEVEL;
-    if(WL > 0)
+    uint8 WL = Engine->WARNING_LEVEL;
+    if(WL > WARNING_DISABLE)
     {
-        if(WL == 1)
+        if(WL == WARNING_SHOW_MESSAGE)
         {
-            printf("\n\nWarning: %s\n\n",Message);
+            printf("\n\nWarning: %s\n\n",Warning->Message);
         }
-        if(WL == 2)
+        if(WL == WARNING_SHOW_ALL)
         {
-            printf("\n\nWarning: %s\nThrower: %s\n\n",Message,Thrower);
+            printf("\n\nWarning: %s\nThrower: %s%s\nDescription: %s\n\n",Warning->Message,Warning->Thrower,Warning->Parameters,Warning->Description);
         }
     }
 }
@@ -81,8 +81,8 @@ int QSCompactPointerPool(const void* X, const void* Y)
 
 int QSCompactObjectPool(const void* X, const void* Y)
 {
-    const ubyte NX = *(ubyte*)X;
-    const ubyte NY = *(ubyte*)Y;
+    const bool NX = *(bool*)X;
+    const bool NY = *(bool*)Y;
     if(NX == false && NY == false)
     {
         return(0);
@@ -104,10 +104,10 @@ int QSCompactObjectPool(const void* X, const void* Y)
 
 int QSSortSpritesByZ(const void* X, const void* Y)
 {
-    const ubyte NX = *(ubyte*)X;
-    const ubyte NY = *(ubyte*)Y;
-    const int SPR1Z = ((Sprite*)X)->RenderParameters.Position.Z;
-    const int SPR2Z = ((Sprite*)Y)->RenderParameters.Position.Z;
+    const bool NX = *(bool*)X;
+    const bool NY = *(bool*)Y;
+    const int32 SPR1Z = ((Sprite*)X)->RenderParameters.Position.Z;
+    const int32 SPR2Z = ((Sprite*)Y)->RenderParameters.Position.Z;
     if(NX == false && NY == false)
     {
         return(0);
@@ -136,7 +136,7 @@ int QSSortSpritesByZ(const void* X, const void* Y)
     return(0);
 }
 
-int PoolCanBeShrunk(void* Array, int AllocatedElements, int AllocatedSize)
+bool PoolCanBeShrunk(void* Array, uint64 AllocatedElements, uint64 AllocatedSize)
 {
     if((AllocatedSize - AllocatedElements) >= MIN_ALLOCATE)
     {
@@ -145,17 +145,9 @@ int PoolCanBeShrunk(void* Array, int AllocatedElements, int AllocatedSize)
     return(false);
 }
 
-int LinearMap(int Number, int NumberMax, int RangeMax, int RangeMin)
+int64 LinearMap(int64 Number, int64 DomainMin, int64 DomainMax, int64 RangeMin, int64 RangeMax)
 {
-    if(Number < RangeMin)
-    {
-        Number = RangeMin;
-    }
-    if(Number > NumberMax)
-    {
-        Number = NumberMax;
-    }
-    return((Number * RangeMax) / NumberMax);
+    return(RangeMin + (Number - DomainMin) * (RangeMax - RangeMin) / (DomainMax - DomainMin));
 }
 
 void SeedRNG()
@@ -163,30 +155,39 @@ void SeedRNG()
     srand(time(NULL));
 }
 
-int GetRandomNumber(int Min, int Max)
+int64 GetRandomNumber(int64 Min, int64 Max)
 {
     return(Min+(rand()%(Max-Min)));
 }
 
-int InitSDL(Engine* Engine)
+int8 InitSDL(Engine* Engine)
 {
     int Result = SDL_Init(SDL_INIT_EVERYTHING);
     if(Result != 0)
     {
-        char Traceback[STRING_BUFFER_SIZE];
-        snprintf(Traceback,STRING_BUFFER_SIZE,"InitSDL(0x%X)",Engine);
-        ThrowError("Failed to start SDL!",Traceback,NULL);
+        Error Error = {ERROR_SDL_FAILURE,"InitSDL","Failed to start SDL!","\0", "\0"};
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(Engine* Engine: 0x%p)",Engine);
+        snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_Init failed and returned %d.",Result);
+        ThrowError(&Error,Engine);
         return(ERROR_SDL_FAILURE);
     }
 
-    Result = Mix_Init(Engine->Audio.Codecs);
-    //Result = ImgInit(Engine->Video.) bleh
-    if(Result != Engine->Audio.Codecs || Result == 0)
+    if(Engine->Config.Render)
     {
-        char Traceback[STRING_BUFFER_SIZE];
-        snprintf(Traceback,STRING_BUFFER_SIZE,"InitSDL(0x%X)",Engine);
-        ThrowWarning("Some or all of the requested audio formats failed to initialize.",Traceback,Engine);
-        return(WARNING_SDL_FAILURE);
+        //Result = ImgInit(Engine->Video.) bleh
+    }
+
+    if(Engine->Config.Audiate)
+    {
+        Result = Mix_Init(Engine->Audio.Codecs);
+        if(Result != Engine->Audio.Codecs || Result == 0)
+        {
+            Error Warning = {WARNING_SDL_FAILURE,"InitSDL","Failed to start SDL Mixer.","\0", "\0"};
+            snprintf(Warning.Parameters,STRING_BUFFER_SIZE,"(Engine* Engine: 0x%p)",Engine);
+            snprintf(Warning.Description,STRING_BUFFER_SIZE,"Mix_Init failed and returned %d.",Result);
+            ThrowWarning(&Warning,Engine);
+            return(WARNING_SDL_FAILURE);
+        }
     }
 
     return(RETURN_SUCCESS);
@@ -199,7 +200,7 @@ void CleanupSDL()
     SDL_Quit();
 }
 
-int GetSDLEvents(Engine* Engine)
+int8 GetSDLEvents(Engine* Engine)
 {
     if(Engine)
     {
@@ -220,16 +221,17 @@ int GetSDLEvents(Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
-int GetBasePath(Engine* Engine)
+int8 GetBasePath(Engine* Engine)
 {
     if(Engine)
     {
         char* Result = SDL_GetBasePath();
         if(!Result)
         {
-            char Traceback[STRING_BUFFER_SIZE];
-            snprintf(Traceback,STRING_BUFFER_SIZE,"GetBasePath(0x%X)",Engine);
-            ThrowError("Failed to get base path!",Traceback,Engine);
+            Error Error = {WARNING_SDL_FAILURE,"GetBasePath","Failed to get base path!","\0", "\0"};
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(Engine* Engine: 0x%p)",Engine);
+            snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_GetbasePath failed and returned %d.",Result);
+            ThrowError(&Error,Engine);
             return(ERROR_SDL_FAILURE);
         }
         char* EBP = Engine->BasePath;
@@ -276,32 +278,55 @@ int KeepTime(Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
-Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, int ERROR_LEVEL, int WARNING_LEVEL)
+Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, int8 ERROR_LEVEL, int8 WARNING_LEVEL, bool Render, bool Audiate, bool ConfigProvided, Config* Config)
 {
     Engine* NewEngine = (Engine*)OSMemoryAllocate(sizeof(Engine));
     if(!NewEngine)
     {
-        ThrowError("Failed to allocate memory!","InitEngine()",NewEngine);
-        return(WARNING_NULL);
+        Error Error = {ERROR_MEMORY,"InitEngine","Failed to allocate memory!","\0", "\0"};
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(char* ConfigFile: %s, char* WindowTitle: %s, char* WindowIconpath: %s, int ERROR_LEVEL: %d, int WARNING_LEVEL: %d, bool Render: %d, bool Audiate: %d, bool ConfigProvided: %d, Config* Config: 0x%p)",ConfigFile,WindowTitle,WindowIconPath,ERROR_LEVEL,WARNING_LEVEL,Render,Audiate,ConfigProvided,Config);
+        snprintf(Error.Description,STRING_BUFFER_SIZE,"OSMemoryAllocate failed and returned: 0x%p",NewEngine);
+        ThrowError(&Error,NewEngine);
+        return(NULL);
     }
 
     NewEngine->ERROR_LEVEL = ERROR_LEVEL;
     NewEngine->WARNING_LEVEL = WARNING_LEVEL;
+    NewEngine->Config.Render = Render;
+    NewEngine->Config.Audiate = Audiate;
 
     ResourceInfo NewResourceInfo;
 
     GetBasePath(NewEngine);
 
-    char Config[STRING_BUFFER_SIZE];
-    strncpy(NewEngine->ConfigPath,GetAssetPath(ConfigFile,Config,NewEngine),STRING_BUFFER_SIZE);
+    char ConfigF[STRING_BUFFER_SIZE];
+    strncpy(NewEngine->ConfigPath,GetAssetPath(ConfigFile,ConfigF,NewEngine),STRING_BUFFER_SIZE);
     char Icon[STRING_BUFFER_SIZE];
     strncpy(NewEngine->Video.WindowIconPath,GetAssetPath(WindowIconPath,Icon,NewEngine),STRING_BUFFER_SIZE);
     strncpy(NewEngine->Video.WindowTitle,WindowTitle,STRING_BUFFER_SIZE);
 
-    UpdateConfig(Config,&NewEngine->Config,NewEngine);
+    if(!ConfigProvided)
+    {
+        UpdateConfig(ConfigF,&NewEngine->Config,NewEngine);
+    }
+    else
+    {
+        if(!Config)
+        {
+            Error Error = {ERROR_INVALID_PARAMETER,"InitEngine","Config provided is invalid!","\0", "\0"};
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(char* ConfigFile: %s, char* WindowTitle: %s, char* WindowIconpath: %s, int ERROR_LEVEL: %d, int WARNING_LEVEL: %d, bool Render: %d, bool Audiate: %d, bool ConfigProvided: %d, Config* Config: 0x%p)",ConfigFile,WindowTitle,WindowIconPath,ERROR_LEVEL,WARNING_LEVEL,Render,Audiate,ConfigProvided,Config);
+            snprintf(Error.Description,STRING_BUFFER_SIZE,"Config is NULL.",NewEngine);
+            ThrowError(&Error,NewEngine);
+            return(NULL);
+        }
+        memcpy(&NewEngine->Config,Config,sizeof(struct Config));
+    }
     LoadEngineConfig(NewEngine);
     InitSDL(NewEngine);
-    InitAudio(NewEngine);
+    if(NewEngine->Config.Audiate)
+    {
+        InitAudio(NewEngine);
+    }
     //sounds
     NewResourceInfo.Pointer = &NewEngine->Resource.Sounds;
     NewResourceInfo.SizeOfResource = sizeof(Mix_Chunk*);
@@ -314,7 +339,10 @@ Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, in
     NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedMusicMemory;
     NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfMusics;
     InitResourcePool(NewResourceInfo,NewEngine);
-    InitVideo(NewEngine);
+    if(NewEngine->Config.Render)
+    {
+        InitVideo(NewEngine);
+    }
     //textures
     NewResourceInfo.Pointer = &NewEngine->Resource.Textures;
     NewResourceInfo.SizeOfResource = sizeof(SDL_Texture*);
@@ -349,7 +377,7 @@ Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, in
     return(NewEngine);
 }
 
-int RunEngine(Engine* Engine)
+int8 RunEngine(Engine* Engine)
 {
     if(Engine)
     {
@@ -390,7 +418,7 @@ int RunEngine(Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
-int CleanupEngine(Engine* Engine)
+int8 CleanupEngine(Engine* Engine)
 {
     if(Engine)
     {
@@ -453,7 +481,7 @@ int CleanupEngine(Engine* Engine)
         ResourceInfo.IsPointerArray = true;
         CleanupResourcePool(ResourceInfo,Engine);
         CleanupVideo(Engine);
-        Engine->Running = false;
+        memset(Engine,0,sizeof(struct Engine));
         return(RETURN_SUCCESS);
     }
     return(ERROR_INVALID_ENGINE);

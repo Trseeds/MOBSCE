@@ -1,10 +1,13 @@
+Disclaimer! The next four enums will tell you exactly how up to date this file is. If the version listed in this file does not match the header
+then this file is out of date.
+
 MOBSCE_VERSION_RELEASE - 0 - The current major release version of MOBSCE.
 
 MOBSCE_VERSION_FEATURE - 23 - The current feature release of MOBSCE.
 
-MOBSCE_VERSION_PATCH - 1 - The current patch of MOBSCE.
+MOBSCE_VERSION_PATCH - 2 - The current patch of MOBSCE.
 
-MOBSCE_VERSION - "0.23.1" - The current version of MOBSCE in string from.
+MOBSCE_VERSION - "0.23.2" - The current version of MOBSCE in string from.
 
 OBJECT_USED - 1 - Constant that determines if an actor or sprite in a given slot is alive.
 
@@ -50,12 +53,19 @@ WARNING_NULL - NULL - I don't even remember why this exists.
 
 RETURN_SUCCESS - 0 - Returned if everything goes well.
 
+ubyte - uint8_t - 8 bit unsigned int.
+byte - int8_t - 8 bit signed int.
+uint16 - uint16_t - 16 bit unsigned int.
+int16 - int16_t - 16 bit signed int.
+uint32 - uint32_t - 32 bit unsigned int.
+int32 - int32_t - 32 bit signed int.
+uint64 - uint64_t - 64 bit unsigned int.
+int64 - int64_t - 64 bit signed int.
+
 enum Flip - Contains values used to flip sprites.
 	FLIP_H - Flip sprites across the X axis.
 	FLIP_V - Flip sprites along the Y axis.
 	FLIP_NONE - Does not flip sprites.
-
-byte - unsigned char - 8 bits. Used occasionally.
 
 struct Vector2 - Two integers.
 	int X
@@ -209,5 +219,50 @@ struct ResourceInfo - Used when performing any action on a pool. Contains inform
 	int* NumberOfResources - See above.
 	byte IsPointerArray - Boolean flag that determines if the pool contains structs or pointers. Triggers slightly different behavior.
 
+ubyte IsZero(void* Pointer, int Size)
+	Checks if every byte from Pointer to Pointer + Size is zero. Returns 0 if a
+	non-zero byte is found.
 
-	
+void ThrowError(char* Message, char* Thrower, Engine* Engine)
+	Creates an error box and cleans up the engine. Will display Message and
+	Thrower when Engine.ERROR_LEVEL = ERROR_SHOW_ALL, Message when
+	ERROR_SHOW_MESSAGE, a generic error when ERROR_SHOW, and no error when
+	ERROR_DISABLE.
+
+void ThrowWarning(char* Message, char* Thrower, Engine* Engine)
+	Prints a warning message to the console. The warning will display Message
+	and Thrower when Engine.WARNING_LEVEL = WARNING_SHOW_ALL, Message when 
+	WARNING_SHOW, and nothing when WARNING_DISABLE.
+
+Uint64 GetNewObjectID(Engine* Engine)
+	Returns Engine.IDCounter + 1. Never returns 0.
+
+int QSCompactPointerPool(const void* X, const void* Y)
+	Passed into qsort by various resource functions to fill all open spaces in a
+	pool with elements.
+
+int QSCompactObjectPool(const void* X, const void* Y)
+	Passed into qsort by various resource functions to fill all open spaces in a 
+	pool with elements.
+
+int QSSortSpritesByZ(const void* X, const void* Y)
+	Passed into qsort by Render to sort sprites according to their 
+	.RenderParameters.Position.Z value.
+
+ubyte PoolCanBeShrunk(void* Array, int AllocatedElements, int AllocatedSize)
+	Determines if a resource pool has room to shrink by MIN_ALLOCATE. Returns
+	1 if yes, 0 if no.
+
+int LinearMap(int Number, int NumberMax, int RangeMax, int RangeMin)
+	VET THIS!!!
+
+void SeedRNG()
+	Seeds the engine's RNG. Called automatically in InitEngine.
+
+int GetRandomNumber(int Min, int Max)
+	Returns a random number between Min and Max.
+
+int handler(void* user, const char* section, const char* name, const char* value)
+	Used for INIH parsing.
+
+int UpdateConfig(char* File, Config* Config, Engine* Engine)

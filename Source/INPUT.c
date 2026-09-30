@@ -4,10 +4,10 @@ int GetKeyboardInput(Engine* Engine)
 {
     if(Engine)
     {
-        Uint8* KS = Engine->Input.SDL_Keystate;
-        Uint8* PKS = Engine->Input.SDL_PreviousKeystate;
-        ubyte* EKD = Engine->Input.KeysDown;
-        ubyte* EKU = Engine->Input.KeysUp;
+        uint8* KS = Engine->Input.SDL_Keystate;
+        uint8* PKS = Engine->Input.SDL_PreviousKeystate;
+        uint8* EKD = Engine->Input.KeysDown;
+        uint8* EKU = Engine->Input.KeysUp;
 
         for(int i = 0; i < SDL_NUM_SCANCODES; i++)
         {
@@ -30,12 +30,12 @@ int GetMouseInput(Engine* Engine)
     if(Engine)
     {
         SDL_Event* EE = Engine->Events;
-        Uint32 M = Engine->Input.SDL_MouseState;
-        Uint32 PM = Engine->Input.SDL_PreviousMouseState;
-        ubyte* EMD = Engine->Input.MouseDown;
-        ubyte* EMU = Engine->Input.MouseUp;
-        ubyte* EMHS = &Engine->Input.HorizontalMouseScroll;
-        ubyte* EMVS = &Engine->Input.VerticalMouseScroll;
+        uint32 M = Engine->Input.SDL_MouseState;
+        uint32 PM = Engine->Input.SDL_PreviousMouseState;
+        uint8* EMD = Engine->Input.MouseDown;
+        uint8* EMU = Engine->Input.MouseUp;
+        uint8* EMHS = &Engine->Input.HorizontalMouseScroll;
+        uint8* EMVS = &Engine->Input.VerticalMouseScroll;
         if(M & SDL_BUTTON(SDL_BUTTON_LEFT))
         {
             EMD[0] = true;
@@ -219,15 +219,17 @@ int RumbleGamepad(int Strength, int Duration, Engine* Engine)
                 Strength = 100;
             }
 
-            Uint16 RealStrength = (Uint16)LinearMap(Strength,100,0xFFFF,0);
+            Uint16 RealStrength = (Uint16)LinearMap(Strength,0,100,0,0xFFFF);
 
             int Result = SDL_GameControllerRumble(Engine->Input.Gamepad,RealStrength,RealStrength,Duration);
             if(Result < 0)
             {
-                char Traceback[STRING_BUFFER_SIZE];
-                snprintf(Traceback,STRING_BUFFER_SIZE,"RumbleGamepad(%d, %d, %p)",Strength,Duration,Engine);
-                ThrowWarning("Controller does not support rumble.",Traceback,Engine);
+                Error Error = {WARNING_IGNORABLE_FAILURE,"RumbleGamepad","Controller does not support rumble.","\0","\0"};
+                snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(int Strength: %d, int Duration: %d, Engine* Engine: 0x%p)",Strength,Duration,Engine);
+                snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_GameControllerRumber failed and returned %d.",Result);
+                ThrowWarning(&Error,Engine);
                 return(WARNING_IGNORABLE_FAILURE);
+                
             }
         }
         return(RETURN_SUCCESS);
