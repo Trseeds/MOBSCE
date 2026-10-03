@@ -262,6 +262,53 @@ char* GetAssetPath(char* Asset, char* Output, Engine* Engine)
     return(WARNING_NULL);
 }
 
+uint8 TickTimers(Engine* Engine) //i've {created {a {monster}}}
+{
+    if(Engine)
+    {
+        Timer* T = Engine->Timers;
+        int ATM = Engine->Resource.AllocatedTimerMemory;
+        for(int i = 0; i < ATM; i++)
+        {
+            if(T[i].IsUsed)
+            {
+                Timer* CT = &T[i];
+                if(!CT->Expired)
+                {
+                    if(CT->TimerType == COUNT_TO)
+                    {
+                        if(CT->Counter >= CT->StopAt)
+                        {
+                            CT->Expired = true;
+                        }
+                        else
+                        {
+                            CT->Counter++;
+                        }
+                    }
+                    if(CT->TimerType == WAIT_UNTIL)
+                    {
+                        if(CT->UnitType == FRAMES)
+                        {
+                            if(CT->StopAt <= Engine->Clock.TotalFrames)
+                            {
+                                CT->Expired = true;
+                            }
+                        }
+                        if(CT->UnitType == REALTIME)
+                        {
+                            //Under construction
+                            ;
+                        }
+                    }
+                }
+            }
+        }
+        return(RETURN_SUCCESS);
+    }
+    return(ERROR_INVALID_ENGINE);
+}
+
 int KeepTime(Engine* Engine)
 {
     if(Engine)
@@ -373,6 +420,19 @@ Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, in
     NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedSpriteReferenceMemory;
     NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfSpriteReferences;
     InitResourcePool(NewResourceInfo,NewEngine);
+    //timers
+    NewResourceInfo.Pointer = &NewEngine->Timers;
+    NewResourceInfo.SizeOfResource = sizeof(Timer);
+    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedTimerMemory;
+    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfTimers;
+    InitResourcePool(NewResourceInfo,NewEngine);
+    //timer references
+    NewResourceInfo.Pointer = &NewEngine->TimerReferences;
+    NewResourceInfo.SizeOfResource = sizeof(void*);
+    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedTimerReferenceMemory;
+    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfTimerReferences;
+    InitResourcePool(NewResourceInfo,NewEngine);
+
     NewEngine->Running = true;
     return(NewEngine);
 }
@@ -408,6 +468,7 @@ int8 RunEngine(Engine* Engine)
             }
         }
         KeepTime(Engine);
+        TickTimers(Engine);
         MixMusicVolume(Engine);
         Render(Engine);
         return(RETURN_SUCCESS);
@@ -481,6 +542,21 @@ int8 CleanupEngine(Engine* Engine)
         ResourceInfo.IsPointerArray = true;
         CleanupResourcePool(ResourceInfo,Engine);
         CleanupVideo(Engine);
+        //timers
+        ResourceInfo.Pointer = &Engine->Timers;
+        ResourceInfo.SizeOfResource = sizeof(Timer);
+        ResourceInfo.FreeFunction = NULL;
+        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTimerMemory;
+        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTimerReferences;
+        ResourceInfo.IsPointerArray = false;
+        //timer references
+        ResourceInfo.Pointer = &Engine->TimerReferences;
+        ResourceInfo.SizeOfResource = sizeof(void*);
+        ResourceInfo.FreeFunction = NULL;
+        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTimerReferenceMemory;
+        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTimerReferences;
+        ResourceInfo.IsPointerArray = true;
+
         memset(Engine,0,sizeof(struct Engine));
         return(RETURN_SUCCESS);
     }

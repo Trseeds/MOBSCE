@@ -11,7 +11,12 @@ API Impact - None
 Feature - Improve window handling. Allow smooth resizing and fullscreening.
 Implementation - Cry.
 API Impact - TBD
+Decidedly impossible. SDL2 does not support this. Renderer would need to be recreated, thus destroying every texture.
 
 Feature - Create a public header and a private header.
 Implementation - Self explanatory.
 API Impact - Major.
+
+Feature - Timers.
+Implementation - TBD.
+API Impact - Optional.

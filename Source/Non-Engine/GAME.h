@@ -1,20 +1,18 @@
 #define NOP __asm__("nop")
 
-/*
-Keep these delcarations, it's hacky, I know, and I'm sorry.
-You can change them as you wish, just dont remove them.
-*/
-/***************************************************************************************/
-typedef struct CustomSpriteData {
-    unsigned char Byte;
-} CustomSpriteData;
 
-typedef struct CustomActorData {
+//these are no longer required!!!
+//you can now define these structs with any name or not at all.
+//The consequence of this change is that you must manually cast from void* when accessing customdata now.
+typedef struct CSD {
+    ubyte Byte;
+} CSD;
+
+typedef struct CAD {
     FVector2 Velocity;
     Uint64 TargetID;
     Uint32 TargetReferenceIndex;
-} CustomActorData;
-/***************************************************************************************/
+} CAD;
 
 enum Textures {
     TXTR_BG,

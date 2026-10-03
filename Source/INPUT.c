@@ -181,6 +181,8 @@ int GetInput(Engine* Engine)
         Input* EI = &Engine->Input;
         EI->SDL_Keystate = (Uint8*)SDL_GetKeyboardState(NULL);
         EI->SDL_MouseState = SDL_GetMouseState(&EI->MousePosition.X,&EI->MousePosition.Y);
+        EI->MousePosition.X /= Engine->Video.WindowScale;
+        EI->MousePosition.Y /= Engine->Video.WindowScale;
         EI->VerticalMouseScroll = 0;
         EI->HorizontalMouseScroll = 0;
         memset(EI->KeysUp,0,sizeof(EI->KeysUp));

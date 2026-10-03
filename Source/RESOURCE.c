@@ -172,7 +172,7 @@ void* FindOpenResourceSpace(void* Pool, int PoolSize, int Size)
     return(NULL);
 }
 
-Uint32 FindOpenReferenceSpace(void* Pool, int AllocatedReferenceMemory)
+uint32 FindOpenReferenceSpace(void* Pool, int AllocatedReferenceMemory)
 {
     void** RealPool = (void**)Pool;
     for(int i = 0; i < AllocatedReferenceMemory; i++)
@@ -185,7 +185,7 @@ Uint32 FindOpenReferenceSpace(void* Pool, int AllocatedReferenceMemory)
     return(-1);
 }
 
-uint32 CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, CustomSpriteData* CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
+uint32 CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, void* CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
 {
     if(Engine)
     {
@@ -401,7 +401,7 @@ uint32 GetSpriteByProperty(void* Property, uint32 Offset, uint32 Size, Engine* E
     return(SENTINEL_OBJECT);
 }
 
-uint32 CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, CustomActorData* CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine)
+uint32 CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, void* CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine)
 {
     if(Engine)
     {
@@ -602,6 +602,51 @@ uint32 GetActorByProperty(void* Property, uint32 Offset, uint32 Size, Engine* En
             ThrowWarning(&Error,Engine);
             return(SENTINEL_OBJECT);
         }
+    }
+    return(SENTINEL_OBJECT);
+}
+
+uint32 CreateTimer(uint8 TimerType, uint8 UnitType, uint64 StopAt, Engine* Engine)
+{
+    if(Engine)
+    {
+        if(Engine->Resource.NumberOfTimers+1 >= Engine->Resource.AllocatedTimerMemory)
+        {
+            ResourceInfo ResourceInfo;
+            ResourceInfo.Pointer = &Engine->Timers;
+            ResourceInfo.SizeOfResource = sizeof(Timer);
+            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTimerMemory;
+            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTimers;
+            ExtendResourcePool(ResourceInfo,Engine);
+            ResourceInfo.Pointer = &Engine->TimerReferences;
+            ResourceInfo.SizeOfResource = sizeof(Timer*);
+            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTimerReferenceMemory;
+            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTimerReferences;
+            ExtendResourcePool(ResourceInfo,Engine);
+            qsort(Engine->Timers, Engine->Resource.NumberOfTimers, sizeof(Timer), QSCompactObjectPool);
+            uint32 ATM = Engine->Resource.AllocatedTimerMemory;
+            Timer* T = Engine->Timers;
+            for(int i = 0; i < ATM; i++)
+            {
+                if(T[i].IsUsed)
+                {
+                    Engine->TimerReferences[T[i].ReferenceIndex] = &T[i];
+                }
+            }
+        }
+
+        Timer* NewTimer = FindOpenResourceSpace(Engine->Timers,Engine->Resource.AllocatedTimerMemory*sizeof(Timer),sizeof(Timer));
+        NewTimer->ReferenceIndex = FindOpenReferenceSpace(Engine->TimerReferences,Engine->Resource.AllocatedTimerReferenceMemory);
+        Engine->TimerReferences[NewTimer->ReferenceIndex] = NewTimer;
+        NewTimer->IsUsed = true;
+        NewTimer->ID = GetNewObjectID(Engine);
+        NewTimer->TimerType = TimerType;
+        NewTimer->UnitType = UnitType;
+        NewTimer->StopAt = StopAt;
+        NewTimer->Counter = 0;
+
+        Engine->Resource.NumberOfTimers++;
+        return(NewTimer->ReferenceIndex);
     }
     return(SENTINEL_OBJECT);
 }

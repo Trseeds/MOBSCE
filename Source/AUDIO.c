@@ -33,7 +33,7 @@ int8 InitAudio(Engine* Engine)
 
 uint8 ScreenPan(int32 X, uint32 EdgeDistance, Engine* Engine)
 /*edge distance is how far away from the screen boundaries x can be before becoming fully silent.
-Note that this function is incapable of controlling the volume, use in conjunction with ScreenVolume.
+Note that this function is incapable of controlling the volume; use in conjunction with ScreenVolume.
 */
 {
     int64 DomainMin = 0 - (int64)EdgeDistance;

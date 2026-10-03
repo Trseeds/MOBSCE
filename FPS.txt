@@ -1,0 +1,9 @@
+Thinkpad T440p (i7-4712MQ, Intel HD Graphics)
+	Windows 7: 4,300 FPS
+	Windows 8.1: 4,200 FPS
+	Windows 10: 1,800 FPS
+	Windows 11: 1,600 FPS
+	Kubuntu: 5,600 FPS
+Ryzen 5 5600X, Radeon RX 6600XT:
+	Windows 10: 6,400 FPS
+	Windows 11: 6,700 FPS

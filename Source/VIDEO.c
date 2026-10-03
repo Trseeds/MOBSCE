@@ -4,7 +4,7 @@ int InitVideo(Engine* Engine)
 {
     if(Engine)
     {
-        Engine->Video.Window = SDL_CreateWindow(Engine->Video.WindowTitle,SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,Engine->Video.LogicalDimensions.X,Engine->Video.LogicalDimensions.Y,Engine->Video.WindowFlags);
+        Engine->Video.Window = SDL_CreateWindow(Engine->Video.WindowTitle,SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,Engine->Video.LogicalDimensions.X*Engine->Video.WindowScale,Engine->Video.LogicalDimensions.Y*Engine->Video.WindowScale,Engine->Video.WindowFlags);
         if(!Engine->Video.Window)
         {
             Error Error = {ERROR_SDL_FAILURE,"InitVideo","Failed to create window!","\0","\0"};

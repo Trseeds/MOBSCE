@@ -1,5 +1,11 @@
 #include "MOBSCE.h"
 
+#define NUM_KEYS SDL_NUM_SCANCODES
+#define NUM_MOUSE_KEYS 5
+#define NUM_GAMEPAD_BUTTONS 15
+#define NUM_GAMEPAD_TRIGGERS 2
+#define NUM_GAMEPAD_STICKS 2
+
 enum MouseButtons {
 	MB_LEFT,
 	MB_RIGHT,
