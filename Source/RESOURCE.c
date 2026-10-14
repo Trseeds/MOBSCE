@@ -28,8 +28,132 @@
     }
 #endif
 
-int InitResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
+int QSCompactPointerPool(const void* X, const void* Y)
 {
+    const void* NX = *(const void**)X;
+    const void* NY = *(const void**)Y;
+    if(NX == NULL && NY == NULL)
+    {
+        return(0);
+    }
+    if(NX != NULL && NY != NULL)
+    {
+        return(0);
+    }
+    if(NX == NULL)
+    {
+        return(1);
+    }
+    if(NY == NULL)
+    {
+        return(-1);
+    }
+    return(0);
+}
+
+int QSCompactObjectPool(const void* X, const void* Y)
+{
+    const bool NX = *(bool*)X;
+    const bool NY = *(bool*)Y;
+    if(NX == false && NY == false)
+    {
+        return(0);
+    }
+    if(NX != false && NY != false)
+    {
+        return(0);
+    }
+    if(NX == false)
+    {
+        return(1);
+    }
+    if(NY == false)
+    {
+        return(-1);
+    }
+    return(0);
+}
+
+int QSSortSpritesByZ(const void* X, const void* Y)
+{
+    const bool NX = *(bool*)X;
+    const bool NY = *(bool*)Y;
+    const int32 SPR1Z = ((Sprite*)X)->RenderParameters.Position.Z;
+    const int32 SPR2Z = ((Sprite*)Y)->RenderParameters.Position.Z;
+    if(NX == false && NY == false)
+    {
+        return(0);
+    }
+    if(NX == false)
+    {
+        return(1);
+    }
+    if(NY == false)
+    {
+        return(-1);
+    }
+    
+    if(SPR1Z == SPR2Z)
+    {
+        return(0);
+    }
+    if(SPR1Z < SPR2Z)
+    {
+        return(-1);
+    }
+    if(SPR1Z > SPR2Z)
+    {
+        return(1);
+    }
+    return(0);
+}
+
+bool PoolCanBeShrunk(void* Array, uint64 AllocatedElements, uint64 AllocatedSize, Engine* Engine)
+{
+    return((AllocatedSize - AllocatedElements) >= MIN_ALLOCATE && (AllocatedSize - MIN_ALLOCATE) > MIN_ALLOCATE);
+}
+
+void* FindOpenResourceSpace(void* Pool, uint32 PoolSize, int Size)
+{
+    for(uint32 i = 0; i < PoolSize; i += Size)
+    {
+        if(!*(uint8*)(Pool+i))
+        {
+            return(Pool+i);
+        }
+    }
+    return(NULL);
+}
+
+uint32 FindOpenReferenceSpace(void* Pool, uint32 AllocatedReferenceMemory)
+{
+    void** RealPool = (void**)Pool;
+    for(uint32 i = 0; i < AllocatedReferenceMemory; i++)
+    {
+        if(!RealPool[i])
+        {
+            return(i);
+        }
+    }
+    return(-1);
+}
+
+void RebuildReferences(void* ReferencePool, void* Pool, int SizeOfObject, uint32 AllocatedResources)
+{
+    Object** RP = (Object**)ReferencePool;
+    for(uint32 i = 0; i < AllocatedResources; i++)
+    {
+        Object* O = Pool+((uint64)i*(uint64)SizeOfObject);
+        if(O->IsUsed)
+        {
+            RP[O->ReferenceIndex] = O;
+        }
+    }
+}
+
+int8 InitResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
+{
+    const char Parameters[] = "(ResourceInfo ResourceInfo: Pointer: 0x%p SizeOfResource: %hi FreeFunction: 0x%p AllocatedResourceMemory: 0x%p NumberOfResources: 0x%p IsPointerArray: %hd)";
     if(Engine)
     {
         if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources)
@@ -38,7 +162,7 @@ int InitResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
             if(!*(void**)ResourceInfo.Pointer)
             {
                 Error Error = {ERROR_MEMORY,"InitResourcePool","Failed to allocate memory!","\0","\0"};
-                snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(ResourceInfo ResourceInfo: Pointer: 0x%p SizeOfResource: %hi FreeFunction: 0x%p AllocatedResourceMemory: 0x%p NumberOfResources: 0x%p IsPointerArray: %hd)",ResourceInfo.Pointer,ResourceInfo.SizeOfResource,ResourceInfo.FreeFunction,ResourceInfo.AllocatedResourceMemory,ResourceInfo.NumberOfResources,ResourceInfo.IsPointerArray);
+                snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,ResourceInfo.Pointer,ResourceInfo.SizeOfResource,ResourceInfo.FreeFunction,ResourceInfo.AllocatedResourceMemory,ResourceInfo.NumberOfResources,ResourceInfo.IsPointerArray);
                 snprintf(Error.Description,STRING_BUFFER_SIZE,"OSMemoryAllocate failed and returned 0x%p",*(void**)ResourceInfo.Pointer);
                 ThrowError(&Error,Engine);
                 return(ERROR_MEMORY);
@@ -52,8 +176,9 @@ int InitResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
-int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
+int8 ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
 {
+    const char Parameters[] = "(ResourceInfo ResourceInfo: Pointer: 0x%p SizeOfResource: %hi FreeFunction: 0x%p AllocatedResourceMemory: 0x%p NumberOfResources: 0x%p IsPointerArray: %hd)";
     if(Engine)
     {
         if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources)
@@ -65,7 +190,7 @@ int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
             if(!*(void**)ResourceInfo.Pointer)
             {
                 Error Error = {ERROR_MEMORY,"ExtendResourcePool","Failed to allocate memory!","\0","\0"};
-                snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(ResourceInfo ResourceInfo: Pointer: 0x%p SizeOfResource: %hi FreeFunction: 0x%p AllocatedResourceMemory: 0x%p NumberOfResources: 0x%p IsPointerArray: %hd)",ResourceInfo.Pointer,ResourceInfo.SizeOfResource,ResourceInfo.FreeFunction,ResourceInfo.AllocatedResourceMemory,ResourceInfo.NumberOfResources,ResourceInfo.IsPointerArray);
+                snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,ResourceInfo.Pointer,ResourceInfo.SizeOfResource,ResourceInfo.FreeFunction,ResourceInfo.AllocatedResourceMemory,ResourceInfo.NumberOfResources,ResourceInfo.IsPointerArray);
                 snprintf(Error.Description,STRING_BUFFER_SIZE,"OSMemoryAllocate failed and returned 0x%p",*(void**)ResourceInfo.Pointer);
                 ThrowError(&Error,Engine);
                 return(ERROR_MEMORY);
@@ -78,7 +203,7 @@ int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
             return(RETURN_SUCCESS);
         }
         Error Error = {ERROR_INVALID_PARAMETER,"ExtendResourcePool","Invalid resource info!","\0","\0"};
-        snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(ResourceInfo ResourceInfo: Pointer: 0x%p SizeOfResource: %hi FreeFunction: 0x%p AllocatedResourceMemory: 0x%p NumberOfResources: 0x%p IsPointerArray: %hd)",ResourceInfo.Pointer,ResourceInfo.SizeOfResource,ResourceInfo.FreeFunction,ResourceInfo.AllocatedResourceMemory,ResourceInfo.NumberOfResources,ResourceInfo.IsPointerArray);
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,ResourceInfo.Pointer,ResourceInfo.SizeOfResource,ResourceInfo.FreeFunction,ResourceInfo.AllocatedResourceMemory,ResourceInfo.NumberOfResources,ResourceInfo.IsPointerArray);
         snprintf(Error.Description,STRING_BUFFER_SIZE,"Caller passed in an invalid ResourceInfo struct. If this was not you, file a bug report. If it was you, stop.");
         ThrowError(&Error,Engine);
         return(ERROR_INVALID_PARAMETER);
@@ -86,8 +211,9 @@ int ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
-int ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
+int8 ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
 {
+    const char Parameters[] = "(ResourceInfo ResourceInfo: Pointer: 0x%p SizeOfResource: %hi FreeFunction: 0x%p AllocatedResourceMemory: 0x%p NumberOfResources: 0x%p IsPointerArray: %hd)";
     if(Engine)
     {
         if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources)
@@ -99,7 +225,7 @@ int ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
             if(!*(void**)ResourceInfo.Pointer)
             {
                 Error Error = {ERROR_MEMORY,"ShrinkResourcePool","Failed to allocate memory!","\0","\0"};
-                snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(ResourceInfo ResourceInfo: Pointer: 0x%p SizeOfResource: %hi FreeFunction: 0x%p AllocatedResourceMemory: 0x%p NumberOfResources: 0x%p IsPointerArray: %hd)",ResourceInfo.Pointer,ResourceInfo.SizeOfResource,ResourceInfo.FreeFunction,ResourceInfo.AllocatedResourceMemory,ResourceInfo.NumberOfResources,ResourceInfo.IsPointerArray);
+                snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,ResourceInfo.Pointer,ResourceInfo.SizeOfResource,ResourceInfo.FreeFunction,ResourceInfo.AllocatedResourceMemory,ResourceInfo.NumberOfResources,ResourceInfo.IsPointerArray);
                 snprintf(Error.Description,STRING_BUFFER_SIZE,"OSMemoryAllocate failed and returned 0x%p",*(void**)ResourceInfo.Pointer);
                 ThrowError(&Error,Engine);
                 return(ERROR_MEMORY);
@@ -112,7 +238,7 @@ int ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
             return(RETURN_SUCCESS);
         }
         Error Error = {ERROR_INVALID_PARAMETER,"ShrinkResourcePool","Invalid resource info!","\0","\0"};
-        snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(ResourceInfo ResourceInfo: Pointer: 0x%p SizeOfResource: %hi FreeFunction: 0x%p AllocatedResourceMemory: 0x%p NumberOfResources: 0x%p IsPointerArray: %hd)",ResourceInfo.Pointer,ResourceInfo.SizeOfResource,ResourceInfo.FreeFunction,ResourceInfo.AllocatedResourceMemory,ResourceInfo.NumberOfResources,ResourceInfo.IsPointerArray);
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,ResourceInfo.Pointer,ResourceInfo.SizeOfResource,ResourceInfo.FreeFunction,ResourceInfo.AllocatedResourceMemory,ResourceInfo.NumberOfResources,ResourceInfo.IsPointerArray);
         snprintf(Error.Description,STRING_BUFFER_SIZE,"Caller passed in an invalid ResourceInfo struct. If this was not you, file a bug report. If it was you, stop.");
         ThrowError(&Error,Engine);
         return(ERROR_INVALID_PARAMETER);
@@ -120,8 +246,9 @@ int ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
-int CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
+int8 CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
 {
+    const char Parameters[] = "(ResourceInfo ResourceInfo: Pointer: 0x%p SizeOfResource: %hi FreeFunction: 0x%p AllocatedResourceMemory: 0x%p NumberOfResources: 0x%p IsPointerArray: %hd)";
     if(Engine)
     {
         if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources)
@@ -152,37 +279,12 @@ int CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
             return(RETURN_SUCCESS);
         }
         Error Error = {ERROR_INVALID_PARAMETER,"CleanupResourcePool","Invalid resource info!","\0","\0"};
-        snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(ResourceInfo ResourceInfo: Pointer: 0x%p SizeOfResource: %hi FreeFunction: 0x%p AllocatedResourceMemory: 0x%p NumberOfResources: 0x%p IsPointerArray: %hd)",ResourceInfo.Pointer,ResourceInfo.SizeOfResource,ResourceInfo.FreeFunction,ResourceInfo.AllocatedResourceMemory,ResourceInfo.NumberOfResources,ResourceInfo.IsPointerArray);
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,ResourceInfo.Pointer,ResourceInfo.SizeOfResource,ResourceInfo.FreeFunction,ResourceInfo.AllocatedResourceMemory,ResourceInfo.NumberOfResources,ResourceInfo.IsPointerArray);
         snprintf(Error.Description,STRING_BUFFER_SIZE,"Caller passed in an invalid ResourceInfo struct. If this was not you, file a bug report. If it was you, stop.");
         ThrowError(&Error,Engine);
         return(ERROR_INVALID_PARAMETER);
     }
     return(ERROR_INVALID_ENGINE);
-}
-
-void* FindOpenResourceSpace(void* Pool, int PoolSize, int Size)
-{
-    for(int i = 0; i < PoolSize; i += Size)
-    {
-        if(!*(uint8*)(Pool+i))
-        {
-            return(Pool+i);
-        }
-    }
-    return(NULL);
-}
-
-uint32 FindOpenReferenceSpace(void* Pool, int AllocatedReferenceMemory)
-{
-    void** RealPool = (void**)Pool;
-    for(int i = 0; i < AllocatedReferenceMemory; i++)
-    {
-        if(!RealPool[i])
-        {
-            return(i);
-        }
-    }
-    return(-1);
 }
 
 uint32 CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, void* CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
@@ -252,8 +354,9 @@ uint32 CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimens
     return(SENTINEL_OBJECT);
 }
 
-int DestroySprite(Sprite* DSprite, void (*FreeFunction)(void*), Engine* Engine)
+int8 DestroySprite(Sprite* DSprite, void (*FreeFunction)(void*), Engine* Engine)
 {
+    const char Parameters[] = "(Sprite* DSprite: 0x%p, FreeFunction: 0x%p, Engine* Engine: 0x%p)";
     if(Engine)
     {
         if(DSprite)
@@ -265,24 +368,16 @@ int DestroySprite(Sprite* DSprite, void (*FreeFunction)(void*), Engine* Engine)
             else
             {
                 Error Error = {ERROR_INVALID_PARAMETER,"DestroySprite","Invalid custom data.","\0","\0"};
-                snprintf(Error.Parameters,STRING_BUFFER_SIZE,"Sprite* DSprite: 0x%p, FreeFunction: 0x%p, Engine* Engine: 0x%p",DSprite,FreeFunction,Engine);
+                snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DSprite,FreeFunction,Engine);
                 snprintf(Error.Description,STRING_BUFFER_SIZE,"DSprite has a NULL CustomData member.");
                 ThrowWarning(&Error,Engine);
             }
-            int ASM = Engine->Resource.AllocatedSpriteMemory;
-            Sprite* S = Engine->Sprites;
-            for(int i = 0; i < ASM; i++)
-            {
-                if(S[i].ID == DSprite->ID)
-                {
-                    Engine->SpriteReferences[DSprite->ReferenceIndex] = NULL;
-                    memset(&S[i],0,sizeof(Sprite));
-                }
-            }
+            Engine->SpriteReferences[DSprite->ReferenceIndex] = NULL;
+            memset(DSprite,0,sizeof(Sprite));
             Engine->SpriteZResortNeeded = true;
             Engine->Resource.NumberOfSprites--;
 
-            if(PoolCanBeShrunk(Engine->Sprites,Engine->Resource.NumberOfSprites,Engine->Resource.AllocatedSpriteMemory))
+            if(PoolCanBeShrunk(Engine->Sprites,Engine->Resource.NumberOfSprites,Engine->Resource.AllocatedSpriteMemory,Engine))
             {
                 qsort(Engine->Sprites, Engine->Resource.AllocatedSpriteMemory, sizeof(Sprite), QSCompactObjectPool);
                 ResourceInfo ResourceInfo;
@@ -296,20 +391,12 @@ int DestroySprite(Sprite* DSprite, void (*FreeFunction)(void*), Engine* Engine)
                 ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteReferenceMemory;
                 ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSpriteReferences;
                 ShrinkResourcePool(ResourceInfo,Engine);
-                int ASM = Engine->Resource.AllocatedSpriteMemory;
-                Sprite* S = Engine->Sprites;
-                for(int i = 0; i < ASM; i++)
-                {
-                    if(S[i].IsUsed)
-                    {
-                        Engine->SpriteReferences[S[i].ReferenceIndex] = &S[i];
-                    }
-                }
+                RebuildReferences(Engine->SpriteReferences,Engine->Sprites,sizeof(struct Sprite),Engine->Resource.AllocatedSpriteMemory);
             }
             return(RETURN_SUCCESS);
         }
         Error Error = {WARNING_INVALID_PARAMETER,"DestroySprite","Invalid sprite.","\0","\0"};
-        snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(Sprite* DSprite: 0x%p, FreeFunction: 0x%p, Engine* Engine: 0x%p)",DSprite,FreeFunction,Engine);
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DSprite,FreeFunction,Engine);
         snprintf(Error.Description,STRING_BUFFER_SIZE,"DSprite is NULL.");
         ThrowWarning(&Error,Engine);
         return(WARNING_INVALID_PARAMETER);
@@ -319,6 +406,7 @@ int DestroySprite(Sprite* DSprite, void (*FreeFunction)(void*), Engine* Engine)
 
 uint32 GetSpriteByName(char* Name, Engine* Engine)
 {
+    const char Parameters[] = "(char* Name: %s, Engine* Engine: 0x%p)";
     if(Engine)
     {
         int ASM = Engine->Resource.AllocatedSpriteMemory;
@@ -336,7 +424,7 @@ uint32 GetSpriteByName(char* Name, Engine* Engine)
                 }
             }
             Error Error = {WARNING_INVALID_PARAMETER,"GetSpriteByName","Could not find sprite.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(char* Name: %s, Engine* Engine: 0x%p)",Name,Engine);
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Name,Engine);
             snprintf(Error.Description,STRING_BUFFER_SIZE,"Could not find a sprite with name \"%s\".",Name);
             ThrowWarning(&Error,Engine);
             return(SENTINEL_OBJECT);
@@ -347,6 +435,7 @@ uint32 GetSpriteByName(char* Name, Engine* Engine)
 
 uint32 GetSpriteByID(Uint64 ID, Engine* Engine)
 {
+    const char Parameters[] = "(int ID: %d, Engine* Engine: 0x%p)";
     if(Engine)
     {
         Sprite* S = Engine->Sprites;
@@ -364,7 +453,7 @@ uint32 GetSpriteByID(Uint64 ID, Engine* Engine)
                 }
             }
             Error Error = {WARNING_INVALID_PARAMETER,"GetSpriteByID","Could not find sprite.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(int ID: %d, Engine* Engine: 0x%p)",ID,Engine);
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,ID,Engine);
             snprintf(Error.Description,STRING_BUFFER_SIZE,"Could not find a sprite with ID %d.",ID);
             ThrowWarning(&Error,Engine);
             return(SENTINEL_OBJECT);
@@ -375,6 +464,7 @@ uint32 GetSpriteByID(Uint64 ID, Engine* Engine)
 
 uint32 GetSpriteByProperty(void* Property, uint32 Offset, uint32 Size, Engine* Engine)
 {
+    const char Parameters[] = "(void* Property: 0x%p, uint32 Offset: %d, uint32 Size: %d, Engine* Engine: 0x%p)";
     if(Engine)
     {
         Sprite* S = Engine->Sprites;
@@ -392,7 +482,7 @@ uint32 GetSpriteByProperty(void* Property, uint32 Offset, uint32 Size, Engine* E
                 }
             }
             Error Error = {WARNING_INVALID_PARAMETER,"GetSpriteByProperty","Could not find sprite.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(void* Property: 0x%p, uint32 Offset: %d, uint32 Size: %d, Engine* Engine: 0x%p)",Property,Offset,Size,Engine);
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Property,Offset,Size,Engine);
             snprintf(Error.Description,STRING_BUFFER_SIZE,"Could not find a sprite with property defined at 0x%p.",Property);
             ThrowWarning(&Error,Engine);
             return(SENTINEL_OBJECT);
@@ -449,8 +539,9 @@ uint32 CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, 
     return(SENTINEL_OBJECT);
 }
 
-int DestroyActor(Actor* DActor, void (*FreeFunction)(void*), Engine* Engine)
+int8 DestroyActor(Actor* DActor, void (*FreeFunction)(void*), Engine* Engine)
 {
+    const char Parameters[] = "(Actor* DActor: 0x%p, FreeFunction: 0x%p, Engine* Engine: 0x%p)";
     if(Engine)
     {
         if(DActor)
@@ -462,25 +553,16 @@ int DestroyActor(Actor* DActor, void (*FreeFunction)(void*), Engine* Engine)
             else
             {
                 Error Error = {ERROR_INVALID_PARAMETER,"DestroyActor","Invalid custom data.","\0","\0"};
-                snprintf(Error.Parameters,STRING_BUFFER_SIZE,"Actor* DActor: 0x%p, FreeFunction: 0x%p, Engine* Engine: 0x%p",DActor,FreeFunction,Engine);
+                snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DActor,FreeFunction,Engine);
                 snprintf(Error.Description,STRING_BUFFER_SIZE,"DActor has a NULL CustomData member.");
                 ThrowWarning(&Error,Engine);
             }
-            
-            int AAM = Engine->Resource.AllocatedActorMemory;
-            Actor* A = Engine->Actors;
-            for(int i = 0; i < AAM; i++)
-            {
-                if(A[i].ID == DActor->ID)
-                {
-                    Engine->ActorReferences[DActor->ReferenceIndex] = NULL;
-                    memset(&A[i],0,sizeof(Actor));
-                }
-            }
 
+            Engine->ActorReferences[DActor->ReferenceIndex] = NULL;
+            memset(DActor,0,sizeof(Actor));
             Engine->Resource.NumberOfActors--;
             
-            if(PoolCanBeShrunk(Engine->Actors,Engine->Resource.NumberOfActors,Engine->Resource.AllocatedActorMemory))
+            if(PoolCanBeShrunk(Engine->Actors,Engine->Resource.NumberOfActors,Engine->Resource.AllocatedActorMemory,Engine))
             {
                 qsort(Engine->Actors, Engine->Resource.AllocatedActorMemory, sizeof(Actor), QSCompactObjectPool);
                 ResourceInfo ResourceInfo;
@@ -494,20 +576,12 @@ int DestroyActor(Actor* DActor, void (*FreeFunction)(void*), Engine* Engine)
                 ResourceInfo.SizeOfResource = sizeof(Actor*);
                 ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActorReferences;
                 ShrinkResourcePool(ResourceInfo,Engine);
-                int AAM = Engine->Resource.AllocatedActorMemory;
-                Actor* A = Engine->Actors;
-                for(int i = 0; i < AAM; i++)
-                {
-                    if(A[i].IsUsed)
-                    {
-                        Engine->ActorReferences[A[i].ReferenceIndex] = &A[i];
-                    }
-                }
+                RebuildReferences(Engine->ActorReferences,Engine->Actors,sizeof(struct Actor),Engine->Resource.AllocatedActorMemory);
             }
             return(RETURN_SUCCESS);
         }
         Error Error = {WARNING_INVALID_PARAMETER,"DestroyActor","Invalid actor.","\0","\0"};
-        snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(Actor* DActor: 0x%p, FreeFunction: 0x%p, Engine* Engine: 0x%p)",DActor,FreeFunction,Engine);
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DActor,FreeFunction,Engine);
         snprintf(Error.Description,STRING_BUFFER_SIZE,"DActor is NULL.");
         ThrowWarning(&Error,Engine);
         return(WARNING_INVALID_PARAMETER);
@@ -517,6 +591,7 @@ int DestroyActor(Actor* DActor, void (*FreeFunction)(void*), Engine* Engine)
 
 uint32 GetActorByName(char* Name, Engine* Engine)
 {
+    const char Parameters[] = "(char* Name: %s, Engine* Engine: 0x%p)";
     if(Engine)
     {
         Actor* A = Engine->Actors;
@@ -534,7 +609,7 @@ uint32 GetActorByName(char* Name, Engine* Engine)
                 }
             }
             Error Error = {WARNING_INVALID_PARAMETER,"GetActorByName","Could not find Actor.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(char* Name: %s, Engine* Engine: 0x%p)",Name,Engine);
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Name,Engine);
             snprintf(Error.Description,STRING_BUFFER_SIZE,"Could not find an actor with name \"%s\".",Name);
             ThrowWarning(&Error,Engine);
             return(SENTINEL_OBJECT);
@@ -545,6 +620,7 @@ uint32 GetActorByName(char* Name, Engine* Engine)
 
 uint32 GetActorByID(Uint64 ID, Engine* Engine)
 {
+    const char Parameters[] = "(int ID: %d, Engine* Engine: 0x%p)";
     if(Engine)
     {
         Actor* A = Engine->Actors;
@@ -562,7 +638,7 @@ uint32 GetActorByID(Uint64 ID, Engine* Engine)
                 }
             }
             Error Error = {WARNING_INVALID_PARAMETER,"GetActorByID","Could not find actor.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(int ID: %d, Engine* Engine: 0x%p)",ID,Engine);
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,ID,Engine);
             snprintf(Error.Description,STRING_BUFFER_SIZE,"Could not find an actor with ID %d.",ID);
             ThrowWarning(&Error,Engine);
             return(SENTINEL_OBJECT);
@@ -573,6 +649,7 @@ uint32 GetActorByID(Uint64 ID, Engine* Engine)
 
 uint32 GetActorByProperty(void* Property, uint32 Offset, uint32 Size, Engine* Engine)
 {
+    const char Parameters[] = "(void* Property: 0x%p, uint32 Offset: %d, uint32 Size: %d, Engine* Engine: 0x%p)";
     if(Engine)
     {
         Actor* A = Engine->Actors;
@@ -597,7 +674,7 @@ uint32 GetActorByProperty(void* Property, uint32 Offset, uint32 Size, Engine* En
                 }
             }
             Error Error = {WARNING_INVALID_PARAMETER,"GetActorByProperty","Could not find actor.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(void* Property: 0x%p, uint32 Offset: %d, uint32 Size: %d, Engine* Engine: 0x%p)",Property,Offset,Size,Engine);
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Property,Offset,Size,Engine);
             snprintf(Error.Description,STRING_BUFFER_SIZE,"Could not find an actor with property defined at 0x%p.",Property);
             ThrowWarning(&Error,Engine);
             return(SENTINEL_OBJECT);
@@ -651,8 +728,128 @@ uint32 CreateTimer(uint8 TimerType, uint8 UnitType, uint64 StopAt, Engine* Engin
     return(SENTINEL_OBJECT);
 }
 
-int CacheSound(char* File, Engine* Engine)
+int8 DestroyTimer(Timer* DTimer, Engine* Engine)
 {
+    const char Parameters[] = "(Timer* DTimer: 0x%p, Engine* Engine: 0x%p)";
+    if(Engine)
+    {
+        if(DTimer)
+        {
+            Engine->TimerReferences[DTimer->ReferenceIndex] = NULL;
+            memset(DTimer,0,sizeof(struct Timer));
+            Engine->Resource.NumberOfTimers--;
+            
+            if(PoolCanBeShrunk(Engine->Timers,Engine->Resource.NumberOfTimers,Engine->Resource.AllocatedTimerMemory,Engine))
+            {
+                qsort(Engine->Timers, Engine->Resource.AllocatedTimerMemory, sizeof(struct Timer), QSCompactObjectPool);
+                ResourceInfo ResourceInfo;
+                ResourceInfo.Pointer = &Engine->Timers;
+                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTimerMemory;
+                ResourceInfo.SizeOfResource = sizeof(struct Timer);
+                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTimers;
+                ShrinkResourcePool(ResourceInfo,Engine);
+                ResourceInfo.Pointer = &Engine->TimerReferences;
+                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTimerReferenceMemory;
+                ResourceInfo.SizeOfResource = sizeof(Timer*);
+                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTimerReferences;
+                ShrinkResourcePool(ResourceInfo,Engine);
+                RebuildReferences(Engine->TimerReferences,Engine->Timers,sizeof(struct Timer),Engine->Resource.AllocatedTimerMemory);
+            }
+            return(RETURN_SUCCESS);
+        }
+        Error Error = {WARNING_INVALID_PARAMETER,"DestroyTimer","Invalid timer.","\0","\0"};
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DTimer,Engine);
+        snprintf(Error.Description,STRING_BUFFER_SIZE,"DTimer is NULL.");
+        ThrowWarning(&Error,Engine);
+        return(WARNING_INVALID_PARAMETER);
+    }
+    return(ERROR_INVALID_ENGINE);
+}
+
+uint32 CreateGamepad(SDL_GameController* Controller, Engine* Engine)
+{
+    if(Engine)
+    {
+        if(Engine->Resource.NumberOfGamepads+1 >= Engine->Resource.AllocatedGamepadMemory)
+        {
+            ResourceInfo ResourceInfo;
+            ResourceInfo.Pointer = &Engine->Input.Gamepads;
+            ResourceInfo.SizeOfResource = sizeof(Gamepad);
+            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedGamepadMemory;
+            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfGamepads;
+            ExtendResourcePool(ResourceInfo,Engine);
+            ResourceInfo.Pointer = &Engine->Input.GamepadReferences;
+            ResourceInfo.SizeOfResource = sizeof(Gamepad*);
+            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedGamepadReferenceMemory;
+            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfGamepadReferences;
+            ExtendResourcePool(ResourceInfo,Engine);
+            qsort(Engine->Input.Gamepads, Engine->Resource.NumberOfGamepads, sizeof(Gamepad), QSCompactObjectPool);
+            uint32 AGPM = Engine->Resource.AllocatedGamepadMemory;
+            Gamepad* GP = Engine->Input.Gamepads;
+            for(int i = 0; i < AGPM; i++)
+            {
+                if(GP[i].IsUsed)
+                {
+                    Engine->Input.GamepadReferences[GP[i].ReferenceIndex] = &GP[i];
+                }
+            }
+        }
+
+        Gamepad* NewGamepad = FindOpenResourceSpace(Engine->Input.Gamepads,Engine->Resource.AllocatedGamepadMemory*sizeof(Gamepad),sizeof(Gamepad));
+        NewGamepad->ReferenceIndex = FindOpenReferenceSpace(Engine->Input.GamepadReferences,Engine->Resource.AllocatedGamepadReferenceMemory);
+        Engine->Input.GamepadReferences[NewGamepad->ReferenceIndex] = NewGamepad;
+        NewGamepad->IsUsed = true;
+        NewGamepad->ID = GetNewObjectID(Engine);
+        NewGamepad->Gamepad = Controller;
+        Engine->Resource.NumberOfGamepads++;
+        return(NewGamepad->ReferenceIndex);
+    }
+    return(SENTINEL_OBJECT);
+}
+
+int8 DestroyGamepad(Gamepad* DGamepad, Engine* Engine)
+{
+    const char Parameters[] = "(Gamepad* DGamepad: 0x%p, Engine* Engine: 0x%p)";
+    if(Engine)
+    {
+        if(DGamepad)
+        {   
+            Engine->Input.GamepadReferences[DGamepad->ReferenceIndex] = NULL;
+            SDL_GameControllerClose(DGamepad->Gamepad);
+            memset(DGamepad,0,sizeof(struct Gamepad));
+            Engine->Resource.NumberOfGamepads--;
+            
+            if(PoolCanBeShrunk(Engine->Input.Gamepads,Engine->Resource.NumberOfGamepads,Engine->Resource.AllocatedGamepadMemory,Engine))
+            {
+                qsort(Engine->Input.Gamepads, Engine->Resource.AllocatedGamepadMemory, sizeof(struct Gamepad), QSCompactObjectPool);
+                ResourceInfo ResourceInfo;
+                ResourceInfo.Pointer = &Engine->Input.Gamepads;
+                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedGamepadMemory;
+                ResourceInfo.SizeOfResource = sizeof(struct Gamepad);
+                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfGamepads;
+                printf("%d",ResourceInfo.NumberOfResources);
+                ShrinkResourcePool(ResourceInfo,Engine);
+                ResourceInfo.Pointer = &Engine->Input.GamepadReferences;
+                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedGamepadReferenceMemory;
+                ResourceInfo.SizeOfResource = sizeof(Gamepad*);
+                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfGamepadReferences;
+                ShrinkResourcePool(ResourceInfo,Engine);
+                RebuildReferences(Engine->Input.GamepadReferences,Engine->Input.Gamepads,sizeof(struct Gamepad),Engine->Resource.AllocatedGamepadMemory);
+            }
+            return(RETURN_SUCCESS);
+        }
+        Error Error = {WARNING_INVALID_PARAMETER,"DestroyGamepad","Invalid gamepad.","\0","\0"};
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DGamepad,Engine);
+        snprintf(Error.Description,STRING_BUFFER_SIZE,"DGamepad is NULL.");
+        ThrowWarning(&Error,Engine);
+        return(WARNING_INVALID_PARAMETER);
+    }
+    return(ERROR_INVALID_ENGINE);
+}
+
+int8 CacheSound(char* File, Engine* Engine)
+{
+    const char Parameters[] = "(char* File: 0x%p, Engine* Engine: 0x%p)";
     if(Engine)
     {
         Mix_Chunk* NewSound = Mix_LoadWAV(File);
@@ -660,7 +857,7 @@ int CacheSound(char* File, Engine* Engine)
         if(!NewSound)
         {
             Error Error = {WARNING_SDL_FAILURE,"CacheSound","Could not create sound.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,"char* File: 0x%p, Engine* Engine: 0x%p",File,Engine);
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,File,Engine);
             snprintf(Error.Description,STRING_BUFFER_SIZE,"Mix_LoadWAV failed and returned 0x%p.",NewSound);
             return(WARNING_SDL_FAILURE);
         }
@@ -682,8 +879,9 @@ int CacheSound(char* File, Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
-int CacheMusic(char* File, Engine* Engine)
+int8 CacheMusic(char* File, Engine* Engine)
 {
+    const char Parameters[] = "(char* File: 0x%p, Engine* Engine: 0x%p)";
     if(Engine)
     {
         Mix_Music* NewMusic = Mix_LoadMUS(File);
@@ -691,7 +889,7 @@ int CacheMusic(char* File, Engine* Engine)
         if(!NewMusic)
         {
             Error Error = {WARNING_SDL_FAILURE,"CacheMusic","Could not create music.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,"char* File: 0x%p, Engine* Engine: 0x%p",File,Engine);
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,File,Engine);
             snprintf(Error.Description,STRING_BUFFER_SIZE,"Mix_LoadMUS failed and returned 0x%p",NewMusic);
             return(WARNING_SDL_FAILURE);
         }
@@ -713,8 +911,9 @@ int CacheMusic(char* File, Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
-int CacheTexture(char* File, Engine* Engine)
+int8 CacheTexture(char* File, Engine* Engine)
 {
+    const char Parameters[] = "(char* File: 0x%p, Engine* Engine: 0x%p)";
     if(Engine)
     {
         if(Engine->Resource.Textures)
@@ -723,7 +922,7 @@ int CacheTexture(char* File, Engine* Engine)
             if(!Surface)
             {
                 Error Error = {WARNING_SDL_FAILURE,"CacheTexture","Could not create surface.","\0","\0"};
-                snprintf(Error.Parameters,STRING_BUFFER_SIZE,"char* File: 0x%p, Engine* Engine: 0x%p",File,Engine);
+                snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,File,Engine);
                 snprintf(Error.Description,STRING_BUFFER_SIZE,"IMG_Load failed and returned 0x%p.",Surface);
                 return(WARNING_SDL_FAILURE);
             }
@@ -733,7 +932,7 @@ int CacheTexture(char* File, Engine* Engine)
             if(!NewTexture)
             {
                 Error Error = {WARNING_SDL_FAILURE,"CacheTexture","Could not create texture.","\0","\0"};
-                snprintf(Error.Parameters,STRING_BUFFER_SIZE,"char* File: 0x%p, Engine* Engine: 0x%p",File,Engine);
+                snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,File,Engine);
                 snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_CreateTextureFromSurface failed and returned 0x%p.",NewTexture);
                 return(WARNING_SDL_FAILURE);   
             }

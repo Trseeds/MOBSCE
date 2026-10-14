@@ -4,7 +4,7 @@
 /*
 Edit these functions to free the appropriate resources inside the custom data functions
 and then free themselves, called by the engine. Do NOT Free the objects themselves, this
-cause problems.
+will result in a crash.
 */
 /***************************************************************************************/
 void SpriteFreeFunction(void* SpritePtr)
@@ -69,19 +69,19 @@ void PlayerRoutine(Actor* Player, Engine* Engine)
     //ActorScreenWrap(Player,Engine);
     ApplyPhysics(Player);
     CAD* CD = Player->CustomData;
-    if(Engine->Input.KeysDown[K_UP] || Engine->Input.GamepadButtonsDown[GP_DP_UP])
+    if(Engine->Input.KeysDown[K_UP])// || Engine->Input.GamepadButtonsDown[GP_DP_UP])
     {
         CD->Velocity.Y -= 0.5;
     }
-    if(Engine->Input.KeysDown[K_DOWN]|| Engine->Input.GamepadButtonsDown[GP_DP_DOWN])
+    if(Engine->Input.KeysDown[K_DOWN])// || Engine->Input.GamepadButtonsDown[GP_DP_DOWN])
     {
         CD->Velocity.Y += 0.5;
     }
-    if(Engine->Input.KeysDown[K_LEFT]|| Engine->Input.GamepadButtonsDown[GP_DP_LEFT])
+    if(Engine->Input.KeysDown[K_LEFT])// || Engine->Input.GamepadButtonsDown[GP_DP_LEFT])
     {
         CD->Velocity.X -= 0.5;
     }
-    if(Engine->Input.KeysDown[K_RIGHT]|| Engine->Input.GamepadButtonsDown[GP_DP_RIGHT])
+    if(Engine->Input.KeysDown[K_RIGHT])// || Engine->Input.GamepadButtonsDown[GP_DP_RIGHT])
     {
         CD->Velocity.X += 0.5;
     }
@@ -101,6 +101,44 @@ void PlayerRoutine(Actor* Player, Engine* Engine)
     {
         Player->Position.X = GetRandomNumber(0,640);
         Player->Position.Y = GetRandomNumber(0,480);
+    }
+    if(Engine->Input.GamepadReferences[0])
+    {
+        Gamepad* G = Engine->Input.GamepadReferences[0];
+        CD->Velocity.X += G->Sticks[GP_STK_LEFT_X]/2;
+        CD->Velocity.Y += G->Sticks[GP_STK_LEFT_Y]/2;
+        if(G->ButtonsDown[GP_DP_UP])
+        {
+            CD->Velocity.Y -= 0.5;
+        }
+        if(G->ButtonsDown[GP_DP_DOWN])
+        {
+            CD->Velocity.Y += 0.5;
+        }
+        if(G->ButtonsDown[GP_DP_LEFT])
+        {
+            CD->Velocity.X -= 0.5;
+        }
+        if(G->ButtonsDown[GP_DP_RIGHT])
+        {
+            CD->Velocity.X += 0.5;
+        }
+        if(G->Sticks[GP_STK_RIGHT_X] > 0.3)
+        {
+            Player->Position.X++;
+        }
+        if(G->Sticks[GP_STK_RIGHT_X] < -0.3)
+        {
+            Player->Position.X--;
+        }
+        if(G->Sticks[GP_STK_RIGHT_Y] > 0.3)
+        {
+            Player->Position.Y++;
+        }
+        if(G->Sticks[GP_STK_RIGHT_Y] < -0.3)
+        {
+            Player->Position.Y--;
+        }
     }
 }
 
@@ -308,17 +346,16 @@ void InitGame(int* FPS, int* OBJ, int* SPR, Engine* Engine)
     PlayMusic(MUS_WFRTP,Engine);
 }
 
-
 int main(int argc, char* argv[])
 {
-    Engine* Engine = InitEngine("Config.ini","MOBSCE Demo","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL,true,true,false,NULL);
+    Engine* Engine = InitEngine("Config.ini","MOBSCE Demo","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL,100,true,true,NULL);
 
     int FPSCounter[6];
     int OBJCounter[6];
     int SPRCounter[6];
     InitGame(FPSCounter,OBJCounter,SPRCounter,Engine);
 
-    Timer* T = Engine->TimerReferences[CreateTimer(COUNT_TO,FRAMES,100000,Engine)];
+    uint32 TR = CreateTimer(COUNT_TO,FRAMES,10000,Engine);
 
     while(Engine->Running)
     {
@@ -342,8 +379,8 @@ int main(int argc, char* argv[])
         {
             CleanupEngine(Engine);
             OSMemoryFree(Engine,sizeof(struct Engine));
-            Config c = {44100,2,1024,32760,100,100,false,640,480,4,0,0,true,true,5.00};
-            Engine = InitEngine(NULL,"MOBSCE Demo","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL,true,true,true,&c);
+            Config c = {44100,2,1024,32760,100,100,false,320,240,4,0,0,true,true,2.00};
+            Engine = InitEngine(NULL,"MOBSCE Demo","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL,100000,true,true,&c);
             InitGame(FPSCounter,OBJCounter,SPRCounter,Engine);
         }
         if(Engine->Input.KeysDown[K_S])
@@ -398,6 +435,20 @@ int main(int argc, char* argv[])
 
         if(Engine->Input.KeysDown[K_LEFTCONTROL] || Engine->Input.KeysDown[K_RIGHTCONTROL])
         {
+            if(Engine->Input.KeysDown[K_LEFTSHIFT] || Engine->Input.KeysDown[K_RIGHTSHIFT])
+            {
+                if(Engine->Input.KeysUp[K_K])
+                {
+                    for(int i = 0; i < Engine->Resource.AllocatedActorMemory; i++)
+                    {
+                        DestroyActor(Engine->ActorReferences[i],ActorFreeFunction,Engine);
+                    }
+                    for(int i = 0; i < Engine->Resource.AllocatedSpriteMemory; i++)
+                    {
+                        DestroySprite(Engine->SpriteReferences[i],SpriteFreeFunction,Engine);
+                    }
+                }
+            }
             if(Engine->Input.KeysDown[K_S])
             {
                 for(int i = 0; i < 100; i++)
@@ -425,11 +476,40 @@ int main(int argc, char* argv[])
             Engine->Audio.Muted =! Engine->Audio.Muted;
         }
 
-        if(T->Expired)
+        if(Engine->Input.KeysUp[K_I])
         {
-            CleanupEngine(Engine);
-            OSMemoryFree(Engine,sizeof(struct Engine));
-            return(0);
+            int soe = 0;
+            soe += sizeof(Engine);
+            soe += sizeof(struct Sprite) * Engine->Resource.AllocatedSpriteMemory;
+            soe += sizeof(Sprite*) * Engine->Resource.AllocatedSpriteReferenceMemory;
+            soe += sizeof(struct Actor) * Engine->Resource.AllocatedActorMemory;
+            soe += sizeof(Actor*) * Engine->Resource.AllocatedActorReferenceMemory;
+            soe += sizeof(struct Timer) * Engine->Resource.AllocatedTimerMemory;
+            soe += sizeof(Timer*) * Engine->Resource.AllocatedTimerReferenceMemory;
+            soe += sizeof(struct Gamepad) * Engine->Resource.AllocatedGamepadMemory;
+            soe += sizeof(Gamepad*) * Engine->Resource.AllocatedGamepadReferenceMemory;
+            soe += sizeof(SDL_Texture*) * Engine->Resource.AllocatedTextureMemory;
+            soe += sizeof(Mix_Chunk*) * Engine->Resource.AllocatedSoundMemory;
+            soe += sizeof(Mix_Music*) * Engine->Resource.AllocatedMusicMemory;
+
+            printf("Size in bytes: %d\nSize in Kilobytes: %f\nSize in Megabytes: %f\n\n",soe,soe/1024.0,(soe/1024.0)/1024.0);
+        }
+
+        if(Engine->Input.KeysUp[K_T])
+        {
+            RestartVideo(Engine);
+        }
+
+        if(Engine->TimerReferences[TR])
+        {
+            if(Engine->TimerReferences[TR]->Expired)
+            {
+                for(int i = 0; i < 100; i++)
+                {
+                    CreateMonsterGame(Engine);
+                }
+                DestroyTimer(Engine->TimerReferences[TR],Engine);
+            }
         }
 
         UpdateDigit(FPSCounter[0],100000,Engine->Clock.FrameRate,Engine);

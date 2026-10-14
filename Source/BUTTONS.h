@@ -4,7 +4,7 @@
 #define NUM_MOUSE_KEYS 5
 #define NUM_GAMEPAD_BUTTONS 15
 #define NUM_GAMEPAD_TRIGGERS 2
-#define NUM_GAMEPAD_STICKS 2
+#define NUM_GAMEPAD_AXES 4
 
 enum MouseButtons {
 	MB_LEFT,

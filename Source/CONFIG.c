@@ -85,6 +85,7 @@ int handler(void* user, const char* section, const char* name, const char* value
 
 int8 UpdateConfig(char* File, Config* Config, Engine* Engine)
 {
+    const char Parameters[] = "(char* File: %s, Config* Config: 0x%p, Engine* Engine: 0x%p)";
     Config->Samplerate = 48000;
     Config->Channels = 2;
     Config->Chunksize = 1024;
@@ -105,7 +106,7 @@ int8 UpdateConfig(char* File, Config* Config, Engine* Engine)
     if(Result < 0)
     {
         Error Error = {WARNING_INIH_FAILURE,"UpdateConfig","Failed to load config file.","\0","\0"};
-        snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(char* File: %s, Config* Config: 0x%p, Engine* Engine: 0x%p)",File,Config,Engine);
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,File,Config,Engine);
         snprintf(Error.Description,STRING_BUFFER_SIZE,"ini_parse failed and returned %d.",Result);
         ThrowWarning(&Error,Engine);
         return(WARNING_INIH_FAILURE);

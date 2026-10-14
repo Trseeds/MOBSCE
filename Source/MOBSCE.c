@@ -56,95 +56,6 @@ Uint64 GetNewObjectID(Engine* Engine)
     return(++Engine->IDCounter); //never return id 0.
 }
 
-int QSCompactPointerPool(const void* X, const void* Y)
-{
-    const void* NX = *(const void**)X;
-    const void* NY = *(const void**)Y;
-    if(NX == NULL && NY == NULL)
-    {
-        return(0);
-    }
-    if(NX != NULL && NY != NULL)
-    {
-        return(0);
-    }
-    if(NX == NULL)
-    {
-        return(1);
-    }
-    if(NY == NULL)
-    {
-        return(-1);
-    }
-    return(0);
-}
-
-int QSCompactObjectPool(const void* X, const void* Y)
-{
-    const bool NX = *(bool*)X;
-    const bool NY = *(bool*)Y;
-    if(NX == false && NY == false)
-    {
-        return(0);
-    }
-    if(NX != false && NY != false)
-    {
-        return(0);
-    }
-    if(NX == false)
-    {
-        return(1);
-    }
-    if(NY == false)
-    {
-        return(-1);
-    }
-    return(0);
-}
-
-int QSSortSpritesByZ(const void* X, const void* Y)
-{
-    const bool NX = *(bool*)X;
-    const bool NY = *(bool*)Y;
-    const int32 SPR1Z = ((Sprite*)X)->RenderParameters.Position.Z;
-    const int32 SPR2Z = ((Sprite*)Y)->RenderParameters.Position.Z;
-    if(NX == false && NY == false)
-    {
-        return(0);
-    }
-    if(NX == false)
-    {
-        return(1);
-    }
-    if(NY == false)
-    {
-        return(-1);
-    }
-    
-    if(SPR1Z == SPR2Z)
-    {
-        return(0);
-    }
-    if(SPR1Z < SPR2Z)
-    {
-        return(-1);
-    }
-    if(SPR1Z > SPR2Z)
-    {
-        return(1);
-    }
-    return(0);
-}
-
-bool PoolCanBeShrunk(void* Array, uint64 AllocatedElements, uint64 AllocatedSize)
-{
-    if((AllocatedSize - AllocatedElements) >= MIN_ALLOCATE)
-    {
-        return(true);
-    }
-    return(false);
-}
-
 int64 LinearMap(int64 Number, int64 DomainMin, int64 DomainMax, int64 RangeMin, int64 RangeMax)
 {
     return(RangeMin + (Number - DomainMin) * (RangeMax - RangeMin) / (DomainMax - DomainMin));
@@ -162,11 +73,12 @@ int64 GetRandomNumber(int64 Min, int64 Max)
 
 int8 InitSDL(Engine* Engine)
 {
+    const char Parameters[] = "(Engine* Engine: 0x%p)";
     int Result = SDL_Init(SDL_INIT_EVERYTHING);
     if(Result != 0)
     {
         Error Error = {ERROR_SDL_FAILURE,"InitSDL","Failed to start SDL!","\0", "\0"};
-        snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(Engine* Engine: 0x%p)",Engine);
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Engine);
         snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_Init failed and returned %d.",Result);
         ThrowError(&Error,Engine);
         return(ERROR_SDL_FAILURE);
@@ -183,7 +95,7 @@ int8 InitSDL(Engine* Engine)
         if(Result != Engine->Audio.Codecs || Result == 0)
         {
             Error Warning = {WARNING_SDL_FAILURE,"InitSDL","Failed to start SDL Mixer.","\0", "\0"};
-            snprintf(Warning.Parameters,STRING_BUFFER_SIZE,"(Engine* Engine: 0x%p)",Engine);
+            snprintf(Warning.Parameters,STRING_BUFFER_SIZE,Parameters,Engine);
             snprintf(Warning.Description,STRING_BUFFER_SIZE,"Mix_Init failed and returned %d.",Result);
             ThrowWarning(&Warning,Engine);
             return(WARNING_SDL_FAILURE);
@@ -223,13 +135,14 @@ int8 GetSDLEvents(Engine* Engine)
 
 int8 GetBasePath(Engine* Engine)
 {
+    const char Parameters[] = "(Engine* Engine: 0x%p)";
     if(Engine)
     {
         char* Result = SDL_GetBasePath();
         if(!Result)
         {
             Error Error = {WARNING_SDL_FAILURE,"GetBasePath","Failed to get base path!","\0", "\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(Engine* Engine: 0x%p)",Engine);
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Engine);
             snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_GetbasePath failed and returned %d.",Result);
             ThrowError(&Error,Engine);
             return(ERROR_SDL_FAILURE);
@@ -262,7 +175,7 @@ char* GetAssetPath(char* Asset, char* Output, Engine* Engine)
     return(WARNING_NULL);
 }
 
-uint8 TickTimers(Engine* Engine) //i've {created {a {monster}}}
+int8 TickTimers(Engine* Engine) //i've {created {a {monster}}}
 {
     if(Engine)
     {
@@ -309,7 +222,7 @@ uint8 TickTimers(Engine* Engine) //i've {created {a {monster}}}
     return(ERROR_INVALID_ENGINE);
 }
 
-int KeepTime(Engine* Engine)
+int8 KeepTime(Engine* Engine)
 {
     if(Engine)
     {
@@ -325,13 +238,14 @@ int KeepTime(Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
-Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, int8 ERROR_LEVEL, int8 WARNING_LEVEL, bool Render, bool Audiate, bool ConfigProvided, Config* Config)
+Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, int8 ERROR_LEVEL, int8 WARNING_LEVEL, uint32 AllocationThreshold, bool Render, bool Audiate, Config* Config)
 {
+    const char Parameters[] = "(char* ConfigFile: %s, char* WindowTitle: %s, char* WindowIconpath: %s, int ERROR_LEVEL: %d, int WARNING_LEVEL: %d, bool Render: %d, bool Audiate: %d, Config* Config: 0x%p)";
     Engine* NewEngine = (Engine*)OSMemoryAllocate(sizeof(Engine));
     if(!NewEngine)
     {
         Error Error = {ERROR_MEMORY,"InitEngine","Failed to allocate memory!","\0", "\0"};
-        snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(char* ConfigFile: %s, char* WindowTitle: %s, char* WindowIconpath: %s, int ERROR_LEVEL: %d, int WARNING_LEVEL: %d, bool Render: %d, bool Audiate: %d, bool ConfigProvided: %d, Config* Config: 0x%p)",ConfigFile,WindowTitle,WindowIconPath,ERROR_LEVEL,WARNING_LEVEL,Render,Audiate,ConfigProvided,Config);
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,ConfigFile,WindowTitle,WindowIconPath,ERROR_LEVEL,WARNING_LEVEL,Render,Audiate,Config);
         snprintf(Error.Description,STRING_BUFFER_SIZE,"OSMemoryAllocate failed and returned: 0x%p",NewEngine);
         ThrowError(&Error,NewEngine);
         return(NULL);
@@ -341,6 +255,7 @@ Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, in
     NewEngine->WARNING_LEVEL = WARNING_LEVEL;
     NewEngine->Config.Render = Render;
     NewEngine->Config.Audiate = Audiate;
+    NewEngine->Resource.AllocationThreshold = AllocationThreshold;
 
     ResourceInfo NewResourceInfo;
 
@@ -352,20 +267,12 @@ Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, in
     strncpy(NewEngine->Video.WindowIconPath,GetAssetPath(WindowIconPath,Icon,NewEngine),STRING_BUFFER_SIZE);
     strncpy(NewEngine->Video.WindowTitle,WindowTitle,STRING_BUFFER_SIZE);
 
-    if(!ConfigProvided)
+    if(!Config)
     {
         UpdateConfig(ConfigF,&NewEngine->Config,NewEngine);
     }
     else
     {
-        if(!Config)
-        {
-            Error Error = {ERROR_INVALID_PARAMETER,"InitEngine","Config provided is invalid!","\0", "\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(char* ConfigFile: %s, char* WindowTitle: %s, char* WindowIconpath: %s, int ERROR_LEVEL: %d, int WARNING_LEVEL: %d, bool Render: %d, bool Audiate: %d, bool ConfigProvided: %d, Config* Config: 0x%p)",ConfigFile,WindowTitle,WindowIconPath,ERROR_LEVEL,WARNING_LEVEL,Render,Audiate,ConfigProvided,Config);
-            snprintf(Error.Description,STRING_BUFFER_SIZE,"Config is NULL.",NewEngine);
-            ThrowError(&Error,NewEngine);
-            return(NULL);
-        }
         memcpy(&NewEngine->Config,Config,sizeof(struct Config));
     }
     LoadEngineConfig(NewEngine);
@@ -379,6 +286,7 @@ Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, in
     NewResourceInfo.SizeOfResource = sizeof(Mix_Chunk*);
     NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedSoundMemory;
     NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfSounds;
+    NewResourceInfo.IsPointerArray = true;
     InitResourcePool(NewResourceInfo,NewEngine);
     //music
     NewResourceInfo.Pointer = &NewEngine->Resource.Music;
@@ -386,6 +294,7 @@ Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, in
     NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedMusicMemory;
     NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfMusics;
     InitResourcePool(NewResourceInfo,NewEngine);
+    NewResourceInfo.IsPointerArray = true;
     if(NewEngine->Config.Render)
     {
         InitVideo(NewEngine);
@@ -396,42 +305,63 @@ Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, in
     NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedTextureMemory;
     NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfTextures;
     InitResourcePool(NewResourceInfo, NewEngine);
+    NewResourceInfo.IsPointerArray = true;
     //actors
     NewResourceInfo.Pointer = &NewEngine->Actors;
     NewResourceInfo.SizeOfResource = sizeof(Actor);
     NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedActorMemory;
     NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfActors;
     InitResourcePool(NewResourceInfo,NewEngine);
+    NewResourceInfo.IsPointerArray = false;
     //actor references
     NewResourceInfo.Pointer = &NewEngine->ActorReferences;
     NewResourceInfo.SizeOfResource = sizeof(void*);
     NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedActorReferenceMemory;
     NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfActorReferences;
     InitResourcePool(NewResourceInfo,NewEngine);
+    NewResourceInfo.IsPointerArray = true;
     //sprites
     NewResourceInfo.Pointer = &NewEngine->Sprites;
     NewResourceInfo.SizeOfResource = sizeof(Sprite);
     NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedSpriteMemory;
     NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfSprites;
     InitResourcePool(NewResourceInfo,NewEngine);
+    NewResourceInfo.IsPointerArray = false;
     //sprite references
     NewResourceInfo.Pointer = &NewEngine->SpriteReferences;
     NewResourceInfo.SizeOfResource = sizeof(void*);
     NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedSpriteReferenceMemory;
     NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfSpriteReferences;
     InitResourcePool(NewResourceInfo,NewEngine);
+    NewResourceInfo.IsPointerArray = true;
     //timers
     NewResourceInfo.Pointer = &NewEngine->Timers;
     NewResourceInfo.SizeOfResource = sizeof(Timer);
     NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedTimerMemory;
     NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfTimers;
     InitResourcePool(NewResourceInfo,NewEngine);
+    NewResourceInfo.IsPointerArray = false;
     //timer references
     NewResourceInfo.Pointer = &NewEngine->TimerReferences;
     NewResourceInfo.SizeOfResource = sizeof(void*);
     NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedTimerReferenceMemory;
     NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfTimerReferences;
     InitResourcePool(NewResourceInfo,NewEngine);
+    NewResourceInfo.IsPointerArray = true;
+    //gamepads
+    NewResourceInfo.Pointer = &NewEngine->Input.Gamepads;
+    NewResourceInfo.SizeOfResource = sizeof(Gamepad);
+    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedGamepadMemory;
+    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfGamepads;
+    InitResourcePool(NewResourceInfo,NewEngine);
+    NewResourceInfo.IsPointerArray = false;
+    //gamepad references
+    NewResourceInfo.Pointer = &NewEngine->Input.GamepadReferences;
+    NewResourceInfo.SizeOfResource = sizeof(void*);
+    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedGamepadReferenceMemory;
+    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfGamepadReferences;
+    InitResourcePool(NewResourceInfo,NewEngine);
+    NewResourceInfo.IsPointerArray = true;
 
     NewEngine->Running = true;
     return(NewEngine);
@@ -556,6 +486,23 @@ int8 CleanupEngine(Engine* Engine)
         ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTimerReferenceMemory;
         ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTimerReferences;
         ResourceInfo.IsPointerArray = true;
+        CleanupResourcePool(ResourceInfo,Engine);
+        //gamepads
+        ResourceInfo.Pointer = &Engine->Input.Gamepads;
+        ResourceInfo.SizeOfResource = sizeof(Gamepad);
+        ResourceInfo.FreeFunction = NULL;
+        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedGamepadMemory;
+        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfGamepadReferences;
+        ResourceInfo.IsPointerArray = false;
+        CleanupResourcePool(ResourceInfo,Engine);
+        //gamepad references
+        ResourceInfo.Pointer = &Engine->Input.GamepadReferences;
+        ResourceInfo.SizeOfResource = sizeof(void*);
+        ResourceInfo.FreeFunction = NULL;
+        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedGamepadReferenceMemory;
+        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfGamepadReferences;
+        ResourceInfo.IsPointerArray = true;
+        CleanupResourcePool(ResourceInfo,Engine);
 
         memset(Engine,0,sizeof(struct Engine));
         return(RETURN_SUCCESS);
