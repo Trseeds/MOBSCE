@@ -1,22 +1,5 @@
 MOBSCE Planned Updates:
-	
-Feature - Multiple gamepads
-Implementation - Resource pool of a gamepad object which contains all of the gamepad related states in Input.
-API Impact - Major
-Almost done. Yet to be tested.
 
-Feature - Fix This (//Result = ImgInit(Engine->Video.) bleh) line in MOBSCE.C
-Implementation - More config stuff. 
-API Impact - None
-
-Feature - Create a public header and a private header.
-Implementation - Self explanatory.
-API Impact - Major.
-
-Feature - Timers.
+Feature - Add destruction of textures, sounds, and musics.
 Implementation - TBD.
-API Impact - Optional.
-
-Feature - Watchdog timers.
-Implementation - Create a timer of type watch_for and pass pointer, value, and size. When size bytes at pointer = value, expire.
-API Impact - Optional.
+API Impact - Probably optional.

@@ -1,4 +1,8 @@
-#include "MOBSCE.h"
+#ifndef BUTTONS_H
+#define BUTTONS_H
+
+#include "INCLUDE.h"
+#include "TYPES.h"
 
 #define NUM_KEYS SDL_NUM_SCANCODES
 #define NUM_MOUSE_KEYS 5
@@ -148,3 +152,5 @@ enum GamepadSticks {
     GP_STK_LEFT,
     GP_STK_RIGHT
 };
+
+#endif

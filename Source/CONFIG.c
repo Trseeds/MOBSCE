@@ -71,6 +71,10 @@ int handler(void* user, const char* section, const char* name, const char* value
         {
             NewConfig->WindowScale = atof(value);
         }
+        else if(strcmp(name, "Formats") == 0)
+        {
+            NewConfig->Formats = atoi(value);
+        }
         else
         {
             return(1);
@@ -97,7 +101,8 @@ int8 UpdateConfig(char* File, Config* Config, Engine* Engine)
     Config->LogicalY = 480;
     Config->WindowFlags = SDL_WINDOW_SHOWN;
     Config->RendererFlags = SDL_RENDERER_PRESENTVSYNC;
-    Config->Codecs = MIX_INIT_FLAC | MIX_INIT_MP3 | MIX_INIT_WAVPACK;
+    Config->Codecs = (MIX_INIT_FLAC | MIX_INIT_MP3 | MIX_INIT_WAVPACK | MIX_INIT_MID | MIX_INIT_MOD | MIX_INIT_OGG | MIX_INIT_OPUS);
+    Config->Formats = (IMG_INIT_JPG | IMG_INIT_PNG | IMG_INIT_AVIF | IMG_INIT_JXL | IMG_INIT_TIF | IMG_INIT_WEBP);
     Config->Render = true;
     Config->Audiate = true;
     Config->WindowScale = 1.00;
@@ -132,6 +137,7 @@ int8 LoadEngineConfig(Engine* Engine)
         Engine->Video.WindowFlags = Engine->Config.WindowFlags;
         Engine->Video.RendererFlags = Engine->Config.RendererFlags;
         Engine->Video.WindowScale = Engine->Config.WindowScale;
+        Engine->Video.Formats = Engine->Config.Formats;
         return(RETURN_SUCCESS);
     }
     return(ERROR_INVALID_ENGINE);

@@ -150,7 +150,7 @@ int8 Render(Engine* Engine)
             Sprite* S = Engine->Sprites;
             int ASM = Engine->Resource.AllocatedSpriteMemory;
             Sprite** SR = Engine->SpriteReferences;
-            SDL_RenderClear(Engine->Video.Renderer);
+            //SDL_RenderClear(Engine->Video.Renderer);
             if(Engine->SpriteZResortNeeded)
             {
                 qsort(S, ASM, sizeof(Sprite), QSSortSpritesByZ);

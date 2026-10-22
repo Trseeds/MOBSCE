@@ -7,32 +7,29 @@ SDL
 C
 Engine
 */
+
 #ifndef MOBSCE_H
 #define MOBSCE_H
 
-#include "SDL.h"
-#include "SDL_mixer.h"
-#include "SDL_image.h"
-#include "ini.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <math.h>
-#include <time.h>
-#include "BUTTONS.h"
+#include "INCLUDE.h"
+
+typedef struct Engine Engine;
+
+#include "TYPES.h"
+#include "OBJECTS.h"
+#include "AUDIO.h"
+#include "VIDEO.h"
+#include "INPUT.h"
+#include "CONFIG.h"
+#include "RESOURCE.h"
+#include "CLOCK.h"
 
 #define MOBSCE_VERSION_RELEASE 0
-#define MOBSCE_VERSION_FEATURE 26
+#define MOBSCE_VERSION_FEATURE 27
 #define MOBSCE_VERSION_PATCH 0
-#define MOBSCE_VERSION "0.26.0"
+#define MOBSCE_VERSION "0.27.0"
 
-#define MIN_ALLOCATE Engine->Resource.AllocationThreshold
-#define STRING_BUFFER_SIZE 5120
-#define OBJECT_NAME_SIZE 128
 #define EVENT_QUEUE_SIZE 512
-#define TINT_NOCHANGE 255
 
 #define ERROR_SHOW_ALL 2
 #define ERROR_SHOW_MESSAGE 1
@@ -46,6 +43,7 @@ Engine
 #define ERROR_SDL_FAILURE 11
 #define ERROR_MEMORY 12
 #define ERROR_INVALID_PARAMETER 13
+#define ERROR_TIME_FAILURE 14
 #define WARNING_SDL_FAILURE 21
 #define WARNING_INVALID_PARAMETER 22
 #define WARNING_INIH_FAILURE 23
@@ -53,75 +51,6 @@ Engine
 #define WARNING_NULL NULL
 #define RETURN_SUCCESS 0
 #define SENTINEL_OBJECT (uint32)(0-1)
-
-//basic data types
-typedef unsigned char* bytepointer; //use for raw byte logic
-typedef unsigned char ubyte;
-typedef signed char sbyte;
-typedef uint8_t uint8;
-typedef int8_t int8;
-typedef uint16_t uint16;
-typedef int16_t int16;
-typedef uint32_t uint32;
-typedef int32_t int32;
-typedef uint64_t uint64;
-typedef int64_t int64;
-
-enum Flip {
-	FLIP_H = SDL_FLIP_HORIZONTAL,
-	FLIP_V = SDL_FLIP_VERTICAL,
-	FLIP_NONE = SDL_FLIP_NONE
-};
-
-enum TimerType {
-	COUNT_TO,
-	WAIT_UNTIL,
-	WATCH_FOR
-};
-
-enum UnitType {
-	FRAMES,
-	REALTIME
-};
-
-typedef struct Vector2 {
-	int32 X;
-	int32 Y;
-} Vector2;
-
-typedef struct Vector3 {
-	int32 X;
-	int32 Y;
-	int32 Z;
-} Vector3;
-
-typedef struct Vector4 {
-	int32 X;
-	int32 Y;
-	int32 Z;
-	int32 W;
-} Vector4;
-
-typedef struct FVector2 {
-	double X;
-	double Y;
-} FVector2;
-
-typedef struct FVector3 {
-	double X;
-	double Y;
-	double Z;
-} FVector3;
-
-typedef struct FVector4 {
-	double X;
-	double Y;
-	double Z;
-	double W;
-} FVector4;
-
-typedef struct CustomSpriteData CustomSpriteData;
-typedef struct CustomActorData CustomActorData;
 
 typedef struct Engine Engine;
 
@@ -132,174 +61,6 @@ typedef struct Error {
 	char Description[STRING_BUFFER_SIZE];
 	char Parameters[STRING_BUFFER_SIZE];
 } Error;
-
-//config struct used for parsing the config file
-typedef struct Config {
-	uint32 Samplerate;
-	uint16 Channels;
-	uint16 Chunksize;
-	uint32 Voices;
-	uint8 MusicVolume;
-	uint8 SoundVolume;
-	bool Muted;
-	uint16 LogicalX;
-	uint16 LogicalY;
-	uint16 WindowFlags;
-	uint16 RendererFlags;
-	uint16 Codecs;
-	bool Render;
-	bool Audiate;
-	float WindowScale;
-} Config;
-
-typedef struct SpriteRenderParameters {
-	SDL_Texture* Texture;
-	Vector3 Position;
-	Vector4 Origin;
-	Vector2 Dimensions;
-	uint8 Transparency;
-	double Angle;
-	uint8 Flip;
-	Vector3 Tint;
-	bool Visible;
-} SpriteRenderParameters;
-
-//objects
-typedef struct Actor {
-	bool IsUsed;
-	uint64 ID;
-	uint32 ReferenceIndex;
-	char Name[OBJECT_NAME_SIZE];
-	FVector2 Position;
-	Vector2 Dimensions;
-	int32 Voice;
-	void (*Routine)(struct Actor*, Engine*);
-	void* CustomData;
-} Actor;
-
-typedef struct Sprite {
-	bool IsUsed;
-	uint64 ID;
-	uint32 ReferenceIndex;
-	char Name[OBJECT_NAME_SIZE];
-	uint32 TextureID;
-	SpriteRenderParameters RenderParameters;
-	uint32 ActorReferenceIndex;
-	uint64 ExpectedActorID;
-	void (*Routine)(struct Sprite*, Engine*);
-	void* CustomData;
-} Sprite;
-
-typedef struct Timer {
-	bool IsUsed;
-	uint64 ID;
-	uint32 ReferenceIndex;
-	uint8 TimerType;
-	uint8 UnitType;
-	bool Expired;
-	uint64 Counter;
-	uint64 StopAt;
-} Timer;
-
-
-typedef struct Gamepad {
-	bool IsUsed;
-	uint64 ID;
-	uint32 ReferenceIndex;
-	SDL_GameController* Gamepad;
-	uint8 PreviousState[NUM_GAMEPAD_BUTTONS];
-	double PreviousTriggersState[NUM_GAMEPAD_TRIGGERS];
-	bool ButtonsUp[NUM_GAMEPAD_BUTTONS];
-	bool ButtonsDown[NUM_GAMEPAD_BUTTONS];
-	double Triggers[NUM_GAMEPAD_TRIGGERS];
-	bool TriggersUp[NUM_GAMEPAD_TRIGGERS];
-	double Sticks[NUM_GAMEPAD_AXES];
-} Gamepad;
-
-typedef struct Object { //use for handling void* structs generically
-	bool IsUsed;
-	uint64 ID;
-	uint32 ReferenceIndex;
-} Object;
-
-
-//engine
-typedef struct Audio {
-	uint32 Samplerate;
-	uint16 Channels;
-	uint16 Chunksize;
-	uint32 Voices;
-	uint8 MusicVolume;
-	uint8 SoundVolume;
-	bool Muted;
-	uint16 Codecs;
-} Audio;
-
-typedef struct Video {
-	SDL_Window* Window;
-	SDL_Renderer* Renderer;
-	Vector2 LogicalDimensions;
-	Vector4 WindowBounds;
-	uint16 WindowFlags;
-	uint16 RendererFlags;
-	float WindowScale;
-	char WindowTitle[STRING_BUFFER_SIZE];
-	char WindowIconPath[STRING_BUFFER_SIZE];
-} Video;
-
-typedef struct Input {
-	uint8* SDL_Keystate;
-	uint8 SDL_PreviousKeystate[NUM_KEYS];
-	uint32 SDL_MouseState;
-	uint32 SDL_PreviousMouseState;
-	bool KeysDown[NUM_KEYS];
-	bool KeysUp[NUM_KEYS];
-	Vector2 MousePosition;
-	bool MouseDown[NUM_MOUSE_KEYS];
-	bool MouseUp[NUM_MOUSE_KEYS];
-	int8 VerticalMouseScroll;
-	int8 HorizontalMouseScroll;
-	Gamepad* Gamepads;
-	Gamepad** GamepadReferences;
-} Input;
-
-typedef struct Clock {
-	double DeltaTime;
-	uint64 CurrentTime;
-	uint64 PreviousTime;
-	uint64 TotalFrames;
-	uint64 RealTime;
-	double FrameRate;
-} Clock;
-
-typedef struct Resource {
-	uint32 AllocationThreshold;
-	SDL_Texture** Textures;
-	Mix_Chunk** Sounds;
-	Mix_Music** Music;
-	uint32 NumberOfTextures;
-	uint32 NumberOfSounds;
-	uint32 NumberOfMusics;
-	uint32 NumberOfSprites;
-	uint32 NumberOfSpriteReferences;
-	uint32 NumberOfActors;
-	uint32 NumberOfActorReferences;
-	uint32 NumberOfTimers;
-	uint32 NumberOfTimerReferences;
-	uint32 NumberOfGamepads;
-	uint32 NumberOfGamepadReferences;
-	uint32 AllocatedTextureMemory;
-	uint32 AllocatedSoundMemory;
-	uint32 AllocatedMusicMemory;
-	uint32 AllocatedSpriteMemory;
-	uint32 AllocatedSpriteReferenceMemory;
-	uint32 AllocatedActorMemory;
-	uint32 AllocatedActorReferenceMemory;
-	uint32 AllocatedTimerMemory;
-	uint32 AllocatedTimerReferenceMemory;
-	uint32 AllocatedGamepadMemory;
-	uint32 AllocatedGamepadReferenceMemory;
-} Resource;
 
 typedef struct Engine {
 	char BasePath[STRING_BUFFER_SIZE];
@@ -318,32 +79,20 @@ typedef struct Engine {
 	Timer** TimerReferences;
 	SDL_Event Events[EVENT_QUEUE_SIZE];
 	uint64 IDCounter;
-	bool Running;
 	uint8 SpriteZResortNeeded;
 	int8 ERROR_LEVEL;
 	int8 WARNING_LEVEL;
+	bool RandSeeded;
+	bool Running;
 } Engine;
 
-typedef struct ResourceInfo {
-	void* Pointer;
-	uint16 SizeOfResource;
-	void (*FreeFunction)(void*);
-	uint32* AllocatedResourceMemory;
-	uint32* NumberOfResources;
-	bool IsPointerArray;
-} ResourceInfo;
-
-//engine stuff
 bool IsZero(void* Pointer, int32 Size);
 void ThrowError(Error* Error, Engine* Engine);
 void ThrowWarning(Error* Warning, Engine* Engine);
 uint64 GetNewObjectID(Engine* Engine);
 int64 LinearMap(int64 Number, int64 DomainMin, int64 DomainMax, int64 RangeMin, int64 RangeMax);
-void SeedRNG();
+void SeedRNG(Engine* Engine);
 int64 GetRandomNumber(int64 Min, int64 Max);
-int handler(void* user, const char* section, const char* name, const char* value);
-int8 UpdateConfig(char* File, Config* Config, Engine* Engine);
-int8 LoadEngineConfig(Engine* Engine);
 int8 InitSDL(Engine* Engine);
 void CleanupSDL();
 int8 GetSDLEvents(Engine* Engine);
@@ -352,68 +101,5 @@ char* GetAssetPath(char* Asset, char* Output, Engine* Engine);
 Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, int8 ERROR_LEVEL, int8 WARNING_LEVEL, uint32 AllocationThreshold, bool Render, bool Audiate, Config* Config);
 int8 RunEngine(Engine* Engine);
 int8 CleanupEngine(Engine* Engine);
-
-//audio
-int8 InitAudio(Engine* Engine);
-uint8 ScreenPan(int32 X, uint32 EdgeDistance, Engine* Engine);
-uint8 ScreenVolume(int32 X, uint32 EdgeDistance, Engine* Engine);
-int8 PlaySound(uint32 SoundID, int32 Voice, uint8 Volume, uint8 Pan, Engine* Engine); //change panning logic to be 0-100 with 0 being hard left and 100 being hard right.
-int8 MixMusicVolume(Engine* Engine);
-int8 PlayMusic(int32 MusicID, Engine* Engine);
-
-//video
-int8 InitVideo(Engine* Engine);
-int8 RestartVideo(Engine* Engine);
-int8 CleanupVideo(Engine* Engine);
-int8 DrawSprite(Sprite* Sprite, Engine* Engine);
-int8 Render(Engine* Engine);
-
-//input
-int8 GetKeyboardInput(Engine* Engine);
-int8 GetMouseInput(Engine* Engine);
-int8 GetGamepadInput(Engine* Engine);
-int8 GetInput(Engine* Engine); 
-int8 RumbleGamepad(Gamepad* Gamepad, int Strength, int Duration, Engine* Engine);
-
-//clock
-int8 TickTimers(Engine* Engine);
-int8 KeepTime(Engine* Engine);
-
-//resource
-void* OSMemoryAllocate(size_t Size);
-void OSMemoryFree(void* Pointer, size_t Size);
-int QSCompactPointerPool(const void* X, const void* Y);
-int QSCompactObjectPool(const void* X, const void* Y);
-int QSSortSpritesByZ(const void* X, const void* Y);
-bool PoolCanBeShrunk(void* Array, uint64 AllocatedElements, uint64 AllocatedSize, Engine* Engine);
-void* FindOpenResourceSpace(void* Pool, uint32 PoolSize, int Size);
-uint32 FindOpenReferenceSpace(void* Pool, uint32 AllocatedReferenceMemory);
-void RebuildReferences(void* ReferencePool, void* Pool, int SizeOfObject, uint32 AllocatedResources);
-int8 InitResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
-int8 ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
-int8 ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
-int8 CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
-void SpriteFreeFunction(void* SpritePtr);
-void ActorFreeFunction(void* ActorPtr);
-//audio
-int8 CacheSound(char* File, Engine* Engine);
-int8 CacheMusic(char* File, Engine* Engine);
-//video
-int8 CacheTexture(char* File, Engine* Engine);
-//objects
-uint32 CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, void* CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine);
-uint32 CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, void* CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine);
-int8 DestroySprite(Sprite* DSprite, void (*FreeFunction)(void*), Engine* Engine);
-int8 DestroyActor(Actor* DActor, void (*FreeFunction)(void*), Engine* Engine);
-uint32 GetSpriteByName(char* Name, Engine* Engine);
-uint32 GetSpriteByID(Uint64 ID, Engine* Engine);
-uint32 GetSpriteByProperty(void* Property, uint32 Offset, uint32 Size, Engine* Engine);
-uint32 GetActorByName(char* Name, Engine* Engine);
-uint32 GetActorByID(Uint64 ID, Engine* Engine);
-uint32 GetActorByProperty(void* Property, uint32 Offset, uint32 Size, Engine* Engine);
-uint32 CreateTimer(uint8 TimerType, uint8 UnitType, uint64 StopAt, Engine* Engine);
-int8 DestroyTimer(Timer* DTimer, Engine* Engine);
-uint32 CreateGamepad(SDL_GameController* Controller, Engine* Engine);
-int8 DestroyGamepad(Gamepad* DGamepad, Engine* Engine);
 
 #endif

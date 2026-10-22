@@ -2,8 +2,8 @@ Compiler = gcc
 IncludeFlags = -I Source -I Libraries/SDL2/include -I Libraries/INIH
 LinkerFlags = -L Libraries/SDL2/lib/x64 -L Libraries/INIH -lSDL2main -lSDL2 -lSDL2_mixer -lSDL2_image -lINIH
 DebugFlags = -g3 -O0
-ReleaseFlags = -g0 -O2 -s -flto -std=c11
-TestFlags = -g0 -Ofast -s -flto -std=c11 -march=native -mtune=native
+ReleaseFlags = -g0 -O2 -s -flto -std=c11 -mwindows
+TestFlags = -g0 -O0 -std=c11
 SOURCES := $(wildcard Source/*.c)
 GAMESOURCES := $(wildcard Source/Non-Engine/*.c)
 Objects = $(SOURCES:Source/%.c=Binaries/%.o)
@@ -31,6 +31,9 @@ Test: $(Objects) $(GameObjects)
 
 Debug: $(ObjectsDebug) $(GameObjectsDebug)
 	$(Compiler) $(DebugFlags) $(ObjectsDebug) $(GameObjectsDebug) $(LinkerFlags) -o $(Target)
+
+Release: $(Objects) $(GameObjects)
+	$(Compiler) $(ReleaseFlags) $(Objects) $(GameObjects) $(LinkerFlags) -o $(Target)
 
 Library: $(Objects)
 	ar rcs Binaries/libMOBSCE.a $(Objects)

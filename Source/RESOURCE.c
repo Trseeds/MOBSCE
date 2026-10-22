@@ -108,16 +108,16 @@ int QSSortSpritesByZ(const void* X, const void* Y)
     return(0);
 }
 
-bool PoolCanBeShrunk(void* Array, uint64 AllocatedElements, uint64 AllocatedSize, Engine* Engine)
+bool PoolCanBeShrunk(void* Array, uint32 AllocatedElements, uint32 AllocatedSize, Engine* Engine)
 {
     return((AllocatedSize - AllocatedElements) >= MIN_ALLOCATE && (AllocatedSize - MIN_ALLOCATE) > MIN_ALLOCATE);
 }
 
-void* FindOpenResourceSpace(void* Pool, uint32 PoolSize, int Size)
+void* FindOpenResourceSpace(void* Pool, uint32 PoolSize, size_t Size)
 {
     for(uint32 i = 0; i < PoolSize; i += Size)
     {
-        if(!*(uint8*)(Pool+i))
+        if(!*(bytepointer)(Pool+i))
         {
             return(Pool+i);
         }
@@ -135,10 +135,10 @@ uint32 FindOpenReferenceSpace(void* Pool, uint32 AllocatedReferenceMemory)
             return(i);
         }
     }
-    return(-1);
+    return(SENTINEL_OBJECT);
 }
 
-void RebuildReferences(void* ReferencePool, void* Pool, int SizeOfObject, uint32 AllocatedResources)
+void RebuildReferences(void* ReferencePool, void* Pool, size_t SizeOfObject, uint32 AllocatedResources)
 {
     Object** RP = (Object**)ReferencePool;
     for(uint32 i = 0; i < AllocatedResources; i++)
@@ -168,8 +168,8 @@ int8 InitResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
                 return(ERROR_MEMORY);
             }
 
-            *(int*)ResourceInfo.AllocatedResourceMemory = MIN_ALLOCATE;
-            *(int*)ResourceInfo.NumberOfResources = 0;
+            *(uint32*)ResourceInfo.AllocatedResourceMemory = MIN_ALLOCATE;
+            *(uint32*)ResourceInfo.NumberOfResources = 0;
             return(RETURN_SUCCESS);
         }       
     }
@@ -184,8 +184,8 @@ int8 ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
         if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources)
         {
             void** OldPtr = *(void**)ResourceInfo.Pointer;
-            int OldSize = *(int*)ResourceInfo.AllocatedResourceMemory*ResourceInfo.SizeOfResource;
-            int NewSize = (*(int*)ResourceInfo.AllocatedResourceMemory+MIN_ALLOCATE)*ResourceInfo.SizeOfResource;
+            uint32 OldSize = *(uint32*)ResourceInfo.AllocatedResourceMemory*ResourceInfo.SizeOfResource;
+            uint32 NewSize = (*(uint32*)ResourceInfo.AllocatedResourceMemory+MIN_ALLOCATE)*ResourceInfo.SizeOfResource;
             *(void**)ResourceInfo.Pointer = OSMemoryAllocate(NewSize);
             if(!*(void**)ResourceInfo.Pointer)
             {
@@ -198,7 +198,7 @@ int8 ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
 
             memcpy(*(void**)ResourceInfo.Pointer,OldPtr,OldSize);
             OSMemoryFree(OldPtr,OldSize);
-            *(int*)ResourceInfo.AllocatedResourceMemory += MIN_ALLOCATE;
+            *(uint32*)ResourceInfo.AllocatedResourceMemory += MIN_ALLOCATE;
 
             return(RETURN_SUCCESS);
         }
@@ -219,8 +219,8 @@ int8 ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
         if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources)
         {
             void** OldPtr = *(void**)ResourceInfo.Pointer;
-            int OldSize = *(int*)ResourceInfo.AllocatedResourceMemory*ResourceInfo.SizeOfResource;
-            int NewSize = (*(int*)ResourceInfo.AllocatedResourceMemory-MIN_ALLOCATE)*ResourceInfo.SizeOfResource;
+            uint32 OldSize = *(uint32*)ResourceInfo.AllocatedResourceMemory*ResourceInfo.SizeOfResource;
+            uint32 NewSize = (*(uint32*)ResourceInfo.AllocatedResourceMemory-MIN_ALLOCATE)*ResourceInfo.SizeOfResource;
             *(void**)ResourceInfo.Pointer = OSMemoryAllocate(NewSize);
             if(!*(void**)ResourceInfo.Pointer)
             {
@@ -233,7 +233,7 @@ int8 ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
 
             memcpy(*(void**)ResourceInfo.Pointer,OldPtr,NewSize);
             OSMemoryFree(OldPtr,OldSize);
-            *(int*)ResourceInfo.AllocatedResourceMemory -= MIN_ALLOCATE;
+            *(uint32*)ResourceInfo.AllocatedResourceMemory -= MIN_ALLOCATE;
 
             return(RETURN_SUCCESS);
         }
@@ -254,7 +254,7 @@ int8 CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
         if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources)
         {
             uint8* Pool = *(void**)ResourceInfo.Pointer;
-            int Size = *(int*)ResourceInfo.AllocatedResourceMemory*ResourceInfo.SizeOfResource;
+            uint32 Size = *(uint32*)ResourceInfo.AllocatedResourceMemory*ResourceInfo.SizeOfResource;
 
             for(int i = 0; i < Size; i += ResourceInfo.SizeOfResource)
             {
@@ -287,7 +287,7 @@ int8 CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
-uint32 CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, int TextureID, void* CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
+uint32 CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, uint32 TextureID, void* CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
 {
     if(Engine)
     {
@@ -334,16 +334,16 @@ uint32 CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimens
         NewSprite->RenderParameters.Transparency = 100;
         Vector3 Tint = {TINT_NOCHANGE,TINT_NOCHANGE,TINT_NOCHANGE};
         NewSprite->RenderParameters.Tint = Tint;
-        if(Actor)
-        {
-            NewSprite->ActorReferenceIndex = Actor->ReferenceIndex;
-            NewSprite->ExpectedActorID = Actor->ID;
-        }
-        else
-        {
-            NewSprite->ActorReferenceIndex = 0;
-            NewSprite->ExpectedActorID = 0;
-        }
+        // if(Actor)
+        // {
+        //     NewSprite->ActorReferenceIndex = Actor->ReferenceIndex;
+        //     NewSprite->ExpectedActorID = Actor->ID;
+        // }
+        // else
+        // {
+        //     NewSprite->ActorReferenceIndex = 0;
+        //     NewSprite->ExpectedActorID = 0;
+        // }
         NewSprite->CustomData = CustomData;
         NewSprite->Routine = Routine;
 
@@ -386,11 +386,13 @@ int8 DestroySprite(Sprite* DSprite, void (*FreeFunction)(void*), Engine* Engine)
                 ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteMemory;
                 ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSprites;
                 ShrinkResourcePool(ResourceInfo,Engine);
-                ResourceInfo.Pointer = &Engine->SpriteReferences;
-                ResourceInfo.SizeOfResource = sizeof(Sprite*);
-                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteReferenceMemory;
-                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSpriteReferences;
-                ShrinkResourcePool(ResourceInfo,Engine);
+                // ResourceInfo.Pointer = &Engine->SpriteReferences;
+                // ResourceInfo.SizeOfResource = sizeof(Sprite*);
+                // ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteReferenceMemory;
+                // ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSpriteReferences;
+                // ShrinkResourcePool(ResourceInfo,Engine);
+                //cant shrink the reference pool because there may still be valid references in it!!!
+                //this is a problem for the future. or i can just accept wasting a few kb of memory on pointers.
                 RebuildReferences(Engine->SpriteReferences,Engine->Sprites,sizeof(struct Sprite),Engine->Resource.AllocatedSpriteMemory);
             }
             return(RETURN_SUCCESS);
@@ -491,7 +493,7 @@ uint32 GetSpriteByProperty(void* Property, uint32 Offset, uint32 Size, Engine* E
     return(SENTINEL_OBJECT);
 }
 
-uint32 CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, int Voice, void* CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine)
+uint32 CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, uint32 Voice, void* CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine)
 {
     if(Engine)
     {
@@ -571,11 +573,11 @@ int8 DestroyActor(Actor* DActor, void (*FreeFunction)(void*), Engine* Engine)
                 ResourceInfo.SizeOfResource = sizeof(Actor);
                 ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActors;
                 ShrinkResourcePool(ResourceInfo,Engine);
-                ResourceInfo.Pointer = &Engine->ActorReferences;
-                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorReferenceMemory;
-                ResourceInfo.SizeOfResource = sizeof(Actor*);
-                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActorReferences;
-                ShrinkResourcePool(ResourceInfo,Engine);
+                // ResourceInfo.Pointer = &Engine->ActorReferences;
+                // ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorReferenceMemory;
+                // ResourceInfo.SizeOfResource = sizeof(Actor*);
+                // ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActorReferences;
+                // ShrinkResourcePool(ResourceInfo,Engine);
                 RebuildReferences(Engine->ActorReferences,Engine->Actors,sizeof(struct Actor),Engine->Resource.AllocatedActorMemory);
             }
             return(RETURN_SUCCESS);
@@ -722,6 +724,22 @@ uint32 CreateTimer(uint8 TimerType, uint8 UnitType, uint64 StopAt, Engine* Engin
         NewTimer->StopAt = StopAt;
         NewTimer->Counter = 0;
 
+        if(NewTimer->TimerType == TMR_T_COUNT_TO)
+        {
+            if(NewTimer->UnitType == TMR_UT_SECONDS)
+            {
+                NewTimer->StopAt = StopAt*1000 + Engine->Clock.RealTimeMS;
+            }
+            if(NewTimer->UnitType == TMR_UT_MILLISECONDS)
+            {
+                NewTimer->StopAt = StopAt + Engine->Clock.RealTimeMS;
+            }
+        }
+        if(NewTimer->TimerType == TMR_T_WAIT_UNTIL && NewTimer->UnitType == TMR_UT_SECONDS)
+        {
+            NewTimer->StopAt = StopAt*1000;
+        }
+
         Engine->Resource.NumberOfTimers++;
         return(NewTimer->ReferenceIndex);
     }
@@ -748,11 +766,11 @@ int8 DestroyTimer(Timer* DTimer, Engine* Engine)
                 ResourceInfo.SizeOfResource = sizeof(struct Timer);
                 ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTimers;
                 ShrinkResourcePool(ResourceInfo,Engine);
-                ResourceInfo.Pointer = &Engine->TimerReferences;
-                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTimerReferenceMemory;
-                ResourceInfo.SizeOfResource = sizeof(Timer*);
-                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTimerReferences;
-                ShrinkResourcePool(ResourceInfo,Engine);
+                // ResourceInfo.Pointer = &Engine->TimerReferences;
+                // ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTimerReferenceMemory;
+                // ResourceInfo.SizeOfResource = sizeof(Timer*);
+                // ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTimerReferences;
+                // ShrinkResourcePool(ResourceInfo,Engine);
                 RebuildReferences(Engine->TimerReferences,Engine->Timers,sizeof(struct Timer),Engine->Resource.AllocatedTimerMemory);
             }
             return(RETURN_SUCCESS);
@@ -827,13 +845,12 @@ int8 DestroyGamepad(Gamepad* DGamepad, Engine* Engine)
                 ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedGamepadMemory;
                 ResourceInfo.SizeOfResource = sizeof(struct Gamepad);
                 ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfGamepads;
-                printf("%d",ResourceInfo.NumberOfResources);
                 ShrinkResourcePool(ResourceInfo,Engine);
-                ResourceInfo.Pointer = &Engine->Input.GamepadReferences;
-                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedGamepadReferenceMemory;
-                ResourceInfo.SizeOfResource = sizeof(Gamepad*);
-                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfGamepadReferences;
-                ShrinkResourcePool(ResourceInfo,Engine);
+                // ResourceInfo.Pointer = &Engine->Input.GamepadReferences;
+                // ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedGamepadReferenceMemory;
+                // ResourceInfo.SizeOfResource = sizeof(Gamepad*);
+                // ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfGamepadReferences;
+                // ShrinkResourcePool(ResourceInfo,Engine);
                 RebuildReferences(Engine->Input.GamepadReferences,Engine->Input.Gamepads,sizeof(struct Gamepad),Engine->Resource.AllocatedGamepadMemory);
             }
             return(RETURN_SUCCESS);

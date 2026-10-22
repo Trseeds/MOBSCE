@@ -6,236 +6,163 @@ Edit these functions to free the appropriate resources inside the custom data fu
 and then free themselves, called by the engine. Do NOT Free the objects themselves, this
 will result in a crash.
 */
-/***************************************************************************************/
 void SpriteFreeFunction(void* SpritePtr)
 {
     Sprite* FSprite = (Sprite*)SpritePtr;
-    free(FSprite->CustomData);
+    if(FSprite->CustomData)
+    {
+        free(FSprite->CustomData);
+    }
 }
 
 void ActorFreeFunction(void* ActorPtr)
 {
     Actor* FActor = (Actor*)ActorPtr;
-    free(FActor->CustomData);
+    if(FActor->CustomData)
+    {
+        free(FActor->CustomData);
+    }
 }
-/***************************************************************************************/
 
-/*SPRITE AND ACTOR ROUTINES*************************************************************/
+
 
 void AlignSpriteToActor(Sprite* Sprite, Engine* Engine)
-{   
-    Actor* Actor = Engine->ActorReferences[Sprite->ActorReferenceIndex];
+{
+    SpriteRenderParameters* SRP = &Sprite->RenderParameters;
+    CSD* CD = Sprite->CustomData;
+    Actor* Actor = Engine->ActorReferences[CD->ActorReference];
     if(Actor)
     {
-        if(Actor->ID == Sprite->ExpectedActorID)
+        if(Actor->ID == CD->ActorID)
         {
-            Sprite->RenderParameters.Position.X = Actor->Position.X;
-            Sprite->RenderParameters.Position.Y = Actor->Position.Y;
+            SRP->Position.X = Actor->Position.X;
+            SRP->Position.Y = Actor->Position.Y;
         }
     }
 }
 
-void ActorScreenWrap(Actor* Actor, Engine* Engine)
+void ActorScreenWrap(uint32 ActorRef, Engine* Engine)
 {
-    if(Actor->Position.X > Engine->Video.LogicalDimensions.X)
+    Actor* Actor = Engine->ActorReferences[ActorRef];
+    FVector2* AP = &Actor->Position;
+    Vector2* LD = &Engine->Video.LogicalDimensions;
+    if(AP->X < 0)
     {
-        Actor->Position.X = 0;
+        AP->X = LD->X;
     }
-    if(Actor->Position.X < 0)
+    if(AP->X > LD->X)
     {
-        Actor->Position.X = Engine->Video.LogicalDimensions.X;
+        AP->X = 0;
     }
-    if(Actor->Position.Y > Engine->Video.LogicalDimensions.Y)
+    if(AP->Y < 0)
     {
-        Actor->Position.Y = 0;
+        AP->Y = LD->Y;
     }
-    if(Actor->Position.Y < 0)
+    if(AP->Y > LD->Y)
     {
-        Actor->Position.Y = Engine->Video.LogicalDimensions.Y;
+        AP->Y = 0;
     }
 }
 
-void ApplyPhysics(Actor* Actor)
+void ApplyPhysics(uint32 ActorRef, Engine* Engine)
 {
-    CAD* PhysProps = Actor->CustomData;
-    PhysProps->Velocity.X *= 0.99;
-    PhysProps->Velocity.Y *= 0.99;
-    Actor->Position.X += PhysProps->Velocity.X;
-    Actor->Position.Y += PhysProps->Velocity.Y;
+    Actor* A = Engine->ActorReferences[ActorRef];
+    CADGeneric* CD = A->CustomData;
+    CD->Physics.Velocity.X *= CD->Physics.Drag;
+    CD->Physics.Velocity.Y *= CD->Physics.Drag;
+    A->Position.X += CD->Physics.Velocity.X;
+    A->Position.Y += CD->Physics.Velocity.Y;
 }
 
 void PlayerRoutine(Actor* Player, Engine* Engine)
 {
-    //ActorScreenWrap(Player,Engine);
-    ApplyPhysics(Player);
-    CAD* CD = Player->CustomData;
-    if(Engine->Input.KeysDown[K_UP])// || Engine->Input.GamepadButtonsDown[GP_DP_UP])
+    CADPlayer* CD = Player->CustomData;
+    Input* I = &Engine->Input;
+    bool* KD = I->KeysDown;
+    int PN = CD->PlayerNumber;
+    
+    if(KD[PlayerKeybinds[PN][PB_UP]])
     {
-        CD->Velocity.Y -= 0.5;
+        CD->Physics.Velocity.Y -= CD->Physics.MoveSpeed;
     }
-    if(Engine->Input.KeysDown[K_DOWN])// || Engine->Input.GamepadButtonsDown[GP_DP_DOWN])
+    if(KD[PlayerKeybinds[PN][PB_DOWN]])
     {
-        CD->Velocity.Y += 0.5;
+        CD->Physics.Velocity.Y += CD->Physics.MoveSpeed;
     }
-    if(Engine->Input.KeysDown[K_LEFT])// || Engine->Input.GamepadButtonsDown[GP_DP_LEFT])
+    if(KD[PlayerKeybinds[PN][PB_LEFT]])
     {
-        CD->Velocity.X -= 0.5;
+        CD->Physics.Velocity.X -= CD->Physics.MoveSpeed;
     }
-    if(Engine->Input.KeysDown[K_RIGHT])// || Engine->Input.GamepadButtonsDown[GP_DP_RIGHT])
+    if(KD[PlayerKeybinds[PN][PB_RIGHT]])
     {
-        CD->Velocity.X += 0.5;
+        CD->Physics.Velocity.X += CD->Physics.MoveSpeed;
     }
-    Player->Position.Y += Engine->Input.VerticalMouseScroll;
-    Player->Position.X += Engine->Input.HorizontalMouseScroll;
-    if(Engine->Input.MouseDown[MB_LEFT])
-    {
-        Player->Position.X = Engine->Input.MousePosition.X;
-        Player->Position.Y = Engine->Input.MousePosition.Y;
-    }
-    if(Engine->Input.MouseDown[MB_RIGHT])
-    {
-        Player->Position.X = Engine->Input.MousePosition.Y;
-        Player->Position.Y = Engine->Input.MousePosition.X;
-    }
-    if(Engine->Input.MouseDown[MB_MIDDLE])
-    {
-        Player->Position.X = GetRandomNumber(0,640);
-        Player->Position.Y = GetRandomNumber(0,480);
-    }
-    if(Engine->Input.GamepadReferences[0])
-    {
-        Gamepad* G = Engine->Input.GamepadReferences[0];
-        CD->Velocity.X += G->Sticks[GP_STK_LEFT_X]/2;
-        CD->Velocity.Y += G->Sticks[GP_STK_LEFT_Y]/2;
-        if(G->ButtonsDown[GP_DP_UP])
-        {
-            CD->Velocity.Y -= 0.5;
-        }
-        if(G->ButtonsDown[GP_DP_DOWN])
-        {
-            CD->Velocity.Y += 0.5;
-        }
-        if(G->ButtonsDown[GP_DP_LEFT])
-        {
-            CD->Velocity.X -= 0.5;
-        }
-        if(G->ButtonsDown[GP_DP_RIGHT])
-        {
-            CD->Velocity.X += 0.5;
-        }
-        if(G->Sticks[GP_STK_RIGHT_X] > 0.3)
-        {
-            Player->Position.X++;
-        }
-        if(G->Sticks[GP_STK_RIGHT_X] < -0.3)
-        {
-            Player->Position.X--;
-        }
-        if(G->Sticks[GP_STK_RIGHT_Y] > 0.3)
-        {
-            Player->Position.Y++;
-        }
-        if(G->Sticks[GP_STK_RIGHT_Y] < -0.3)
-        {
-            Player->Position.Y--;
-        }
-    }
+
+    ActorScreenWrap(Player->ReferenceIndex,Engine);
+    ApplyPhysics(Player->ReferenceIndex,Engine);
 }
 
 void MonsterRoutine(Actor* Monster, Engine* Engine)
 {
-    ActorScreenWrap(Monster,Engine);
-    ApplyPhysics(Monster);
-    CAD* CD = Monster->CustomData;
-    Actor* Target = Engine->ActorReferences[CD->TargetReferenceIndex];
-    if(Target->ID != CD->TargetID)
-    {
-        return;
-    }
+    ActorScreenWrap(Monster->ReferenceIndex,Engine);
+    ApplyPhysics(Monster->ReferenceIndex,Engine);
 
-    if(Monster->Position.X < Target->Position.X)
+    if(!(Engine->Clock.TotalTicks % 5))
     {
-        CD->Velocity.X += 0.2;
-    }
-    if(Monster->Position.X > Target->Position.X)
-    {
-        CD->Velocity.X -= 0.2;
-    }
-    if(Monster->Position.Y < Target->Position.Y)
-    {
-        CD->Velocity.Y += 0.2;
-    }
-    if(Monster->Position.Y > Target->Position.Y)
-    {
-        CD->Velocity.Y -= 0.2;
+        CADMonster* CD = Monster->CustomData;
+        Actor* Target = NULL;
+        if(CD->TargetReferenceIndex != SENTINEL_OBJECT)
+        {
+            Target = Engine->ActorReferences[CD->TargetReferenceIndex];
+        }
+
+        if(Target)
+        {
+            if(Target->ID == CD->TargetID)
+            {
+                *(&CD->TargetPosition) = (FVector2){Target->Position.X,Target->Position.Y};
+            }
+        }
+        else
+        {
+            if(!(Engine->Clock.TotalTicks % 60))
+            {
+                *(&CD->TargetPosition) = (FVector2){GetRandomNumber(0,Engine->Video.LogicalDimensions.X),GetRandomNumber(0,Engine->Video.LogicalDimensions.Y)};
+                uint32 AR = GetActorByName("Player",Engine);
+                if(AR != SENTINEL_OBJECT)
+                {
+                    CD->TargetReferenceIndex = AR;
+                    CD->TargetID = Engine->ActorReferences[AR]->ID;
+                }
+            }
+        }
+
+        if(Monster->Position.X < CD->TargetPosition.X)
+        {
+            CD->Physics.Velocity.X += CD->Physics.MoveSpeed;
+        }
+        if(Monster->Position.X > CD->TargetPosition.X)
+        {
+            CD->Physics.Velocity.X -= CD->Physics.MoveSpeed;
+        }
+        if(Monster->Position.Y < CD->TargetPosition.Y)
+        {
+            CD->Physics.Velocity.Y += CD->Physics.MoveSpeed;
+        }
+        if(Monster->Position.Y > CD->TargetPosition.Y)
+        {
+            CD->Physics.Velocity.Y -= CD->Physics.MoveSpeed;
+        }
     }
 }
 
-void UpdateDigit(int Reference, int Divisor, int Data, Engine* Engine)
-{
-    Sprite* Digit = Engine->SpriteReferences[Reference];
-    Digit->RenderParameters.Origin.X = (32 * ((Data / Divisor) % 10) + 1536);
-}
-/*SPRITE AND ACTOR ROUTINES END*********************************************************/
 
-void CreateFPSCounter(int* References, Engine* Engine)
-{
-    Vector3 Position = {0,0,1000};
-    Vector4 Origin = {0,0,32,32};
-    Vector2 Dimensions = {32,32};
-    References[0] = CreateSprite("FPS Digit 100,000",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
-    Position.X += 32;
-    References[1] = CreateSprite("FPS Digit 10,000",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
-    Position.X += 32;
-    References[2] = CreateSprite("FPS Digit 1,000",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
-    Position.X += 32;
-    References[3] = CreateSprite("FPS Digit 100",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
-    Position.X += 32;
-    References[4] = CreateSprite("FPS Digit 10",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
-    Position.X += 32;
-    References[5] = CreateSprite("FPS Digit 1",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
-}
-
-void CreateObjectCounter(int* References, Engine* Engine)
-{
-    Vector3 Position = {0,32,1000};
-    Vector4 Origin = {0,0,32,32};
-    Vector2 Dimensions = {32,32};
-    References[0] = CreateSprite("OBJ Digit 100,000",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
-    Position.X += 32;
-    References[1] = CreateSprite("OBJ Digit 10,000",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
-    Position.X += 32;
-    References[2] = CreateSprite("OBJ Digit 1,000",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
-    Position.X += 32;
-    References[3] = CreateSprite("OBJ Digit 100",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
-    Position.X += 32;
-    References[4] = CreateSprite("OBJ Digit 10",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
-    Position.X += 32;
-    References[5] = CreateSprite("OBJ Digit 1",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
-}
-
-void CreateSpriteCounter(int* References, Engine* Engine)
-{
-    Vector3 Position = {0,64,1000};
-    Vector4 Origin = {0,0,32,32};
-    Vector2 Dimensions = {32,32};
-    References[0] = CreateSprite("SPR Digit 100,000",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
-    Position.X += 32;
-    References[1] = CreateSprite("SPR Digit 10,000",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
-    Position.X += 32;
-    References[2] = CreateSprite("SPR Digit 1,000",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
-    Position.X += 32;
-    References[3] = CreateSprite("SPR Digit 100",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
-    Position.X += 32;
-    References[4] = CreateSprite("SPR Digit 10",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
-    Position.X += 32;
-    References[5] = CreateSprite("SPR Digit 1",Position,Origin,Dimensions,TXTR_FONT,NULL,NULL,NULL,Engine);
-}
 
 void CacheTexturesGame(Engine* Engine)
 {
     char Buffer[STRING_BUFFER_SIZE];
     CacheTexture(GetAssetPath("Assets/Images/Backgrounds/TestBG.png",Buffer,Engine),Engine);
+    CacheTexture(GetAssetPath("Assets/Images/Backgrounds/EvilBG.png",Buffer,Engine),Engine);
     CacheTexture(GetAssetPath("Assets/Images/Sprites/Player.png",Buffer,Engine),Engine);
     CacheTexture(GetAssetPath("Assets/Images/Sprites/Monster.png",Buffer,Engine),Engine);
     CacheTexture(GetAssetPath("Assets/Images/Sprites/Font.png",Buffer,Engine),Engine);
@@ -250,112 +177,102 @@ void CacheSoundsAndMusicGame(Engine* Engine)
 
 void CreateBGGame(Engine* Engine)
 {
-    Vector2 ActorPosition;
-    Vector2 ActorDimensions;
-    int Voice = 0;
-    CustomActorData* ActorData = calloc(1,sizeof(CAD));
-    ActorPosition.X = 0; ActorPosition.Y = 0;
-    ActorDimensions.X = 1280; ActorDimensions.Y = 960;
-    uint32 AR = CreateActor("Background",ActorPosition,ActorDimensions,Voice,ActorData,NULL,Engine);
-    Actor* Actor;
-    if(AR != SENTINEL_OBJECT)
-    {
-        Actor = Engine->ActorReferences[AR];
-    }
-    /***********************************************************************************/
-    Vector3 Position;
-    Vector4 Origin;
-    Vector2 Dimensions;
-    CustomSpriteData* SpriteData = calloc(1,sizeof(CAD));
-    Position.X = 0; Position.Y = 0; Position.Z = 0;
-    Origin.X = 0; Origin.Y = 0; Origin.Z = 1280; Origin.W = 960;
-    Dimensions.X = 1280; Dimensions.Y = 960;
-    CreateSprite("Background",Position,Origin,Dimensions,TXTR_BG,SpriteData,Actor,NULL,Engine);
+    Vector3 SP = {0,0,0};
+    Vector4 SO = {0,0,640,480};
+    Vector2 SD = {640,480};
+    void* CSD = NULL;
+    int ST = TXTR_EBG;
+    CreateSprite("BackGround",SP,SO,SD,ST,CSD,NULL,NULL,Engine);
 }
 
-void CreatePlayerGame(Engine* Engine)
+void CreatePlayerGame(uint8 PlayerNumber, Engine* Engine)
 {
-    Vector2 ActorPosition;
-    Vector2 ActorDimensions;
-    int Voice = 0;
-    CustomActorData* ActorData = calloc(1,sizeof(CAD));
-    ActorPosition.X = 100; ActorPosition.Y = 100;
-    ActorDimensions.X = 16; ActorDimensions.Y = 16;
-    uint32 AR = CreateActor("Player",ActorPosition,ActorDimensions,Voice,ActorData,&PlayerRoutine,Engine);
-    Actor* Actor;
+    Vector2 AP = {GetRandomNumber(0,Engine->Video.LogicalDimensions.X),GetRandomNumber(0,Engine->Video.LogicalDimensions.Y)};
+    Vector2 AD = {16,16};
+    int AV = 0;
+    CADPlayer* CAD = calloc(1,sizeof(struct CADPlayer));
+    *CAD = (CADPlayer)
+    {
+        (CADHeader){CAD_PLAYER,ACT_PLAYER},
+        (CADPhysics){(FVector2){0.00,0.00},0.50,0.99,0.75},
+        PlayerNumber
+    };
+    uint32 AR = CreateActor("Player",AP,AD,AV,CAD,&PlayerRoutine,Engine);
+    Actor* A;
     if(AR != SENTINEL_OBJECT)
     {
-        Actor = Engine->ActorReferences[AR];
+        A = Engine->ActorReferences[AR];
     }
-    /***********************************************************************************/
-    Vector3 SpritePosition;
-    Vector4 SpriteOrigin;
-    Vector2 SpriteDimensions;
-    CustomSpriteData* SpriteData = calloc(1,sizeof(CAD));
-    SpritePosition.X = 0; SpritePosition.Y = 0; SpritePosition.Z = 2;
-    SpriteOrigin.X = 0; SpriteOrigin.Y = 0; SpriteOrigin.Z = 16; SpriteOrigin.W = 16;
-    SpriteDimensions.X = 16; SpriteDimensions.Y = 16;
-    CreateSprite("Player",SpritePosition,SpriteOrigin,SpriteDimensions,TXTR_PLAYER,SpriteData,Actor,&AlignSpriteToActor,Engine);
+    else
+    {
+        return;
+    }
+
+    Vector3 SP = {AP.X,AP.Y,1000};
+    Vector4 SO = {0,0,16,16};
+    Vector2 SD = {16,16};
+    CSD* CSDD = calloc(1,sizeof(struct CSD));
+    *CSDD = (CSD){A->ReferenceIndex,A->ID};
+    int ST = TXTR_PLAYER;
+    CreateSprite("Player",SP,SO,SD,ST,CSDD,A,AlignSpriteToActor,Engine);
 }
 
 void CreateMonsterGame(Engine* Engine)
 {
-    Vector2 ActorPosition;
-    Vector2 ActorDimensions;
-    int Voice = Engine->IDCounter + 1;
-    CustomActorData* ActorData = calloc(1,sizeof(CAD));
-    ActorPosition.X = 300; ActorPosition.Y = 300;
-    ActorDimensions.X = GetRandomNumber(8,64); ActorDimensions.Y = GetRandomNumber(8,64);
-    uint32 AR = CreateActor("Monster",ActorPosition,ActorDimensions,Voice,ActorData,&MonsterRoutine,Engine);
-    Actor* Actor;
+    Vector2 AP = {GetRandomNumber(0,Engine->Video.LogicalDimensions.X),GetRandomNumber(0,Engine->Video.LogicalDimensions.Y)};
+    Vector2 AD = {32,32};
+    int AV = 0;
+    CADMonster* CAD = calloc(1,sizeof(struct CADMonster));
+    *CAD = (CADMonster)
+    {
+        (CADHeader){CAD_MONSTER,ACT_MONSTER},
+        (CADPhysics){(FVector2){0.00,0.00},1.50,0.99,0.75},
+        SENTINEL_OBJECT,
+        0,
+        (FVector2){0.00,0.00}
+    };
+    uint32 AR = CreateActor("Monster",AP,AD,AV,CAD,&MonsterRoutine,Engine);
+    Actor* A;
     if(AR != SENTINEL_OBJECT)
     {
-        Actor = Engine->ActorReferences[AR];
-        ((CAD*)(Actor->CustomData))->TargetReferenceIndex = GetActorByName("Player",Engine);
-        ((CAD*)(Actor->CustomData))->TargetID = Engine->ActorReferences[((CAD*)(Actor->CustomData))->TargetReferenceIndex]->ID;
+        A = Engine->ActorReferences[AR];
     }
-    /***********************************************************************************/
-    Vector3 SpritePosition;
-    Vector4 SpriteOrigin;
-    Vector2 SpriteDimensions;
-    CustomSpriteData* SpriteData = calloc(1,sizeof(CSD));
-    SpritePosition.X = 0; SpritePosition.Y = 0; SpritePosition.Z = 1;
-    SpriteOrigin.X = 0; SpriteOrigin.Y = GetRandomNumber(0,4)*32; SpriteOrigin.Z = 32; SpriteOrigin.W = 32;
-    SpriteDimensions.X = ActorDimensions.X; SpriteDimensions.Y = ActorDimensions.Y;
-    uint32 SR = CreateSprite("Monster",SpritePosition,SpriteOrigin,SpriteDimensions,TXTR_MONSTER,SpriteData,Actor,&AlignSpriteToActor,Engine);
-    Sprite* Sprite;
+    else
+    {
+        return;
+    }
+
+    Vector3 SP = {AP.X,AP.Y,1};
+    Vector4 SO = {0,0,32,32};
+    Vector2 SD = {32,32};
+    CSD* CSDD = calloc(1,sizeof(struct CSD));
+    *CSDD = (CSD){A->ReferenceIndex,A->ID};
+    int ST = TXTR_MONSTER;
+    uint32 SR = CreateSprite("Monster",SP,SO,SD,ST,CSDD,A,AlignSpriteToActor,Engine);
     if(SR != SENTINEL_OBJECT)
     {
-        Sprite = Engine->SpriteReferences[SR];
+        Sprite* S = Engine->SpriteReferences[SR];
+        S->RenderParameters.Tint = (Vector3){GetRandomNumber(0,255),GetRandomNumber(0,255),GetRandomNumber(0,255)};
     }
-    Sprite->RenderParameters.Tint.X = GetRandomNumber(0,255);
-    Sprite->RenderParameters.Tint.Y = GetRandomNumber(0,255);
-    Sprite->RenderParameters.Tint.Z = GetRandomNumber(0,255);
 }
 
-void InitGame(int* FPS, int* OBJ, int* SPR, Engine* Engine)
+
+
+void InitGame(Engine* Engine)
 {
     CacheTexturesGame(Engine);
     CacheSoundsAndMusicGame(Engine);
     CreateBGGame(Engine);
-    CreatePlayerGame(Engine);
-    CreateMonsterGame(Engine);
-    CreateFPSCounter(FPS,Engine);
-    CreateObjectCounter(OBJ,Engine);
-    CreateSpriteCounter(SPR,Engine);
+    CreatePlayerGame(1,Engine);
     PlayMusic(MUS_WFRTP,Engine);
 }
 
+
+
 int main(int argc, char* argv[])
 {
-    Engine* Engine = InitEngine("Config.ini","MOBSCE Demo","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL,100,true,true,NULL);
-
-    int FPSCounter[6];
-    int OBJCounter[6];
-    int SPRCounter[6];
-    InitGame(FPSCounter,OBJCounter,SPRCounter,Engine);
-
-    uint32 TR = CreateTimer(COUNT_TO,FRAMES,10000,Engine);
+    Engine* Engine = InitEngine("Config.ini","MOBSCE Demo","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL,1000,true,true,NULL);
+    InitGame(Engine);
 
     while(Engine->Running)
     {
@@ -369,167 +286,34 @@ int main(int argc, char* argv[])
             }
         }
 
-        if(Engine->Input.KeysUp[K_ESCAPE])
+        if(Engine->Input.KeysUp[GM_QUIT])
         {
             CleanupEngine(Engine);
             OSMemoryFree(Engine,sizeof(struct Engine));
             return(0);
         }
-        if(Engine->Input.KeysUp[K_R])
+        if(Engine->Input.KeysUp[GM_RESTART])
         {
             CleanupEngine(Engine);
             OSMemoryFree(Engine,sizeof(struct Engine));
-            Config c = {44100,2,1024,32760,100,100,false,320,240,4,0,0,true,true,2.00};
-            Engine = InitEngine(NULL,"MOBSCE Demo","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL,100000,true,true,&c);
-            InitGame(FPSCounter,OBJCounter,SPRCounter,Engine);
+            Engine = InitEngine("Config.ini","MOBSCE Demo","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL,100000,true,true,NULL);
+            InitGame(Engine);
         }
-        if(Engine->Input.KeysDown[K_S])
+        if(Engine->Input.KeysUp[K_S])
         {
-            CreateMonsterGame(Engine);
-        }
-        if(Engine->Input.KeysUp[K_O])
-        {
-            CreatePlayerGame(Engine);
-        }
-        if(Engine->Input.KeysDown[K_O])
-        {
-            if(Engine->Input.KeysUp[K_K])
+            for(int i = 0; i < 1000; i++)
             {
-                uint32 SR = GetSpriteByName("Player",Engine);
-                Sprite* Sprite;
-                if(SR != SENTINEL_OBJECT)
-                {
-                    Sprite = Engine->SpriteReferences[SR];
-                    if(Sprite && (Sprite->ActorReferenceIndex != SENTINEL_OBJECT))
-                    {
-                        Actor* Actor = Engine->ActorReferences[Sprite->ActorReferenceIndex];
-                        if(Actor)
-                        {
-                            PlaySound(SND_COUGH,Actor->Voice,ScreenVolume(Actor->Position.X,10,Engine),ScreenPan(Actor->Position.X,10,Engine),Engine);
-                        }
-                        DestroySprite(Sprite,&SpriteFreeFunction,Engine);
-                        DestroyActor(Actor,&ActorFreeFunction,Engine);   
-                    }
-                }
+                CreateMonsterGame(Engine);
             }
         }
-        if(Engine->Input.KeysDown[K_K])
+        if(Engine->Clock.TotalTicks && (int)(Engine->Clock.FrameRate))
         {
-            uint32 SR = GetSpriteByName("Monster",Engine);
-            Sprite* Sprite;
-            if(SR != SENTINEL_OBJECT)
+            if(!(Engine->Clock.TotalTicks % (int)(Engine->Clock.FrameRate)))
             {
-                Sprite = Engine->SpriteReferences[SR];
-                if(Sprite && (Sprite->ActorReferenceIndex != SENTINEL_OBJECT))
-                {
-                    Actor* Actor = Engine->ActorReferences[Sprite->ActorReferenceIndex];
-                    if(Actor)
-                    {
-                        PlaySound(SND_COUGH,Actor->Voice,ScreenVolume(Actor->Position.X,10,Engine),ScreenPan(Actor->Position.X,10,Engine),Engine);
-                    }
-                    DestroySprite(Sprite,&SpriteFreeFunction,Engine);
-                    DestroyActor(Actor,&ActorFreeFunction,Engine);   
-                }
+                //printf("\r%d",(int)(Engine->Clock.FrameRate));
+                //printf("\r%d",Engine->Resource.NumberOfActors+Engine->Resource.NumberOfSprites);
             }
         }
-
-        if(Engine->Input.KeysDown[K_LEFTCONTROL] || Engine->Input.KeysDown[K_RIGHTCONTROL])
-        {
-            if(Engine->Input.KeysDown[K_LEFTSHIFT] || Engine->Input.KeysDown[K_RIGHTSHIFT])
-            {
-                if(Engine->Input.KeysUp[K_K])
-                {
-                    for(int i = 0; i < Engine->Resource.AllocatedActorMemory; i++)
-                    {
-                        DestroyActor(Engine->ActorReferences[i],ActorFreeFunction,Engine);
-                    }
-                    for(int i = 0; i < Engine->Resource.AllocatedSpriteMemory; i++)
-                    {
-                        DestroySprite(Engine->SpriteReferences[i],SpriteFreeFunction,Engine);
-                    }
-                }
-            }
-            if(Engine->Input.KeysDown[K_S])
-            {
-                for(int i = 0; i < 100; i++)
-                {
-                    CreateMonsterGame(Engine);
-                }
-            }
-            if(Engine->Input.KeysUp[K_X])
-            {
-                for(int i = 0; i < 100000; i++)
-                {
-                    CreateMonsterGame(Engine);
-                }
-            }
-        }
-
-        if(Engine->Input.KeysUp[K_P])
-        {
-            Actor* A = Engine->ActorReferences[GetActorByName("Player",Engine)];
-            PlaySound(SND_COUGH,A->Voice,ScreenVolume(A->Position.X,500,Engine),ScreenPan(A->Position.X,500,Engine),Engine);
-        }
-
-        if(Engine->Input.KeysDown[K_M])
-        {
-            Engine->Audio.Muted =! Engine->Audio.Muted;
-        }
-
-        if(Engine->Input.KeysUp[K_I])
-        {
-            int soe = 0;
-            soe += sizeof(Engine);
-            soe += sizeof(struct Sprite) * Engine->Resource.AllocatedSpriteMemory;
-            soe += sizeof(Sprite*) * Engine->Resource.AllocatedSpriteReferenceMemory;
-            soe += sizeof(struct Actor) * Engine->Resource.AllocatedActorMemory;
-            soe += sizeof(Actor*) * Engine->Resource.AllocatedActorReferenceMemory;
-            soe += sizeof(struct Timer) * Engine->Resource.AllocatedTimerMemory;
-            soe += sizeof(Timer*) * Engine->Resource.AllocatedTimerReferenceMemory;
-            soe += sizeof(struct Gamepad) * Engine->Resource.AllocatedGamepadMemory;
-            soe += sizeof(Gamepad*) * Engine->Resource.AllocatedGamepadReferenceMemory;
-            soe += sizeof(SDL_Texture*) * Engine->Resource.AllocatedTextureMemory;
-            soe += sizeof(Mix_Chunk*) * Engine->Resource.AllocatedSoundMemory;
-            soe += sizeof(Mix_Music*) * Engine->Resource.AllocatedMusicMemory;
-
-            printf("Size in bytes: %d\nSize in Kilobytes: %f\nSize in Megabytes: %f\n\n",soe,soe/1024.0,(soe/1024.0)/1024.0);
-        }
-
-        if(Engine->Input.KeysUp[K_T])
-        {
-            RestartVideo(Engine);
-        }
-
-        if(Engine->TimerReferences[TR])
-        {
-            if(Engine->TimerReferences[TR]->Expired)
-            {
-                for(int i = 0; i < 100; i++)
-                {
-                    CreateMonsterGame(Engine);
-                }
-                DestroyTimer(Engine->TimerReferences[TR],Engine);
-            }
-        }
-
-        UpdateDigit(FPSCounter[0],100000,Engine->Clock.FrameRate,Engine);
-        UpdateDigit(FPSCounter[1],10000,Engine->Clock.FrameRate,Engine);
-        UpdateDigit(FPSCounter[2],1000,Engine->Clock.FrameRate,Engine);
-        UpdateDigit(FPSCounter[3],100,Engine->Clock.FrameRate,Engine);
-        UpdateDigit(FPSCounter[4],10,Engine->Clock.FrameRate,Engine);
-        UpdateDigit(FPSCounter[5],1,Engine->Clock.FrameRate,Engine);
-        UpdateDigit(OBJCounter[0],100000,Engine->Resource.NumberOfActors,Engine);
-        UpdateDigit(OBJCounter[1],10000,Engine->Resource.NumberOfActors,Engine);
-        UpdateDigit(OBJCounter[2],1000,Engine->Resource.NumberOfActors,Engine);
-        UpdateDigit(OBJCounter[3],100,Engine->Resource.NumberOfActors,Engine);
-        UpdateDigit(OBJCounter[4],10,Engine->Resource.NumberOfActors,Engine);
-        UpdateDigit(OBJCounter[5],1,Engine->Resource.NumberOfActors,Engine);
-        UpdateDigit(SPRCounter[0],100000,Engine->Resource.NumberOfSprites,Engine);
-        UpdateDigit(SPRCounter[1],10000,Engine->Resource.NumberOfSprites,Engine);
-        UpdateDigit(SPRCounter[2],1000,Engine->Resource.NumberOfSprites,Engine);
-        UpdateDigit(SPRCounter[3],100,Engine->Resource.NumberOfSprites,Engine);
-        UpdateDigit(SPRCounter[4],10,Engine->Resource.NumberOfSprites,Engine);
-        UpdateDigit(SPRCounter[5],1,Engine->Resource.NumberOfSprites,Engine);
 
         RunEngine(Engine);
     }

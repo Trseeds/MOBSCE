@@ -61,9 +61,10 @@ int64 LinearMap(int64 Number, int64 DomainMin, int64 DomainMax, int64 RangeMin, 
     return(RangeMin + (Number - DomainMin) * (RangeMax - RangeMin) / (DomainMax - DomainMin));
 }
 
-void SeedRNG()
+void SeedRNG(Engine* Engine)
 {
-    srand(time(NULL));
+    srand(Engine->Clock.RealTimeMS);
+    Engine->RandSeeded = true;
 }
 
 int64 GetRandomNumber(int64 Min, int64 Max)
@@ -86,7 +87,15 @@ int8 InitSDL(Engine* Engine)
 
     if(Engine->Config.Render)
     {
-        //Result = ImgInit(Engine->Video.) bleh
+        Result = IMG_Init(Engine->Video.Formats);
+        if(Result != Engine->Video.Formats)
+        {
+            Error Warning = {WARNING_SDL_FAILURE,"InitSDL","Failed to start SDL IMG.","\0", "\0"};
+            snprintf(Warning.Parameters,STRING_BUFFER_SIZE,Parameters,Engine);
+            snprintf(Warning.Description,STRING_BUFFER_SIZE,"IMG_Init failed and returned %d.",Result);
+            ThrowWarning(&Warning,Engine);
+            return(WARNING_SDL_FAILURE);
+        }
     }
 
     if(Engine->Config.Audiate)
@@ -175,73 +184,11 @@ char* GetAssetPath(char* Asset, char* Output, Engine* Engine)
     return(WARNING_NULL);
 }
 
-int8 TickTimers(Engine* Engine) //i've {created {a {monster}}}
-{
-    if(Engine)
-    {
-        Timer* T = Engine->Timers;
-        int ATM = Engine->Resource.AllocatedTimerMemory;
-        for(int i = 0; i < ATM; i++)
-        {
-            if(T[i].IsUsed)
-            {
-                Timer* CT = &T[i];
-                if(!CT->Expired)
-                {
-                    if(CT->TimerType == COUNT_TO)
-                    {
-                        if(CT->Counter >= CT->StopAt)
-                        {
-                            CT->Expired = true;
-                        }
-                        else
-                        {
-                            CT->Counter++;
-                        }
-                    }
-                    if(CT->TimerType == WAIT_UNTIL)
-                    {
-                        if(CT->UnitType == FRAMES)
-                        {
-                            if(CT->StopAt <= Engine->Clock.TotalFrames)
-                            {
-                                CT->Expired = true;
-                            }
-                        }
-                        if(CT->UnitType == REALTIME)
-                        {
-                            //Under construction
-                            ;
-                        }
-                    }
-                }
-            }
-        }
-        return(RETURN_SUCCESS);
-    }
-    return(ERROR_INVALID_ENGINE);
-}
-
-int8 KeepTime(Engine* Engine)
-{
-    if(Engine)
-    {
-        Clock* C = &Engine->Clock;
-        C->PreviousTime = C->CurrentTime;
-        C->CurrentTime = SDL_GetPerformanceCounter();
-        C->DeltaTime = (double)((C->CurrentTime-C->PreviousTime)/(double)SDL_GetPerformanceFrequency());
-        C->TotalFrames++;
-        C->RealTime = time(NULL);
-        C->FrameRate = (double)(1/C->DeltaTime);
-        return(RETURN_SUCCESS);
-    }
-    return(ERROR_INVALID_ENGINE);
-}
-
 Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, int8 ERROR_LEVEL, int8 WARNING_LEVEL, uint32 AllocationThreshold, bool Render, bool Audiate, Config* Config)
 {
     const char Parameters[] = "(char* ConfigFile: %s, char* WindowTitle: %s, char* WindowIconpath: %s, int ERROR_LEVEL: %d, int WARNING_LEVEL: %d, bool Render: %d, bool Audiate: %d, Config* Config: 0x%p)";
     Engine* NewEngine = (Engine*)OSMemoryAllocate(sizeof(Engine));
+    NewEngine->RandSeeded = false;
     if(!NewEngine)
     {
         Error Error = {ERROR_MEMORY,"InitEngine","Failed to allocate memory!","\0", "\0"};
@@ -371,12 +318,18 @@ int8 RunEngine(Engine* Engine)
 {
     if(Engine)
     {
+        // uint64 PTC = SDL_GetPerformanceCounter();
+        // uint64 OPTC = PTC;
         GetSDLEvents(Engine);
         GetInput(Engine);
+        // PTC = SDL_GetPerformanceCounter();
+        // printf("Input and Events: %d\n",PTC-OPTC);
         int ASM = Engine->Resource.AllocatedSpriteMemory;
         int AAM = Engine->Resource.AllocatedActorMemory;
         Sprite* S = Engine->Sprites;
         Actor* A = Engine->Actors;
+        // PTC = SDL_GetPerformanceCounter();
+        // OPTC = PTC;
         for(int i = 0; i < ASM; i++)
         {
             if(S[i].IsUsed)
@@ -397,13 +350,24 @@ int8 RunEngine(Engine* Engine)
                 }
             }
         }
+        // PTC = SDL_GetPerformanceCounter();
+        // printf("Actors and Sprites: %d\n",PTC-OPTC);
+        // PTC = SDL_GetPerformanceCounter();
+        // OPTC = PTC;
         KeepTime(Engine);
         TickTimers(Engine);
         MixMusicVolume(Engine);
+        // PTC = SDL_GetPerformanceCounter();
+        // printf("Time and Music: %d\n",PTC-OPTC);
+        // PTC = SDL_GetPerformanceCounter();
+        // OPTC = PTC;
         Render(Engine);
+        // PTC = SDL_GetPerformanceCounter();
+        // printf("Render: %d\n",PTC-OPTC);
+        // printf("\033[4a\r");
         return(RETURN_SUCCESS);
         //Clock a = Engine->Clock;
-        //printf("Current Time: %lu\nPrevious Time: %lu\nDelta Time: %f\nTotal Frames: %lu\nReal Time: %lu\nFramerate: %f\033[6A\r",a.CurrentTime,a.PreviousTime,a.DeltaTime,a.TotalFrames,a.RealTime,a.FrameRate);
+        //printf("Current Time: %lu\nPrevious Time: %lu\nDelta Time: %f\nTotal Frames: %lu\nReal Time: %lu\nFramerate: %f\033[6A\r",a.PerfTime,a.PrevPerfTime,a.DeltaTime,a.TotalTicks,a.RealTime,a.FrameRate);
         //return(RETURN_SUCCESS);
     }
     return(ERROR_INVALID_ENGINE);

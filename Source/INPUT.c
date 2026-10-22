@@ -104,7 +104,7 @@ int8 GetMouseInput(Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
-int8 GetGamepadInput(Engine* Engine) //i would fix this but its going to be demolished soon
+int8 GetGamepadInput(Engine* Engine)
 {
     if(Engine)
     {
@@ -195,7 +195,7 @@ int8 GetInput(Engine* Engine)
         Gamepad* G = Engine->Input.Gamepads;
         for(int i = 0; i < AGPM; i++)
         {
-            if(&G[i].IsUsed)
+            if(G[i].IsUsed)
             {
                 memset(&G[i].ButtonsUp,0,sizeof(G->ButtonsUp));
                 memset(&G[i].ButtonsDown,0,sizeof(G->ButtonsDown));
@@ -209,7 +209,7 @@ int8 GetInput(Engine* Engine)
 
         for(int i = 0; i < AGPM; i++)
         {
-            if(&G[i].IsUsed)
+            if(G[i].IsUsed)
             {
                 memcpy(&G[i].PreviousState,&G[i].ButtonsDown,sizeof(G->PreviousState));
                 memcpy(&G[i].PreviousTriggersState,&G[i].Triggers,sizeof(G->PreviousTriggersState));
@@ -222,35 +222,34 @@ int8 GetInput(Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
-int8 RumbleGamepad(Gamepad* Gamepad, int Strength, int Duration, Engine* Engine)
+int8 RumbleGamepad(Gamepad* Gamepad, uint8 Strength, uint32 Duration, Engine* Engine)
 {
+    const char Parameters[] = "(Gamepad* Gamepad: 0x%p, uint8 Strength: %d, uint32 Duration: %d, Engine* Engine: 0x%p)";
     if(Engine)
     {
-        // if(Engine->Input.GamepadIsConnected && Engine->Input.Gamepad)
-        // {
-        //     if(Strength < 0)
-        //     {
-        //         Strength = 0;
-        //     }
-        //     if(Strength > 100)
-        //     {
-        //         Strength = 100;
-        //     }
+        if(Gamepad)
+        {
+            if(Gamepad->Gamepad)
+            {
+                if(Strength > 100)
+                {
+                    Strength = 100;
+                }
 
-        //     Uint16 RealStrength = (Uint16)LinearMap(Strength,0,100,0,0xFFFF);
-
-        //     int Result = SDL_GameControllerRumble(Engine->Input.Gamepad,RealStrength,RealStrength,Duration);
-        //     if(Result < 0)
-        //     {
-        //         Error Error = {WARNING_IGNORABLE_FAILURE,"RumbleGamepad","Controller does not support rumble.","\0","\0"};
-        //         snprintf(Error.Parameters,STRING_BUFFER_SIZE,"(int Strength: %d, int Duration: %d, Engine* Engine: 0x%p)",Strength,Duration,Engine);
-        //         snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_GameControllerRumber failed and returned %d.",Result);
-        //         ThrowWarning(&Error,Engine);
-        //         return(WARNING_IGNORABLE_FAILURE);
-                
-        //     }
-        // }
-        return(RETURN_SUCCESS);
+                uint16 RealStrength = (uint16)LinearMap(Strength,0,100,0,(uint16)UNSIGNED_TYPE_MAX_VAL);
+                int Result = SDL_GameControllerRumble(Gamepad->Gamepad,RealStrength,RealStrength,Duration);
+                if(Result < 0)
+                {
+                    Error Error = {WARNING_SDL_FAILURE,"RumbleGamepad","Controller does not support rumble.","\0","\0"};
+                    snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Strength,Duration,Engine);
+                    snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_GameControllerRumber failed and returned %d.",Result);
+                    ThrowWarning(&Error,Engine);
+                    return(WARNING_SDL_FAILURE);
+                }
+                return(RETURN_SUCCESS);
+            }
+        }
+        return(WARNING_INVALID_PARAMETER);
     }
     return(ERROR_INVALID_ENGINE);
 }
