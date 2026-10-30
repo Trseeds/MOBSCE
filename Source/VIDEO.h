@@ -28,7 +28,6 @@ typedef struct Video {
 } Video;
 
 int8 InitVideo(Engine* Engine);
-int8 RestartVideo(Engine* Engine);
 int8 CleanupVideo(Engine* Engine);
 int8 DrawSprite(Sprite* Sprite, Engine* Engine);
 int8 Render(Engine* Engine);

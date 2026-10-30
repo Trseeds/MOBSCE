@@ -1,0 +1,14 @@
+Excessive creation and or destruction of objects inside of object routines is dangerous.
+    Doing such may trigger a reallocation of the object pool concerned.
+    This reallocation will: A. Move the base pointer of the pool. B. Resize the pool. C. Sort the objects, thus also moving them around inside the pool.
+    All while the engine is still iterating over this pool to run routines.
+    This is unlikely to cause an outright crash, but it may cause some routines to be run twice or never at all.
+    If you plan to do actor/sprite creation or destruction inside of an actor or sprite routine, try to minimize the amount of reallocations.
+    Alternatively, move those actions outside of the routine and outside of the engine runtime altogether.
+    (A better place would be main, with an event handler)
+
+Free Functions are important!
+    The ActorFreeFunction and SpriteFreeFunction methods are called blindly on ALL living actors/sprites during destruction AND cleanup.
+    Though it is unlikely to happen, these free functions may recieve an invalid object. It is better to check than to crash.
+    There is only allowed to be one method of these names and types, so it must be robust in handling all possible states of objects.
+    Do not try to free the object itself. This will certainly result in a crash or at the very least memory corruption.

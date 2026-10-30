@@ -47,25 +47,6 @@ int8 InitVideo(Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
-int8 RestartVideo(Engine* Engine)
-{
-    if(Engine)
-    {
-        ResourceInfo ResourceInfo;
-        ResourceInfo.Pointer = &Engine->Resource.Textures;
-        ResourceInfo.SizeOfResource = sizeof(SDL_Texture*);
-        ResourceInfo.FreeFunction = (void (*)(void*))&SDL_DestroyTexture;
-        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTextures;
-        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTextureMemory;
-        CleanupResourcePool(ResourceInfo,Engine);
-        InitResourcePool(ResourceInfo,Engine);
-        CleanupVideo(Engine);
-        InitVideo(Engine);
-        return(RETURN_SUCCESS);
-    }
-    return(ERROR_INVALID_ENGINE);
-}
-
 int8 CleanupVideo(Engine* Engine)
 {
     if(Engine)

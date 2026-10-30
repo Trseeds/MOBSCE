@@ -67,24 +67,17 @@ uint8 ScreenVolume(int32 X, uint32 EdgeDistance, Engine* Engine)
     return((uint8)Volume);
 }
 
-int8 PlaySound(uint32 SoundID, int32 Voice, uint8 Volume, uint8 Pan, Engine* Engine)
+int8 PlaySound(Mix_Chunk* Sound, int32 Voice, uint8 Volume, uint8 Pan, Engine* Engine)
 {
-    const char Parameters[] = "(int SoundID: %d, int Voice: %d, int Volume: %d, int Pan: %d, Engine* Engine: 0x%p)";
+    const char Parameters[] = "(Mix_Chunk* Sound: 0x%p, int Voice: %d, int Volume: %d, int Pan: %d, Engine* Engine: 0x%p)";
     if(Engine)
     {
-        if(SoundID > Engine->Resource.AllocatedSoundMemory)
+        
+        if(!Sound)
         {
-            if(!Engine->Resource.Sounds[SoundID])
-            {
-                Error Error = {WARNING_INVALID_PARAMETER,"PlaySound","Sound is not valid.","\0","\0"};
-                snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,SoundID,Voice,Volume,Pan,Engine);
-                snprintf(Error.Description,STRING_BUFFER_SIZE,"Pointer to sound is NULL. (derived from Engine->Resource.Sounds[SoundID], SoundID is out of bounds.)");
-                ThrowWarning(&Error,Engine);
-                return(WARNING_INVALID_PARAMETER);
-            }
-            Error Error = {WARNING_INVALID_PARAMETER,"PlaySound","Sound is not valid","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,SoundID,Voice,Volume,Pan,Engine);
-            snprintf(Error.Description,STRING_BUFFER_SIZE,"Sound provided does not and can not exist.");
+            Error Error = {WARNING_INVALID_PARAMETER,"PlaySound","Sound is not valid.","\0","\0"};
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Sound,Voice,Volume,Pan,Engine);
+            snprintf(Error.Description,STRING_BUFFER_SIZE,"Pointer to sound is NULL.");
             ThrowWarning(&Error,Engine);
             return(WARNING_INVALID_PARAMETER);
         }
@@ -117,7 +110,7 @@ int8 PlaySound(uint32 SoundID, int32 Voice, uint8 Volume, uint8 Pan, Engine* Eng
         else
         {
             Error Error = {WARNING_INVALID_PARAMETER,"PlaySound","Sound will not pan and volume will not change.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,SoundID,Voice,Volume,Pan,Engine);
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Sound,Voice,Volume,Pan,Engine);
             snprintf(Error.Description,STRING_BUFFER_SIZE,"Sounds played on channel -1 can't be panned and will not have their volume changed. Sound will play at an equal volume in both channels and that volume will be the maximum volume.");
             ThrowWarning(&Error,Engine);
             RealVolume = 128;
@@ -125,11 +118,11 @@ int8 PlaySound(uint32 SoundID, int32 Voice, uint8 Volume, uint8 Pan, Engine* Eng
 
         Mix_Volume(Voice,RealVolume);
         Mix_SetPanning(Voice,RPan[0],RPan[1]);
-        int Result = Mix_PlayChannel(Voice, Engine->Resource.Sounds[SoundID], 0);
+        int Result = Mix_PlayChannel(Voice, Sound, 0);
         if(Result < 0)
         {
             Error Error = {WARNING_SDL_FAILURE,"PlaySound","Could not play sound.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,SoundID,Voice,Volume,Pan,Engine);
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Sound,Voice,Volume,Pan,Engine);
             snprintf(Error.Description,STRING_BUFFER_SIZE,"Mix_PlayChannel failed and returned %d.",Result);
             ThrowWarning(&Error,Engine);
             return(WARNING_SDL_FAILURE);
@@ -155,39 +148,31 @@ int8 MixMusicVolume(Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
-int8 PlayMusic(int32 MusicID, Engine* Engine)
+int8 PlayMusic(Mix_Music* Music, int8 Loops, Engine* Engine)
 {
-    const char Parameters[] = "(int MusicID: %d, Engine* Engine: 0x%p)";
+    const char Parameters[] = "(Mix_Music: 0x%p, Engine* Engine: 0x%p)";
     if(Engine)
     {
-        if(MusicID < Engine->Resource.AllocatedMusicMemory)
+        if(Music)
         {
-            if(Engine->Resource.Music[MusicID])
+            if(Engine->Audio.Muted)
             {
-                if(Engine->Audio.Muted)
-                {
-                    return(RETURN_SUCCESS);
-                }
-                int Result = Mix_PlayMusic(Engine->Resource.Music[MusicID],-1);
-                if(Result < 0)
-                {
-                    Error Error = {WARNING_SDL_FAILURE,"PlayMusic","Could not play music.","\0","\0"};
-                    snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,MusicID,Engine);
-                    snprintf(Error.Description,STRING_BUFFER_SIZE,"Mix_PlayMusic failed and returned %d.",Result);
-                    ThrowWarning(&Error,Engine);
-                    return(WARNING_SDL_FAILURE);
-                }
                 return(RETURN_SUCCESS);
             }
-            Error Error = {WARNING_INVALID_PARAMETER,"PlayMusic","Sound is not valid","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,MusicID,Engine);
-            snprintf(Error.Description,STRING_BUFFER_SIZE,"Pointer to music is NULL. (derived from Engine->Resource.Music[MusicID], MusicID is out of bounds.)");
-            ThrowWarning(&Error,Engine);
-            return(WARNING_INVALID_PARAMETER);
+            int Result = Mix_PlayMusic(Music,Loops);
+            if(Result < 0)
+            {
+                Error Error = {WARNING_SDL_FAILURE,"PlayMusic","Could not play music.","\0","\0"};
+                snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Music,Engine);
+                snprintf(Error.Description,STRING_BUFFER_SIZE,"Mix_PlayMusic failed and returned %d.",Result);
+                ThrowWarning(&Error,Engine);
+                return(WARNING_SDL_FAILURE);
+            }
+            return(RETURN_SUCCESS);
         }
         Error Error = {WARNING_INVALID_PARAMETER,"PlayMusic","Music is not valid.","\0","\0"};
-        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,MusicID,Engine);
-        snprintf(Error.Description,STRING_BUFFER_SIZE,"Music provided does not and can not exist.");
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Music,Engine);
+        snprintf(Error.Description,STRING_BUFFER_SIZE,"Music provided is NULL.");
         ThrowWarning(&Error,Engine);
         return(WARNING_INVALID_PARAMETER);
     }

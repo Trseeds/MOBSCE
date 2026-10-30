@@ -25,9 +25,9 @@ typedef struct Engine Engine;
 #include "CLOCK.h"
 
 #define MOBSCE_VERSION_RELEASE 0
-#define MOBSCE_VERSION_FEATURE 27
+#define MOBSCE_VERSION_FEATURE 28
 #define MOBSCE_VERSION_PATCH 0
-#define MOBSCE_VERSION "0.27.0"
+#define MOBSCE_VERSION "0.28.0"
 
 #define EVENT_QUEUE_SIZE 512
 
@@ -51,6 +51,7 @@ typedef struct Engine Engine;
 #define WARNING_NULL NULL
 #define RETURN_SUCCESS 0
 #define SENTINEL_OBJECT (uint32)(0-1)
+#define SENTINEL_ID 0
 
 typedef struct Engine Engine;
 
@@ -77,6 +78,12 @@ typedef struct Engine {
 	Sprite** SpriteReferences;
 	Timer* Timers;
 	Timer** TimerReferences;
+	Sound* Sounds;
+	Sound** SoundReferences;
+	Music* Musics;
+	Music** MusicReferences;
+	Texture* Textures;
+	Texture** TextureReferences;
 	SDL_Event Events[EVENT_QUEUE_SIZE];
 	uint64 IDCounter;
 	uint8 SpriteZResortNeeded;
@@ -99,6 +106,7 @@ int8 GetSDLEvents(Engine* Engine);
 int8 GetBasePath(Engine* Engine);
 char* GetAssetPath(char* Asset, char* Output, Engine* Engine);
 Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, int8 ERROR_LEVEL, int8 WARNING_LEVEL, uint32 AllocationThreshold, bool Render, bool Audiate, Config* Config);
+void TickObjects(Engine* Engine);
 int8 RunEngine(Engine* Engine);
 int8 CleanupEngine(Engine* Engine);
 

@@ -5,10 +5,15 @@
     void* OSMemoryAllocate(size_t Size)
     {
         void* Pointer = VirtualAlloc(NULL,Size,MEM_RESERVE|MEM_COMMIT,PAGE_READWRITE);
+        if(Pointer)
+        {
+            memset(Pointer,0,Size);
+        }
         return(Pointer);
     }
     void OSMemoryFree(void* Pointer, size_t Size)
     {
+        //memset(Pointer,0,Size);
         VirtualFree(Pointer,0,MEM_RELEASE);
     }
 #elif defined(__unix__)
@@ -20,10 +25,12 @@
         {
             return(NULL);
         }
+        memset(Pointer,0,Size);
         return(Pointer);
     }
     void OSMemoryFree(void* Pointer, size_t Size)
     {
+        //memset(Pointer,0,Size);
         munmap(Pointer,Size);
     }
 #endif
@@ -253,28 +260,32 @@ int8 CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
     {
         if(ResourceInfo.Pointer && ResourceInfo.AllocatedResourceMemory && ResourceInfo.NumberOfResources)
         {
-            uint8* Pool = *(void**)ResourceInfo.Pointer;
-            uint32 Size = *(uint32*)ResourceInfo.AllocatedResourceMemory*ResourceInfo.SizeOfResource;
+            bytepointer Pool = *(void**)ResourceInfo.Pointer;
+            size_t SizeOfResource = ResourceInfo.SizeOfResource;
+            size_t Size = *(uint32*)ResourceInfo.AllocatedResourceMemory*SizeOfResource;
+            
 
-            for(int i = 0; i < Size; i += ResourceInfo.SizeOfResource)
+            for(size_t i = 0; i < Size; i += SizeOfResource)
             {
                 void* Element = Pool+i;
-                if(!IsZero(Element,ResourceInfo.SizeOfResource))
+                if(!ResourceInfo.IsPointerArray)
                 {
                     if(ResourceInfo.FreeFunction)
                     {
-                        if(ResourceInfo.IsPointerArray)
-                        {
-                            ResourceInfo.FreeFunction(*(void**)Element);
-                        }
-                        else
+                        if(((Object*)Element)->IsUsed)
                         {
                             ResourceInfo.FreeFunction(Element);
                         }
                     }
                 }
+                else
+                {
+                    if(ResourceInfo.FreeFunction)
+                    {
+                        ResourceInfo.FreeFunction(*(void**)Element);
+                    }
+                }
             }
-            memset(Pool,0,Size);
             OSMemoryFree(Pool,Size);
             return(RETURN_SUCCESS);
         }
@@ -287,125 +298,434 @@ int8 CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
-uint32 CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, uint32 TextureID, void* CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
+//create ==============================================================================================================================================================================================================
+void* CreateObject(ResourceInfo Objects, ResourceInfo References, Engine* Engine)
 {
+    const char Parameters[] = "(ResourceInfo Objects: 0x%p, ResourceInfo References: 0x%p, Engine* Engine: 0x%p)";
     if(Engine)
     {
-        if(Engine->Resource.NumberOfSprites+1 >= Engine->Resource.AllocatedSpriteMemory)
+        if(*Objects.NumberOfResources+1 >= *Objects.AllocatedResourceMemory)
         {
-            ResourceInfo ResourceInfo;
-            ResourceInfo.Pointer = &Engine->Sprites;
-            ResourceInfo.SizeOfResource = sizeof(Sprite);
-            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteMemory;
-            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSprites;
-            ExtendResourcePool(ResourceInfo,Engine);
-            ResourceInfo.Pointer = &Engine->SpriteReferences;
-            ResourceInfo.SizeOfResource = sizeof(Sprite*);
-            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteReferenceMemory;
-            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSpriteReferences;
-            ExtendResourcePool(ResourceInfo,Engine);
-            qsort(Engine->Sprites, Engine->Resource.NumberOfSprites, sizeof(Sprite), QSCompactObjectPool);
-            int ASM = Engine->Resource.AllocatedSpriteMemory;
-            Sprite* S = Engine->Sprites;
-            for(int i = 0; i < ASM; i++)
-            {
-                if(S[i].IsUsed)
-                {
-                    Engine->SpriteReferences[Engine->Sprites[i].ReferenceIndex] = &S[i];
-                }
-            }
+            ExtendResourcePool(Objects,Engine);
+            ExtendResourcePool(References,Engine);
+            qsort(*(void**)Objects.Pointer,*Objects.NumberOfResources,Objects.SizeOfResource,QSCompactObjectPool);
+            RebuildReferences(*(void**)References.Pointer,*(void**)Objects.Pointer,Objects.SizeOfResource,*Objects.AllocatedResourceMemory);
         }
 
-        Sprite* NewSprite = FindOpenResourceSpace(Engine->Sprites,Engine->Resource.AllocatedSpriteMemory*sizeof(Sprite),sizeof(Sprite));
-        NewSprite->ReferenceIndex = FindOpenReferenceSpace(Engine->SpriteReferences,Engine->Resource.AllocatedSpriteReferenceMemory);
-        Engine->SpriteReferences[NewSprite->ReferenceIndex] = NewSprite;
-        NewSprite->IsUsed = true;
-        strncpy(NewSprite->Name,Name,OBJECT_NAME_SIZE);
-        NewSprite->Name[OBJECT_NAME_SIZE-1] = '\0';
-        NewSprite->ID = GetNewObjectID(Engine);
-        NewSprite->RenderParameters.Position.X = Position.X; NewSprite->RenderParameters.Position.Y = Position.Y; NewSprite->RenderParameters.Position.Z = Position.Z;
-        NewSprite->RenderParameters.Origin.X = Origin.X; NewSprite->RenderParameters.Origin.Y = Origin.Y; NewSprite->RenderParameters.Origin.Z = Origin.Z; NewSprite->RenderParameters.Origin.W = Origin.W; 
-        NewSprite->RenderParameters.Dimensions.X = Dimensions.X; NewSprite->RenderParameters.Dimensions.Y = Dimensions.Y;
-        NewSprite->TextureID = TextureID;
-        NewSprite->RenderParameters.Texture = Engine->Resource.Textures[TextureID];
-        NewSprite->RenderParameters.Visible = true;
-        NewSprite->RenderParameters.Angle = 0;
-        NewSprite->RenderParameters.Flip = FLIP_NONE;
-        NewSprite->RenderParameters.Transparency = 100;
-        Vector3 Tint = {TINT_NOCHANGE,TINT_NOCHANGE,TINT_NOCHANGE};
-        NewSprite->RenderParameters.Tint = Tint;
-        // if(Actor)
-        // {
-        //     NewSprite->ActorReferenceIndex = Actor->ReferenceIndex;
-        //     NewSprite->ExpectedActorID = Actor->ID;
-        // }
-        // else
-        // {
-        //     NewSprite->ActorReferenceIndex = 0;
-        //     NewSprite->ExpectedActorID = 0;
-        // }
-        NewSprite->CustomData = CustomData;
-        NewSprite->Routine = Routine;
+        Object* NewObject = FindOpenResourceSpace(*(void**)Objects.Pointer,(*Objects.AllocatedResourceMemory)*Objects.SizeOfResource,Objects.SizeOfResource);
+        NewObject->ReferenceIndex = FindOpenReferenceSpace(*(void**)References.Pointer,*References.AllocatedResourceMemory);
+        ((void**)(*(void**)References.Pointer))[NewObject->ReferenceIndex] = NewObject;
+        NewObject->IsUsed = true;
+        NewObject->ID = GetNewObjectID(Engine);
+        (*(Objects.NumberOfResources))++;
+        return(NewObject);
+    }
+    return(NULL);
+}
 
-        Engine->Resource.NumberOfSprites++;
-        Engine->SpriteZResortNeeded = true;
-        return(NewSprite->ReferenceIndex);
+uint32 CreateSound(char* File, char* Name, Engine* Engine)
+{
+    const char Parameters[] = "(char* File: 0x%p, Engine* Engine: 0x%p)";
+    if(Engine)
+    {
+        Mix_Chunk* SoundT = Mix_LoadWAV(File);
+        if(!SoundT)
+        {
+            Error Error = {WARNING_SDL_FAILURE,"CreateSound","Could not create sound.","\0","\0"};
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,File,Engine);
+            snprintf(Error.Description,STRING_BUFFER_SIZE,"Mix_LoadWAV failed and returned 0x%p.",SoundT);
+            ThrowWarning(&Error,Engine);
+            return(SENTINEL_OBJECT);
+        }
+
+        ResourceInfo Objects = {&Engine->Sounds,sizeof(struct Sound),&SoundFreeFunction,&Engine->Resource.AllocatedSoundMemory,&Engine->Resource.NumberOfSounds,false};
+        ResourceInfo References = {&Engine->SoundReferences,sizeof(Sound*),NULL,&Engine->Resource.AllocatedSoundReferenceMemory,&Engine->Resource.NumberOfSoundReferences,true};
+        Sound* S = CreateObject(Objects,References,Engine);
+        S->Sound = SoundT;
+        strncpy(S->Name,Name,OBJECT_NAME_SIZE);
+        S->Name[OBJECT_NAME_SIZE-1] = '\0';
+        return(S->ReferenceIndex);
     }
     return(SENTINEL_OBJECT);
 }
 
-int8 DestroySprite(Sprite* DSprite, void (*FreeFunction)(void*), Engine* Engine)
+uint32 CreateMusic(char* File, char* Name, Engine* Engine)
 {
-    const char Parameters[] = "(Sprite* DSprite: 0x%p, FreeFunction: 0x%p, Engine* Engine: 0x%p)";
+    const char Parameters[] = "(char* File: 0x%p, Engine* Engine: 0x%p)";
+    if(Engine)
+    {
+        Mix_Music* MusicT = Mix_LoadMUS(File);
+        if(!MusicT)
+        {
+            Error Error = {WARNING_SDL_FAILURE,"CreateMusic","Could not create music.","\0","\0"};
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,File,Engine);
+            snprintf(Error.Description,STRING_BUFFER_SIZE,"Mix_LoadMUS failed and returned 0x%p.",MusicT);
+            ThrowWarning(&Error,Engine);
+            return(SENTINEL_OBJECT);
+        }
+
+        ResourceInfo Objects = {&Engine->Musics,sizeof(struct Music),&MusicFreeFunction,&Engine->Resource.AllocatedMusicMemory,&Engine->Resource.NumberOfMusics,false};
+        ResourceInfo References = {&Engine->MusicReferences,sizeof(Music*),NULL,&Engine->Resource.AllocatedMusicReferenceMemory,&Engine->Resource.NumberOfMusicReferences,true};
+        Music* M = CreateObject(Objects,References,Engine);
+        M->Music = MusicT;
+        strncpy(M->Name,Name,OBJECT_NAME_SIZE);
+        M->Name[OBJECT_NAME_SIZE-1] = '\0';
+        return(M->ReferenceIndex);
+    }
+    return(SENTINEL_OBJECT);
+}
+
+uint32 CreateTexture(char* File, char* Name, Engine* Engine)
+{
+    const char Parameters[] = "(char* File: 0x%p, char* Name: 0x%p, Engine* Engine: 0x%p)";
+    if(Engine)
+    {
+        SDL_Surface* S = IMG_Load(File);
+        if(!S)
+        {
+            Error Error = {WARNING_SDL_FAILURE,"CreateTexture","Could not create surface.","\0","\0"};
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,File,Engine);
+            snprintf(Error.Description,STRING_BUFFER_SIZE,"IMG_Load failed and returned 0x%p.",S);
+            ThrowWarning(&Error,Engine);
+            return(SENTINEL_OBJECT);
+        }
+        SDL_Texture* TextureT = SDL_CreateTextureFromSurface(Engine->Video.Renderer,S);
+        SDL_FreeSurface(S);
+        if(!TextureT)
+        {
+            Error Error = {WARNING_SDL_FAILURE,"CreateTexture","Could not create texture.","\0","\0"};
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,File,Engine);
+            snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_CreateTextureFromSurface failed and returned 0x%p.",TextureT);
+            ThrowWarning(&Error,Engine);
+            return(SENTINEL_OBJECT);
+        }
+
+        ResourceInfo Objects = {&Engine->Textures,sizeof(struct Texture),&TextureFreeFunction,&Engine->Resource.AllocatedTextureMemory,&Engine->Resource.NumberOfTextures,false};
+        ResourceInfo References = {&Engine->TextureReferences,sizeof(Texture*),NULL,&Engine->Resource.AllocatedTextureReferenceMemory,&Engine->Resource.NumberOfTextureReferences,true};
+        Texture* T = CreateObject(Objects,References,Engine);
+        T->Texture = TextureT;
+        strncpy(T->Name,Name,OBJECT_NAME_SIZE);
+        T->Name[OBJECT_NAME_SIZE-1] = '\0';
+        return(T->ReferenceIndex);
+    }
+    return(SENTINEL_OBJECT);
+}
+
+uint32 CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimensions, uint32 TextureReference, void* CustomData, Actor* Actor, void (*Routine)(struct Sprite*, struct Engine*), Engine* Engine)
+{
+    if(Engine)
+    {
+        ResourceInfo Objects = {&Engine->Sprites,sizeof(struct Sprite),&SpriteFreeFunction,&Engine->Resource.AllocatedSpriteMemory,&Engine->Resource.NumberOfSprites,false};
+        ResourceInfo References = {&Engine->SpriteReferences,sizeof(Sprite*),NULL,&Engine->Resource.AllocatedSpriteReferenceMemory,&Engine->Resource.NumberOfSpriteReferences,true};
+        Sprite* S = CreateObject(Objects,References,Engine);
+        S->CustomData = CustomData;
+        S->Routine = Routine;
+        strncpy(S->Name,Name,OBJECT_NAME_SIZE);
+        S->Name[OBJECT_NAME_SIZE-1] = '\0';
+
+        S->RenderParameters.Position.X = Position.X; S->RenderParameters.Position.Y = Position.Y; S->RenderParameters.Position.Z = Position.Z;
+        S->RenderParameters.Origin.X = Origin.X; S->RenderParameters.Origin.Y = Origin.Y; S->RenderParameters.Origin.Z = Origin.Z; S->RenderParameters.Origin.W = Origin.W; 
+        S->RenderParameters.Dimensions.X = Dimensions.X; S->RenderParameters.Dimensions.Y = Dimensions.Y;
+        if(TextureReference != SENTINEL_OBJECT)
+        {
+            S->TextureReference = Engine->TextureReferences[TextureReference]->ReferenceIndex;
+            S->TextureID = Engine->TextureReferences[TextureReference]->ID;
+            if(Engine->TextureReferences[S->TextureReference]->ID == S->TextureID)
+            {
+                S->RenderParameters.Texture = Engine->TextureReferences[TextureReference]->Texture;
+            }
+        }
+        S->RenderParameters.Visible = true;
+        S->RenderParameters.Angle = 0;
+        S->RenderParameters.Flip = FLIP_NONE;
+        S->RenderParameters.Transparency = 100;
+        Vector3 Tint = {TINT_NOCHANGE,TINT_NOCHANGE,TINT_NOCHANGE};
+        S->RenderParameters.Tint = Tint;
+        S->CustomData = CustomData;
+        S->Routine = Routine;
+
+        Engine->SpriteZResortNeeded = true;
+        return(S->ReferenceIndex);
+    }
+    return(SENTINEL_OBJECT);
+}
+
+uint32 CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, uint32 Voice, void* CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine)
+{
+    if(Engine)
+    {
+        ResourceInfo Objects = {&Engine->Actors,sizeof(struct Actor),&ActorFreeFunction,&Engine->Resource.AllocatedActorMemory,&Engine->Resource.NumberOfActors,false};
+        ResourceInfo References = {&Engine->ActorReferences,sizeof(Actor*),NULL,&Engine->Resource.AllocatedActorReferenceMemory,&Engine->Resource.NumberOfActorReferences,true};
+        Actor* A = CreateObject(Objects,References,Engine);
+        A->Position.X = Position.X; A->Position.Y = Position.Y;
+        A->Dimensions.X = Dimensions.X; A->Dimensions.Y = Dimensions.Y;
+        A->Voice = Voice;
+        A->CustomData = CustomData;
+        A->Routine = Routine;
+        strncpy(A->Name,Name,OBJECT_NAME_SIZE);
+        A->Name[OBJECT_NAME_SIZE-1] = '\0';
+
+        return(A->ReferenceIndex);
+    }
+    return(SENTINEL_OBJECT);
+}
+
+uint32 CreateTimer(char* Name, uint8 TimerType, uint8 UnitType, uint64 StopAt, Engine* Engine)
+{
+    if(Engine)
+    {
+        ResourceInfo Objects = {&Engine->Timers,sizeof(struct Timer),NULL,&Engine->Resource.AllocatedTimerMemory,&Engine->Resource.NumberOfTimers,false};
+        ResourceInfo References = {&Engine->TimerReferences,sizeof(Timer*),NULL,&Engine->Resource.AllocatedTimerReferenceMemory,&Engine->Resource.NumberOfTimerReferences,true};
+        Timer* T = CreateObject(Objects,References,Engine);   
+        strncpy(T->Name,Name,OBJECT_NAME_SIZE);
+        T->Name[OBJECT_NAME_SIZE-1] = '\0';
+        T->TimerType = TimerType;
+        T->UnitType = UnitType;
+        T->StopAt = StopAt;
+        T->Counter = 0;
+
+        if(T->TimerType == TMR_T_COUNT_TO)
+        {
+            if(T->UnitType == TMR_UT_SECONDS)
+            {
+                T->StopAt = StopAt*1000 + Engine->Clock.RealTimeMS;
+            }
+            if(T->UnitType == TMR_UT_MILLISECONDS)
+            {
+                T->StopAt = StopAt + Engine->Clock.RealTimeMS;
+            }
+        }
+        if(T->TimerType == TMR_T_WAIT_UNTIL && T->UnitType == TMR_UT_SECONDS)
+        {
+            T->StopAt = StopAt*1000;
+        }
+
+        return(T->ReferenceIndex);
+    }
+    return(SENTINEL_OBJECT);
+}
+
+uint32 CreateGamepad(SDL_GameController* Controller, Engine* Engine)
+{
+    if(Engine)
+    {
+        ResourceInfo Objects = {&Engine->Input.Gamepads,sizeof(struct Gamepad),NULL,&Engine->Resource.AllocatedGamepadMemory,&Engine->Resource.NumberOfGamepads,false};
+        ResourceInfo References = {&Engine->Input.GamepadReferences,sizeof(Gamepad*),NULL,&Engine->Resource.AllocatedGamepadReferenceMemory,&Engine->Resource.NumberOfGamepadReferences,true};
+        Gamepad* G = CreateObject(Objects,References,Engine);   
+        G->Gamepad = Controller;
+        return(G->ReferenceIndex);
+    }
+    return(SENTINEL_OBJECT);
+}
+
+//free =================================================================================================================================================================================================================
+void TextureFreeFunction(void* Ptr)
+{
+    if(Ptr)
+    {
+        if(((Texture*)(Ptr))->Texture)
+        {
+            SDL_DestroyTexture(((Texture*)(Ptr))->Texture);
+        }
+    }
+}
+
+void SoundFreeFunction(void* Ptr)
+{
+    if(Ptr)
+    {
+        if(((Sound*)(Ptr))->Sound)
+        {
+            Mix_FreeChunk(((Sound*)(Ptr))->Sound);
+        }
+    }
+}
+
+void MusicFreeFunction(void* Ptr)
+{
+    if(Ptr)
+    {
+        if(((Music*)(Ptr))->Music)
+        {
+            Mix_FreeMusic(((Music*)(Ptr))->Music);
+        }
+    }
+}
+
+void GamepadFreeFunction(void* Ptr)
+{
+    if(Ptr)
+    {
+        if(((Gamepad*)(Ptr))->Gamepad)
+        {
+            SDL_GameControllerClose(((Gamepad*)(Ptr))->Gamepad);
+        }
+    }
+}
+
+//destroy ==============================================================================================================================================================================================================
+void DestroyObject(ResourceInfo Objects, ResourceInfo References, Object* Object, Engine* Engine)
+{
+    const char Parameters[] = "(ResourceInfo Objects: 0x%p, ResourceInfo References: 0x%p, Object* Object: 0x%p, Engine* Engine: 0x%p)";
+    if(Engine)
+    {
+        if(Object)
+        {
+            if(Object->IsUsed)
+            {
+                if(PoolCanBeShrunk(*(void**)Objects.Pointer,*Objects.NumberOfResources,*Objects.AllocatedResourceMemory,Engine))
+                {
+                    qsort(*(void**)Objects.Pointer,*Objects.AllocatedResourceMemory,Objects.SizeOfResource,QSCompactObjectPool);
+                    ShrinkResourcePool(Objects,Engine);
+                    RebuildReferences(*(void**)References.Pointer,*(void**)Objects.Pointer,Objects.SizeOfResource,*Objects.AllocatedResourceMemory);
+                }
+
+                Objects.FreeFunction(Object);
+                memset(Object,0,sizeof(struct Object)); //clears the header, not the actual object. dead objects are beheaded, not cremated.
+                return;
+            }
+        }
+        Error Error = {WARNING_INVALID_PARAMETER,"DestroyObject","Invalid object.","\0","\0"};
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Objects,References,Object,Engine);
+        snprintf(Error.Description,STRING_BUFFER_SIZE,"Object is NULL or dead.");
+        ThrowWarning(&Error,Engine);
+    }
+}
+
+void DestroySprite(Sprite* DSprite, Engine* Engine)
+{
+    const char Parameters[] = "(Sprite* DSprite: 0x%p, Engine* Engine: 0x%p)";
     if(Engine)
     {
         if(DSprite)
-        {
-            if(DSprite->CustomData)
-            {
-                FreeFunction(DSprite);
-            }
-            else
-            {
-                Error Error = {ERROR_INVALID_PARAMETER,"DestroySprite","Invalid custom data.","\0","\0"};
-                snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DSprite,FreeFunction,Engine);
-                snprintf(Error.Description,STRING_BUFFER_SIZE,"DSprite has a NULL CustomData member.");
-                ThrowWarning(&Error,Engine);
-            }
-            Engine->SpriteReferences[DSprite->ReferenceIndex] = NULL;
-            memset(DSprite,0,sizeof(Sprite));
-            Engine->SpriteZResortNeeded = true;
-            Engine->Resource.NumberOfSprites--;
-
-            if(PoolCanBeShrunk(Engine->Sprites,Engine->Resource.NumberOfSprites,Engine->Resource.AllocatedSpriteMemory,Engine))
-            {
-                qsort(Engine->Sprites, Engine->Resource.AllocatedSpriteMemory, sizeof(Sprite), QSCompactObjectPool);
-                ResourceInfo ResourceInfo;
-                ResourceInfo.Pointer = &Engine->Sprites;
-                ResourceInfo.SizeOfResource = sizeof(Sprite);
-                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteMemory;
-                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSprites;
-                ShrinkResourcePool(ResourceInfo,Engine);
-                // ResourceInfo.Pointer = &Engine->SpriteReferences;
-                // ResourceInfo.SizeOfResource = sizeof(Sprite*);
-                // ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteReferenceMemory;
-                // ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSpriteReferences;
-                // ShrinkResourcePool(ResourceInfo,Engine);
-                //cant shrink the reference pool because there may still be valid references in it!!!
-                //this is a problem for the future. or i can just accept wasting a few kb of memory on pointers.
-                RebuildReferences(Engine->SpriteReferences,Engine->Sprites,sizeof(struct Sprite),Engine->Resource.AllocatedSpriteMemory);
-            }
-            return(RETURN_SUCCESS);
+        {   
+            ResourceInfo Objects = {&Engine->Sprites,sizeof(struct Sprite),&SpriteFreeFunction,&Engine->Resource.AllocatedSpriteMemory,&Engine->Resource.NumberOfSprites,false};
+            ResourceInfo References = {&Engine->SpriteReferences,sizeof(Sprite*),NULL,&Engine->Resource.AllocatedSpriteReferenceMemory,&Engine->Resource.NumberOfSpriteReferences,true};
+            DestroyObject(Objects,References,(void*)DSprite,Engine);
+            return;
         }
         Error Error = {WARNING_INVALID_PARAMETER,"DestroySprite","Invalid sprite.","\0","\0"};
-        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DSprite,FreeFunction,Engine);
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DSprite,Engine);
         snprintf(Error.Description,STRING_BUFFER_SIZE,"DSprite is NULL.");
         ThrowWarning(&Error,Engine);
-        return(WARNING_INVALID_PARAMETER);
     }
-    return(ERROR_INVALID_ENGINE);
 }
 
+void DestroyActor(Actor* DActor, Engine* Engine)
+{
+    const char Parameters[] = "(Actor* DActor: 0x%p, Engine* Engine: 0x%p)";
+    if(Engine)
+    {
+        if(DActor)
+        {   
+            ResourceInfo Objects = {&Engine->Actors,sizeof(struct Actor),&ActorFreeFunction,&Engine->Resource.AllocatedActorMemory,&Engine->Resource.NumberOfActors,false};
+            ResourceInfo References = {&Engine->ActorReferences,sizeof(Actor*),NULL,&Engine->Resource.AllocatedActorReferenceMemory,&Engine->Resource.NumberOfActorReferences,true};
+            DestroyObject(Objects,References,(void*)DActor,Engine);
+            return;
+        }
+        Error Error = {WARNING_INVALID_PARAMETER,"DestroyActor","Invalid actor.","\0","\0"};
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DActor,Engine);
+        snprintf(Error.Description,STRING_BUFFER_SIZE,"DActor is NULL.");
+        ThrowWarning(&Error,Engine);
+    }
+}
+
+void DestroyTimer(Timer* DTimer, Engine* Engine)
+{
+    const char Parameters[] = "(Timer* DTimer: 0x%p, Engine* Engine: 0x%p)";
+    if(Engine)
+    {
+        if(DTimer)
+        {   
+            ResourceInfo Objects = {&Engine->Timers,sizeof(struct Timer),NULL,&Engine->Resource.AllocatedTimerMemory,&Engine->Resource.NumberOfTimers,false};
+            ResourceInfo References = {&Engine->TimerReferences,sizeof(Timer*),NULL,&Engine->Resource.AllocatedTimerReferenceMemory,&Engine->Resource.NumberOfTimerReferences,true};
+            DestroyObject(Objects,References,(void*)DTimer,Engine);
+            return;
+        }
+        Error Error = {WARNING_INVALID_PARAMETER,"DestroyTimer","Invalid timer.","\0","\0"};
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DTimer,Engine);
+        snprintf(Error.Description,STRING_BUFFER_SIZE,"DTimer is NULL.");
+        ThrowWarning(&Error,Engine);
+    }
+}
+
+void DestroyGamepad(Gamepad* DGamepad, Engine* Engine)
+{
+    const char Parameters[] = "(Gamepad* DGamepad: 0x%p, Engine* Engine: 0x%p)";
+    if(Engine)
+    {
+        if(DGamepad)
+        {   
+            ResourceInfo Objects = {&Engine->Input.Gamepads,sizeof(struct Gamepad),&GamepadFreeFunction,&Engine->Resource.AllocatedGamepadMemory,&Engine->Resource.NumberOfGamepads,false};
+            ResourceInfo References = {&Engine->Input.GamepadReferences,sizeof(Gamepad*),NULL,&Engine->Resource.AllocatedGamepadReferenceMemory,&Engine->Resource.NumberOfGamepadReferences,true};
+            DestroyObject(Objects,References,(void*)DGamepad,Engine);
+            return;
+        }
+        Error Error = {WARNING_INVALID_PARAMETER,"DestroyGamepad","Invalid gamepad.","\0","\0"};
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DGamepad,Engine);
+        snprintf(Error.Description,STRING_BUFFER_SIZE,"DGamepad is NULL.");
+        ThrowWarning(&Error,Engine);
+    }
+}
+
+void DestroyTexture(Texture* DTexture, Engine* Engine)
+{
+    const char Parameters[] = "(Texture* DTexture: 0x%p, Engine* Engine: 0x%p)";
+    if(Engine)
+    {
+        if(DTexture)
+        {   
+            ResourceInfo Objects = {&Engine->Textures,sizeof(struct Texture),&TextureFreeFunction,&Engine->Resource.AllocatedTextureMemory,&Engine->Resource.NumberOfTextures,false};
+            ResourceInfo References = {&Engine->TextureReferences,sizeof(Texture*),NULL,&Engine->Resource.AllocatedTextureReferenceMemory,&Engine->Resource.NumberOfTextureReferences,true};
+            DestroyObject(Objects,References,(void*)DTexture,Engine);
+            return;
+        }
+        Error Error = {WARNING_INVALID_PARAMETER,"DestroyTexture","Invalid texture.","\0","\0"};
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DTexture,Engine);
+        snprintf(Error.Description,STRING_BUFFER_SIZE,"DTexture is NULL.");
+        ThrowWarning(&Error,Engine);
+    }
+}
+
+void DestroyMusic(Music* DMusic, Engine* Engine)
+{
+    const char Parameters[] = "(Music* DMusic: 0x%p, Engine* Engine: 0x%p)";
+    if(Engine)
+    {
+        if(DMusic)
+        {   
+            ResourceInfo Objects = {&Engine->Musics,sizeof(struct Music),&MusicFreeFunction,&Engine->Resource.AllocatedMusicMemory,&Engine->Resource.NumberOfMusics,false};
+            ResourceInfo References = {&Engine->MusicReferences,sizeof(Music*),NULL,&Engine->Resource.AllocatedMusicReferenceMemory,&Engine->Resource.NumberOfMusicReferences,true};
+            DestroyObject(Objects,References,(void*)DMusic,Engine);
+            return;
+        }
+        Error Error = {WARNING_INVALID_PARAMETER,"DestroyMusic","Invalid music.","\0","\0"};
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DMusic,Engine);
+        snprintf(Error.Description,STRING_BUFFER_SIZE,"DMusic is NULL.");
+        ThrowWarning(&Error,Engine);
+    }
+}
+
+void DestroySound(Sound* DSound, Engine* Engine)
+{
+    const char Parameters[] = "(Music* DMusic: 0x%p, Engine* Engine: 0x%p)";
+    if(Engine)
+    {
+        if(DSound)
+        {   
+            ResourceInfo Objects = {&Engine->Sounds,sizeof(struct Sound),&SoundFreeFunction,&Engine->Resource.AllocatedSoundMemory,&Engine->Resource.NumberOfSounds,false};
+            ResourceInfo References = {&Engine->SoundReferences,sizeof(Sound*),NULL,&Engine->Resource.AllocatedSoundReferenceMemory,&Engine->Resource.NumberOfSoundReferences,true};
+            DestroyObject(Objects,References,(void*)DSound,Engine);
+            return;
+        }
+        Error Error = {WARNING_INVALID_PARAMETER,"DestroySound","Invalid sound.","\0","\0"};
+        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DSound,Engine);
+        snprintf(Error.Description,STRING_BUFFER_SIZE,"DSound is NULL.");
+        ThrowWarning(&Error,Engine);
+    }
+}
+
+//find =================================================================================================================================================================================================================
 uint32 GetSpriteByName(char* Name, Engine* Engine)
 {
     const char Parameters[] = "(char* Name: %s, Engine* Engine: 0x%p)";
@@ -491,104 +811,6 @@ uint32 GetSpriteByProperty(void* Property, uint32 Offset, uint32 Size, Engine* E
         }
     }
     return(SENTINEL_OBJECT);
-}
-
-uint32 CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, uint32 Voice, void* CustomData, void (*Routine)(struct Actor*, struct Engine*), Engine* Engine)
-{
-    if(Engine)
-    {
-        if(Engine->Resource.NumberOfActors+1 >= Engine->Resource.AllocatedActorMemory)
-        {
-            ResourceInfo ResourceInfo;
-            ResourceInfo.Pointer = &Engine->Actors;
-            ResourceInfo.SizeOfResource = sizeof(Actor);
-            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
-            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActors;
-            ExtendResourcePool(ResourceInfo,Engine);
-            ResourceInfo.Pointer = &Engine->ActorReferences;
-            ResourceInfo.SizeOfResource = sizeof(Actor*);
-            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorReferenceMemory;
-            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActorReferences;
-            ExtendResourcePool(ResourceInfo,Engine);
-            qsort(Engine->Actors, Engine->Resource.NumberOfActors, sizeof(Actor), QSCompactObjectPool);
-            int AAM = Engine->Resource.AllocatedActorMemory;
-            Actor* A = Engine->Actors;
-            for(int i = 0; i < AAM; i++)
-            {
-                if(A[i].IsUsed)
-                {
-                    Engine->ActorReferences[A[i].ReferenceIndex] = &A[i];
-                }
-            }
-        }
-
-        Actor* NewActor = FindOpenResourceSpace(Engine->Actors,Engine->Resource.AllocatedActorMemory*sizeof(Actor),sizeof(Actor));
-        NewActor->ReferenceIndex = FindOpenReferenceSpace(Engine->ActorReferences,Engine->Resource.AllocatedActorReferenceMemory);
-        Engine->ActorReferences[NewActor->ReferenceIndex] = NewActor;
-        NewActor->IsUsed = true;
-        strncpy(NewActor->Name,Name,OBJECT_NAME_SIZE);
-        NewActor->Name[OBJECT_NAME_SIZE-1] = '\0';
-        NewActor->ID = GetNewObjectID(Engine);
-        NewActor->Position.X = Position.X; NewActor->Position.Y = Position.Y;
-        NewActor->Dimensions.X = Dimensions.X; NewActor->Dimensions.Y = Dimensions.Y;
-        NewActor->Voice = Voice;
-        NewActor->CustomData = CustomData;
-        NewActor->Routine = Routine;
-
-        Engine->Resource.NumberOfActors++;
-        return(NewActor->ReferenceIndex);
-    }
-    return(SENTINEL_OBJECT);
-}
-
-int8 DestroyActor(Actor* DActor, void (*FreeFunction)(void*), Engine* Engine)
-{
-    const char Parameters[] = "(Actor* DActor: 0x%p, FreeFunction: 0x%p, Engine* Engine: 0x%p)";
-    if(Engine)
-    {
-        if(DActor)
-        {
-            if(DActor->CustomData)
-            {
-                FreeFunction(DActor);
-            }
-            else
-            {
-                Error Error = {ERROR_INVALID_PARAMETER,"DestroyActor","Invalid custom data.","\0","\0"};
-                snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DActor,FreeFunction,Engine);
-                snprintf(Error.Description,STRING_BUFFER_SIZE,"DActor has a NULL CustomData member.");
-                ThrowWarning(&Error,Engine);
-            }
-
-            Engine->ActorReferences[DActor->ReferenceIndex] = NULL;
-            memset(DActor,0,sizeof(Actor));
-            Engine->Resource.NumberOfActors--;
-            
-            if(PoolCanBeShrunk(Engine->Actors,Engine->Resource.NumberOfActors,Engine->Resource.AllocatedActorMemory,Engine))
-            {
-                qsort(Engine->Actors, Engine->Resource.AllocatedActorMemory, sizeof(Actor), QSCompactObjectPool);
-                ResourceInfo ResourceInfo;
-                ResourceInfo.Pointer = &Engine->Actors;
-                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
-                ResourceInfo.SizeOfResource = sizeof(Actor);
-                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActors;
-                ShrinkResourcePool(ResourceInfo,Engine);
-                // ResourceInfo.Pointer = &Engine->ActorReferences;
-                // ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorReferenceMemory;
-                // ResourceInfo.SizeOfResource = sizeof(Actor*);
-                // ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActorReferences;
-                // ShrinkResourcePool(ResourceInfo,Engine);
-                RebuildReferences(Engine->ActorReferences,Engine->Actors,sizeof(struct Actor),Engine->Resource.AllocatedActorMemory);
-            }
-            return(RETURN_SUCCESS);
-        }
-        Error Error = {WARNING_INVALID_PARAMETER,"DestroyActor","Invalid actor.","\0","\0"};
-        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DActor,FreeFunction,Engine);
-        snprintf(Error.Description,STRING_BUFFER_SIZE,"DActor is NULL.");
-        ThrowWarning(&Error,Engine);
-        return(WARNING_INVALID_PARAMETER);
-    }
-    return(ERROR_INVALID_ENGINE);
 }
 
 uint32 GetActorByName(char* Name, Engine* Engine)
@@ -685,289 +907,31 @@ uint32 GetActorByProperty(void* Property, uint32 Offset, uint32 Size, Engine* En
     return(SENTINEL_OBJECT);
 }
 
-uint32 CreateTimer(uint8 TimerType, uint8 UnitType, uint64 StopAt, Engine* Engine)
+uint32 GetTextureByName(char* Name, Engine* Engine)
 {
+    const char Parameters[] = "(char* Name: %s, Engine* Engine: 0x%p)";
     if(Engine)
     {
-        if(Engine->Resource.NumberOfTimers+1 >= Engine->Resource.AllocatedTimerMemory)
+        Texture* T = Engine->Textures;
+        int ATM = Engine->Resource.AllocatedTextureMemory;
+        if(T)
         {
-            ResourceInfo ResourceInfo;
-            ResourceInfo.Pointer = &Engine->Timers;
-            ResourceInfo.SizeOfResource = sizeof(Timer);
-            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTimerMemory;
-            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTimers;
-            ExtendResourcePool(ResourceInfo,Engine);
-            ResourceInfo.Pointer = &Engine->TimerReferences;
-            ResourceInfo.SizeOfResource = sizeof(Timer*);
-            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTimerReferenceMemory;
-            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTimerReferences;
-            ExtendResourcePool(ResourceInfo,Engine);
-            qsort(Engine->Timers, Engine->Resource.NumberOfTimers, sizeof(Timer), QSCompactObjectPool);
-            uint32 ATM = Engine->Resource.AllocatedTimerMemory;
-            Timer* T = Engine->Timers;
             for(int i = 0; i < ATM; i++)
             {
                 if(T[i].IsUsed)
                 {
-                    Engine->TimerReferences[T[i].ReferenceIndex] = &T[i];
+                    if(!strcmp(T[i].Name,Name))
+                    {
+                        return(T[i].ReferenceIndex);
+                    }
                 }
             }
+            Error Error = {WARNING_INVALID_PARAMETER,"GetTextureByName","Could not find texture.","\0","\0"};
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Name,Engine);
+            snprintf(Error.Description,STRING_BUFFER_SIZE,"Could not find a texture with name \"%s\".",Name);
+            ThrowWarning(&Error,Engine);
+            return(SENTINEL_OBJECT);
         }
-
-        Timer* NewTimer = FindOpenResourceSpace(Engine->Timers,Engine->Resource.AllocatedTimerMemory*sizeof(Timer),sizeof(Timer));
-        NewTimer->ReferenceIndex = FindOpenReferenceSpace(Engine->TimerReferences,Engine->Resource.AllocatedTimerReferenceMemory);
-        Engine->TimerReferences[NewTimer->ReferenceIndex] = NewTimer;
-        NewTimer->IsUsed = true;
-        NewTimer->ID = GetNewObjectID(Engine);
-        NewTimer->TimerType = TimerType;
-        NewTimer->UnitType = UnitType;
-        NewTimer->StopAt = StopAt;
-        NewTimer->Counter = 0;
-
-        if(NewTimer->TimerType == TMR_T_COUNT_TO)
-        {
-            if(NewTimer->UnitType == TMR_UT_SECONDS)
-            {
-                NewTimer->StopAt = StopAt*1000 + Engine->Clock.RealTimeMS;
-            }
-            if(NewTimer->UnitType == TMR_UT_MILLISECONDS)
-            {
-                NewTimer->StopAt = StopAt + Engine->Clock.RealTimeMS;
-            }
-        }
-        if(NewTimer->TimerType == TMR_T_WAIT_UNTIL && NewTimer->UnitType == TMR_UT_SECONDS)
-        {
-            NewTimer->StopAt = StopAt*1000;
-        }
-
-        Engine->Resource.NumberOfTimers++;
-        return(NewTimer->ReferenceIndex);
     }
     return(SENTINEL_OBJECT);
-}
-
-int8 DestroyTimer(Timer* DTimer, Engine* Engine)
-{
-    const char Parameters[] = "(Timer* DTimer: 0x%p, Engine* Engine: 0x%p)";
-    if(Engine)
-    {
-        if(DTimer)
-        {
-            Engine->TimerReferences[DTimer->ReferenceIndex] = NULL;
-            memset(DTimer,0,sizeof(struct Timer));
-            Engine->Resource.NumberOfTimers--;
-            
-            if(PoolCanBeShrunk(Engine->Timers,Engine->Resource.NumberOfTimers,Engine->Resource.AllocatedTimerMemory,Engine))
-            {
-                qsort(Engine->Timers, Engine->Resource.AllocatedTimerMemory, sizeof(struct Timer), QSCompactObjectPool);
-                ResourceInfo ResourceInfo;
-                ResourceInfo.Pointer = &Engine->Timers;
-                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTimerMemory;
-                ResourceInfo.SizeOfResource = sizeof(struct Timer);
-                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTimers;
-                ShrinkResourcePool(ResourceInfo,Engine);
-                // ResourceInfo.Pointer = &Engine->TimerReferences;
-                // ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTimerReferenceMemory;
-                // ResourceInfo.SizeOfResource = sizeof(Timer*);
-                // ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTimerReferences;
-                // ShrinkResourcePool(ResourceInfo,Engine);
-                RebuildReferences(Engine->TimerReferences,Engine->Timers,sizeof(struct Timer),Engine->Resource.AllocatedTimerMemory);
-            }
-            return(RETURN_SUCCESS);
-        }
-        Error Error = {WARNING_INVALID_PARAMETER,"DestroyTimer","Invalid timer.","\0","\0"};
-        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DTimer,Engine);
-        snprintf(Error.Description,STRING_BUFFER_SIZE,"DTimer is NULL.");
-        ThrowWarning(&Error,Engine);
-        return(WARNING_INVALID_PARAMETER);
-    }
-    return(ERROR_INVALID_ENGINE);
-}
-
-uint32 CreateGamepad(SDL_GameController* Controller, Engine* Engine)
-{
-    if(Engine)
-    {
-        if(Engine->Resource.NumberOfGamepads+1 >= Engine->Resource.AllocatedGamepadMemory)
-        {
-            ResourceInfo ResourceInfo;
-            ResourceInfo.Pointer = &Engine->Input.Gamepads;
-            ResourceInfo.SizeOfResource = sizeof(Gamepad);
-            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedGamepadMemory;
-            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfGamepads;
-            ExtendResourcePool(ResourceInfo,Engine);
-            ResourceInfo.Pointer = &Engine->Input.GamepadReferences;
-            ResourceInfo.SizeOfResource = sizeof(Gamepad*);
-            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedGamepadReferenceMemory;
-            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfGamepadReferences;
-            ExtendResourcePool(ResourceInfo,Engine);
-            qsort(Engine->Input.Gamepads, Engine->Resource.NumberOfGamepads, sizeof(Gamepad), QSCompactObjectPool);
-            uint32 AGPM = Engine->Resource.AllocatedGamepadMemory;
-            Gamepad* GP = Engine->Input.Gamepads;
-            for(int i = 0; i < AGPM; i++)
-            {
-                if(GP[i].IsUsed)
-                {
-                    Engine->Input.GamepadReferences[GP[i].ReferenceIndex] = &GP[i];
-                }
-            }
-        }
-
-        Gamepad* NewGamepad = FindOpenResourceSpace(Engine->Input.Gamepads,Engine->Resource.AllocatedGamepadMemory*sizeof(Gamepad),sizeof(Gamepad));
-        NewGamepad->ReferenceIndex = FindOpenReferenceSpace(Engine->Input.GamepadReferences,Engine->Resource.AllocatedGamepadReferenceMemory);
-        Engine->Input.GamepadReferences[NewGamepad->ReferenceIndex] = NewGamepad;
-        NewGamepad->IsUsed = true;
-        NewGamepad->ID = GetNewObjectID(Engine);
-        NewGamepad->Gamepad = Controller;
-        Engine->Resource.NumberOfGamepads++;
-        return(NewGamepad->ReferenceIndex);
-    }
-    return(SENTINEL_OBJECT);
-}
-
-int8 DestroyGamepad(Gamepad* DGamepad, Engine* Engine)
-{
-    const char Parameters[] = "(Gamepad* DGamepad: 0x%p, Engine* Engine: 0x%p)";
-    if(Engine)
-    {
-        if(DGamepad)
-        {   
-            Engine->Input.GamepadReferences[DGamepad->ReferenceIndex] = NULL;
-            SDL_GameControllerClose(DGamepad->Gamepad);
-            memset(DGamepad,0,sizeof(struct Gamepad));
-            Engine->Resource.NumberOfGamepads--;
-            
-            if(PoolCanBeShrunk(Engine->Input.Gamepads,Engine->Resource.NumberOfGamepads,Engine->Resource.AllocatedGamepadMemory,Engine))
-            {
-                qsort(Engine->Input.Gamepads, Engine->Resource.AllocatedGamepadMemory, sizeof(struct Gamepad), QSCompactObjectPool);
-                ResourceInfo ResourceInfo;
-                ResourceInfo.Pointer = &Engine->Input.Gamepads;
-                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedGamepadMemory;
-                ResourceInfo.SizeOfResource = sizeof(struct Gamepad);
-                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfGamepads;
-                ShrinkResourcePool(ResourceInfo,Engine);
-                // ResourceInfo.Pointer = &Engine->Input.GamepadReferences;
-                // ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedGamepadReferenceMemory;
-                // ResourceInfo.SizeOfResource = sizeof(Gamepad*);
-                // ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfGamepadReferences;
-                // ShrinkResourcePool(ResourceInfo,Engine);
-                RebuildReferences(Engine->Input.GamepadReferences,Engine->Input.Gamepads,sizeof(struct Gamepad),Engine->Resource.AllocatedGamepadMemory);
-            }
-            return(RETURN_SUCCESS);
-        }
-        Error Error = {WARNING_INVALID_PARAMETER,"DestroyGamepad","Invalid gamepad.","\0","\0"};
-        snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,DGamepad,Engine);
-        snprintf(Error.Description,STRING_BUFFER_SIZE,"DGamepad is NULL.");
-        ThrowWarning(&Error,Engine);
-        return(WARNING_INVALID_PARAMETER);
-    }
-    return(ERROR_INVALID_ENGINE);
-}
-
-int8 CacheSound(char* File, Engine* Engine)
-{
-    const char Parameters[] = "(char* File: 0x%p, Engine* Engine: 0x%p)";
-    if(Engine)
-    {
-        Mix_Chunk* NewSound = Mix_LoadWAV(File);
-
-        if(!NewSound)
-        {
-            Error Error = {WARNING_SDL_FAILURE,"CacheSound","Could not create sound.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,File,Engine);
-            snprintf(Error.Description,STRING_BUFFER_SIZE,"Mix_LoadWAV failed and returned 0x%p.",NewSound);
-            return(WARNING_SDL_FAILURE);
-        }
-
-        if(Engine->Resource.NumberOfSounds+1 >= Engine->Resource.AllocatedSoundMemory)
-        {
-            ResourceInfo ResourceInfo;
-            ResourceInfo.Pointer = &Engine->Resource.Sounds;
-            ResourceInfo.SizeOfResource = sizeof(Mix_Chunk*);
-            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSoundMemory;
-            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSounds;
-            ExtendResourcePool(ResourceInfo,Engine);
-        }
-
-        Engine->Resource.Sounds[Engine->Resource.NumberOfSounds] = NewSound;
-        Engine->Resource.NumberOfSounds++;
-        return(RETURN_SUCCESS);
-    }
-    return(ERROR_INVALID_ENGINE);
-}
-
-int8 CacheMusic(char* File, Engine* Engine)
-{
-    const char Parameters[] = "(char* File: 0x%p, Engine* Engine: 0x%p)";
-    if(Engine)
-    {
-        Mix_Music* NewMusic = Mix_LoadMUS(File);
-
-        if(!NewMusic)
-        {
-            Error Error = {WARNING_SDL_FAILURE,"CacheMusic","Could not create music.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,File,Engine);
-            snprintf(Error.Description,STRING_BUFFER_SIZE,"Mix_LoadMUS failed and returned 0x%p",NewMusic);
-            return(WARNING_SDL_FAILURE);
-        }
-
-        if(Engine->Resource.NumberOfMusics+1 >= Engine->Resource.AllocatedMusicMemory)
-        {
-            ResourceInfo ResourceInfo;
-            ResourceInfo.Pointer = &Engine->Resource.Music;
-            ResourceInfo.SizeOfResource = sizeof(Mix_Music*);
-            ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedMusicMemory;
-            ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfMusics;
-            ExtendResourcePool(ResourceInfo,Engine);
-        }
-
-        Engine->Resource.Music[Engine->Resource.NumberOfMusics] = NewMusic;
-        Engine->Resource.NumberOfMusics++;
-        return(RETURN_SUCCESS);
-    }
-    return(ERROR_INVALID_ENGINE);
-}
-
-int8 CacheTexture(char* File, Engine* Engine)
-{
-    const char Parameters[] = "(char* File: 0x%p, Engine* Engine: 0x%p)";
-    if(Engine)
-    {
-        if(Engine->Resource.Textures)
-        {
-            SDL_Surface* Surface = IMG_Load(File);
-            if(!Surface)
-            {
-                Error Error = {WARNING_SDL_FAILURE,"CacheTexture","Could not create surface.","\0","\0"};
-                snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,File,Engine);
-                snprintf(Error.Description,STRING_BUFFER_SIZE,"IMG_Load failed and returned 0x%p.",Surface);
-                return(WARNING_SDL_FAILURE);
-            }
-
-            SDL_Texture* NewTexture = SDL_CreateTextureFromSurface(Engine->Video.Renderer,Surface);
-            SDL_FreeSurface(Surface);
-            if(!NewTexture)
-            {
-                Error Error = {WARNING_SDL_FAILURE,"CacheTexture","Could not create texture.","\0","\0"};
-                snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,File,Engine);
-                snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_CreateTextureFromSurface failed and returned 0x%p.",NewTexture);
-                return(WARNING_SDL_FAILURE);   
-            }
-
-            if(Engine->Resource.NumberOfTextures+1 >= Engine->Resource.AllocatedTextureMemory)
-            {
-                ResourceInfo ResourceInfo;
-                ResourceInfo.Pointer = &Engine->Resource.Textures;
-                ResourceInfo.SizeOfResource = sizeof(SDL_Texture*);
-                ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTextureMemory;
-                ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTextures;
-                ExtendResourcePool(ResourceInfo,Engine);
-            }
-
-            Engine->Resource.Textures[Engine->Resource.NumberOfTextures] = NewTexture;
-            Engine->Resource.NumberOfTextures++;
-            return(RETURN_SUCCESS);
-        }
-    }
-    return(ERROR_INVALID_ENGINE);
 }

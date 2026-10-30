@@ -1,5 +1,12 @@
 #define NOP __asm__("nop")
 
+typedef struct Scene {
+    uint8 SceneNumber;
+    uint32 Textures[10];
+    uint32 Sounds[10];
+    uint32 Musics[10];
+} Scene;
+
 typedef struct CADHeader {
     uint8 CADType;
     uint8 ActorType;
@@ -14,9 +21,17 @@ typedef struct CADPhysics {
     float Friction;
 } CADPhysics;
 
+typedef struct CADGOD{
+    CADHeader Header;
+    Scene* CurrentScene;
+    bool ResetScene;
+} CADGOD;
+
 typedef struct CADMonster {
     CADHeader Header;
     CADPhysics Physics;
+    uint32 GodReference;
+    uint64 GodID;
     uint32 TargetReferenceIndex;
     uint64 TargetID;
     FVector2 TargetPosition;
@@ -25,20 +40,28 @@ typedef struct CADMonster {
 typedef struct CADPlayer {
     CADHeader Header;
     CADPhysics Physics;
+    uint32 GodReference;
+    uint64 GodID;
     uint8 PlayerNumber;
 } CADPlayer;
 
 typedef struct CADGeneric {
     CADHeader Header;
     CADPhysics Physics;
+    uint32 GodReference;
+    uint64 GodID;
 } CADGeneric;
 
 enum CADTypes {
+    CAD_GENERIC,
+    CAD_GOD,
     CAD_PLAYER,
     CAD_MONSTER
 };
 
 enum ActorTypes {
+    ACT_GOD,
+    ACT_BG,
     ACT_PLAYER,
     ACT_MONSTER
 };
@@ -49,19 +72,17 @@ typedef struct CSD {
 } CSD;
 
 enum Textures {
-    TXTR_TBG,
-    TXTR_EBG,
+    TXTR_BG,
     TXTR_PLAYER,
-    TXTR_MONSTER,
-    TXTR_FONT
+    TXTR_MONSTER
 };
 
 enum Sounds {
-    SND_COUGH
+    SND_MONSTER_DIE
 };
 
-enum Music {
-    MUS_WFRTP
+enum Musics {
+    MUS_TRACK01
 };
 
 static int PlayerKeybinds[2][4] = 
@@ -81,3 +102,9 @@ enum PlayerButtons {
     PB_LEFT = 2,
     PB_RIGHT = 3
 };
+
+Scene* CreateScene(Scene* Scene, Engine* Engine);
+void ResetScene(Engine* Engine);
+
+void CreateMonsterGame(uint32 GodRef, Engine* Engine);
+void KillMonsterGame(uint32 GodRef, Engine* Engine);

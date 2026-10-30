@@ -224,151 +224,206 @@ Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, in
     }
     LoadEngineConfig(NewEngine);
     InitSDL(NewEngine);
+
+    ResourceInfo RSRCSounds = 
+    {
+        &NewEngine->Sounds,
+        sizeof(Sound),
+        &SoundFreeFunction,
+        &NewEngine->Resource.AllocatedSoundMemory,
+        &NewEngine->Resource.NumberOfSounds,
+        false
+    };
+    ResourceInfo RSRCSoundRefs = 
+    {
+        &NewEngine->SoundReferences,
+        sizeof(Sound*),
+        NULL,
+        &NewEngine->Resource.AllocatedSoundReferenceMemory,
+        &NewEngine->Resource.NumberOfSoundReferences,
+        true
+    };
+
+    ResourceInfo RSRCMusics = 
+    {
+        &NewEngine->Musics,
+        sizeof(Music),
+        &MusicFreeFunction,
+        &NewEngine->Resource.AllocatedMusicMemory,
+        &NewEngine->Resource.NumberOfMusics,
+        false
+    };
+    ResourceInfo RSRCMusicRefs = 
+    {
+        &NewEngine->MusicReferences,
+        sizeof(Music*),
+        NULL,
+        &NewEngine->Resource.AllocatedMusicReferenceMemory,
+        &NewEngine->Resource.NumberOfMusicReferences,
+        true
+    };
+
+    ResourceInfo RSRCTextures = 
+    {
+        &NewEngine->Textures,
+        sizeof(Texture),
+        &TextureFreeFunction,
+        &NewEngine->Resource.AllocatedTextureMemory,
+        &NewEngine->Resource.NumberOfTextures,
+        false
+    };
+    ResourceInfo RSRCTextureRefs = 
+    {
+        &NewEngine->TextureReferences,
+        sizeof(Texture*),
+        NULL,
+        &NewEngine->Resource.AllocatedTextureReferenceMemory,
+        &NewEngine->Resource.NumberOfTextureReferences,
+        true
+    };
+
+    ResourceInfo RSRCSprites = 
+    {
+        &NewEngine->Sprites,
+        sizeof(Sprite),
+        &SpriteFreeFunction,
+        &NewEngine->Resource.AllocatedSpriteMemory,
+        &NewEngine->Resource.NumberOfSprites,
+        false
+    };
+    ResourceInfo RSRCSpriteRefs = 
+    {
+        &NewEngine->SpriteReferences,
+        sizeof(Sprite*),
+        NULL,
+        &NewEngine->Resource.AllocatedSpriteReferenceMemory,
+        &NewEngine->Resource.NumberOfSpriteReferences,
+        true
+    };
+
+    ResourceInfo RSRCActors = 
+    {
+        &NewEngine->Actors,
+        sizeof(Actor),
+        &ActorFreeFunction,
+        &NewEngine->Resource.AllocatedActorMemory,
+        &NewEngine->Resource.NumberOfActors,
+        false
+    };
+    ResourceInfo RSRCActorRefs = 
+    {
+        &NewEngine->ActorReferences,
+        sizeof(Actor*),
+        NULL,
+        &NewEngine->Resource.AllocatedActorReferenceMemory,
+        &NewEngine->Resource.NumberOfActorReferences,
+        true
+    };
+
+    ResourceInfo RSRCGamepads = 
+    {
+        &NewEngine->Input.Gamepads,
+        sizeof(Gamepad),
+        &GamepadFreeFunction,
+        &NewEngine->Resource.AllocatedGamepadMemory,
+        &NewEngine->Resource.NumberOfGamepads,
+        false
+    };
+    ResourceInfo RSRCGamepadRefs = 
+    {
+        &NewEngine->Input.GamepadReferences,
+        sizeof(Gamepad*),
+        NULL,
+        &NewEngine->Resource.AllocatedGamepadReferenceMemory,
+        &NewEngine->Resource.NumberOfGamepadReferences,
+        true
+    };
+
+    ResourceInfo RSRCTimers = 
+    {
+        &NewEngine->Timers,
+        sizeof(Timer),
+        NULL,
+        &NewEngine->Resource.AllocatedTimerMemory,
+        &NewEngine->Resource.NumberOfTimerReferences,
+        false
+    };
+    ResourceInfo RSRCTimerRefs = 
+    {
+        &NewEngine->TimerReferences,
+        sizeof(Timer*),
+        NULL,
+        &NewEngine->Resource.AllocatedTimerReferenceMemory,
+        &NewEngine->Resource.NumberOfTimerReferences,
+        true
+    };
+
     if(NewEngine->Config.Audiate)
     {
         InitAudio(NewEngine);
+        InitResourcePool(RSRCSounds,NewEngine);
+        InitResourcePool(RSRCSoundRefs,NewEngine);
+        InitResourcePool(RSRCMusics,NewEngine);
+        InitResourcePool(RSRCMusicRefs,NewEngine);
     }
-    //sounds
-    NewResourceInfo.Pointer = &NewEngine->Resource.Sounds;
-    NewResourceInfo.SizeOfResource = sizeof(Mix_Chunk*);
-    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedSoundMemory;
-    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfSounds;
-    NewResourceInfo.IsPointerArray = true;
-    InitResourcePool(NewResourceInfo,NewEngine);
-    //music
-    NewResourceInfo.Pointer = &NewEngine->Resource.Music;
-    NewResourceInfo.SizeOfResource = sizeof(Mix_Music*);
-    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedMusicMemory;
-    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfMusics;
-    InitResourcePool(NewResourceInfo,NewEngine);
-    NewResourceInfo.IsPointerArray = true;
     if(NewEngine->Config.Render)
     {
         InitVideo(NewEngine);
+        InitResourcePool(RSRCTextures,NewEngine);
+        InitResourcePool(RSRCTextureRefs,NewEngine);
     }
-    //textures
-    NewResourceInfo.Pointer = &NewEngine->Resource.Textures;
-    NewResourceInfo.SizeOfResource = sizeof(SDL_Texture*);
-    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedTextureMemory;
-    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfTextures;
-    InitResourcePool(NewResourceInfo, NewEngine);
-    NewResourceInfo.IsPointerArray = true;
-    //actors
-    NewResourceInfo.Pointer = &NewEngine->Actors;
-    NewResourceInfo.SizeOfResource = sizeof(Actor);
-    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedActorMemory;
-    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfActors;
-    InitResourcePool(NewResourceInfo,NewEngine);
-    NewResourceInfo.IsPointerArray = false;
-    //actor references
-    NewResourceInfo.Pointer = &NewEngine->ActorReferences;
-    NewResourceInfo.SizeOfResource = sizeof(void*);
-    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedActorReferenceMemory;
-    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfActorReferences;
-    InitResourcePool(NewResourceInfo,NewEngine);
-    NewResourceInfo.IsPointerArray = true;
-    //sprites
-    NewResourceInfo.Pointer = &NewEngine->Sprites;
-    NewResourceInfo.SizeOfResource = sizeof(Sprite);
-    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedSpriteMemory;
-    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfSprites;
-    InitResourcePool(NewResourceInfo,NewEngine);
-    NewResourceInfo.IsPointerArray = false;
-    //sprite references
-    NewResourceInfo.Pointer = &NewEngine->SpriteReferences;
-    NewResourceInfo.SizeOfResource = sizeof(void*);
-    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedSpriteReferenceMemory;
-    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfSpriteReferences;
-    InitResourcePool(NewResourceInfo,NewEngine);
-    NewResourceInfo.IsPointerArray = true;
-    //timers
-    NewResourceInfo.Pointer = &NewEngine->Timers;
-    NewResourceInfo.SizeOfResource = sizeof(Timer);
-    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedTimerMemory;
-    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfTimers;
-    InitResourcePool(NewResourceInfo,NewEngine);
-    NewResourceInfo.IsPointerArray = false;
-    //timer references
-    NewResourceInfo.Pointer = &NewEngine->TimerReferences;
-    NewResourceInfo.SizeOfResource = sizeof(void*);
-    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedTimerReferenceMemory;
-    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfTimerReferences;
-    InitResourcePool(NewResourceInfo,NewEngine);
-    NewResourceInfo.IsPointerArray = true;
-    //gamepads
-    NewResourceInfo.Pointer = &NewEngine->Input.Gamepads;
-    NewResourceInfo.SizeOfResource = sizeof(Gamepad);
-    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedGamepadMemory;
-    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfGamepads;
-    InitResourcePool(NewResourceInfo,NewEngine);
-    NewResourceInfo.IsPointerArray = false;
-    //gamepad references
-    NewResourceInfo.Pointer = &NewEngine->Input.GamepadReferences;
-    NewResourceInfo.SizeOfResource = sizeof(void*);
-    NewResourceInfo.AllocatedResourceMemory = &NewEngine->Resource.AllocatedGamepadReferenceMemory;
-    NewResourceInfo.NumberOfResources = &NewEngine->Resource.NumberOfGamepadReferences;
-    InitResourcePool(NewResourceInfo,NewEngine);
-    NewResourceInfo.IsPointerArray = true;
+    InitResourcePool(RSRCSprites,NewEngine);
+    InitResourcePool(RSRCSpriteRefs,NewEngine);
+    InitResourcePool(RSRCActors,NewEngine);
+    InitResourcePool(RSRCActorRefs,NewEngine);
+    InitResourcePool(RSRCTimers,NewEngine);
+    InitResourcePool(RSRCTimerRefs,NewEngine);
+    InitResourcePool(RSRCGamepads,NewEngine);
+    InitResourcePool(RSRCGamepadRefs,NewEngine);
 
     NewEngine->Running = true;
     return(NewEngine);
+}
+
+void TickObjects(Engine* Engine)
+{
+    for(int i = 0; i < Engine->Resource.AllocatedSpriteMemory; i++)
+    {
+        Sprite* S = Engine->Sprites;
+    
+        if(S[i].IsUsed)
+        {
+            if(S[i].Routine != NULL)
+            {
+                S[i].Routine(&S[i],Engine);
+            }
+        }
+    }
+    for(int i = 0; i < Engine->Resource.AllocatedActorMemory; i++)
+    {
+        Actor* A = Engine->Actors;
+        if(A[i].IsUsed)
+        {
+            if(((Actor)A[i]).Routine)
+            {
+                A[i].Routine(&A[i],Engine);
+            }
+        }
+    }
 }
 
 int8 RunEngine(Engine* Engine)
 {
     if(Engine)
     {
-        // uint64 PTC = SDL_GetPerformanceCounter();
-        // uint64 OPTC = PTC;
         GetSDLEvents(Engine);
         GetInput(Engine);
-        // PTC = SDL_GetPerformanceCounter();
-        // printf("Input and Events: %d\n",PTC-OPTC);
-        int ASM = Engine->Resource.AllocatedSpriteMemory;
-        int AAM = Engine->Resource.AllocatedActorMemory;
-        Sprite* S = Engine->Sprites;
-        Actor* A = Engine->Actors;
-        // PTC = SDL_GetPerformanceCounter();
-        // OPTC = PTC;
-        for(int i = 0; i < ASM; i++)
-        {
-            if(S[i].IsUsed)
-            {
-                if(S[i].Routine != NULL)
-                {
-                    S[i].Routine(&S[i],Engine);
-                }
-            }
-        }
-        for(int i = 0; i < AAM; i++)
-        {
-            if(A[i].IsUsed)
-            {
-                if(((Actor)A[i]).Routine)
-                {
-                    A[i].Routine(&A[i],Engine);
-                }
-            }
-        }
-        // PTC = SDL_GetPerformanceCounter();
-        // printf("Actors and Sprites: %d\n",PTC-OPTC);
-        // PTC = SDL_GetPerformanceCounter();
-        // OPTC = PTC;
+        TickObjects(Engine);
         KeepTime(Engine);
         TickTimers(Engine);
         MixMusicVolume(Engine);
-        // PTC = SDL_GetPerformanceCounter();
-        // printf("Time and Music: %d\n",PTC-OPTC);
-        // PTC = SDL_GetPerformanceCounter();
-        // OPTC = PTC;
         Render(Engine);
-        // PTC = SDL_GetPerformanceCounter();
-        // printf("Render: %d\n",PTC-OPTC);
-        // printf("\033[4a\r");
         return(RETURN_SUCCESS);
-        //Clock a = Engine->Clock;
-        //printf("Current Time: %lu\nPrevious Time: %lu\nDelta Time: %f\nTotal Frames: %lu\nReal Time: %lu\nFramerate: %f\033[6A\r",a.PerfTime,a.PrevPerfTime,a.DeltaTime,a.TotalTicks,a.RealTime,a.FrameRate);
-        //return(RETURN_SUCCESS);
     }
     return(ERROR_INVALID_ENGINE);
 }
@@ -377,100 +432,163 @@ int8 CleanupEngine(Engine* Engine)
 {
     if(Engine)
     {
-        ResourceInfo ResourceInfo;
-        
-        //sounds
-        ResourceInfo.Pointer = &Engine->Resource.Sounds;
-        ResourceInfo.SizeOfResource = sizeof(Mix_Chunk*);
-        ResourceInfo.FreeFunction = (void (*)(void*))&Mix_FreeChunk;
-        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSounds;
-        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSoundMemory;
-        ResourceInfo.IsPointerArray = true;
-        CleanupResourcePool(ResourceInfo,Engine);
-        //music
-        ResourceInfo.Pointer = &Engine->Resource.Music;
-        ResourceInfo.SizeOfResource = sizeof(Mix_Music*);
-        ResourceInfo.FreeFunction = (void (*)(void*))&Mix_FreeMusic;
-        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfMusics;
-        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedMusicMemory;
-        ResourceInfo.IsPointerArray = true;
-        CleanupResourcePool(ResourceInfo,Engine);
-        //textures
-        ResourceInfo.Pointer = &Engine->Resource.Textures;
-        ResourceInfo.SizeOfResource = sizeof(SDL_Texture*);
-        ResourceInfo.FreeFunction = (void (*)(void*))&SDL_DestroyTexture;
-        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTextures;
-        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTextureMemory;
-        ResourceInfo.IsPointerArray = true;
-        CleanupResourcePool(ResourceInfo,Engine);
-        //sprites
-        ResourceInfo.Pointer = &Engine->Sprites;
-        ResourceInfo.SizeOfResource = sizeof(Sprite);
-        ResourceInfo.FreeFunction = &SpriteFreeFunction;
-        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSprites;
-        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteMemory;
-        ResourceInfo.IsPointerArray = false;
-        CleanupResourcePool(ResourceInfo,Engine);
-        //sprite references
-        ResourceInfo.Pointer = &Engine->SpriteReferences;
-        ResourceInfo.SizeOfResource = sizeof(void*);
-        ResourceInfo.FreeFunction = NULL;
-        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteReferenceMemory;
-        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfSpriteReferences;
-        ResourceInfo.IsPointerArray = true;
-        CleanupResourcePool(ResourceInfo,Engine);
-        //actors
-        ResourceInfo.Pointer = &Engine->Actors;
-        ResourceInfo.SizeOfResource = sizeof(Actor);
-        ResourceInfo.FreeFunction = &ActorFreeFunction;
-        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActors;
-        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
-        ResourceInfo.IsPointerArray = false;
-        CleanupResourcePool(ResourceInfo,Engine);
-        //actor references
-        ResourceInfo.Pointer = &Engine->ActorReferences;
-        ResourceInfo.SizeOfResource = sizeof(void*);
-        ResourceInfo.FreeFunction = NULL;
-        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedActorReferenceMemory;
-        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfActorReferences;
-        ResourceInfo.IsPointerArray = true;
-        CleanupResourcePool(ResourceInfo,Engine);
-        CleanupVideo(Engine);
-        //timers
-        ResourceInfo.Pointer = &Engine->Timers;
-        ResourceInfo.SizeOfResource = sizeof(Timer);
-        ResourceInfo.FreeFunction = NULL;
-        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTimerMemory;
-        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTimerReferences;
-        ResourceInfo.IsPointerArray = false;
-        //timer references
-        ResourceInfo.Pointer = &Engine->TimerReferences;
-        ResourceInfo.SizeOfResource = sizeof(void*);
-        ResourceInfo.FreeFunction = NULL;
-        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedTimerReferenceMemory;
-        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfTimerReferences;
-        ResourceInfo.IsPointerArray = true;
-        CleanupResourcePool(ResourceInfo,Engine);
-        //gamepads
-        ResourceInfo.Pointer = &Engine->Input.Gamepads;
-        ResourceInfo.SizeOfResource = sizeof(Gamepad);
-        ResourceInfo.FreeFunction = NULL;
-        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedGamepadMemory;
-        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfGamepadReferences;
-        ResourceInfo.IsPointerArray = false;
-        CleanupResourcePool(ResourceInfo,Engine);
-        //gamepad references
-        ResourceInfo.Pointer = &Engine->Input.GamepadReferences;
-        ResourceInfo.SizeOfResource = sizeof(void*);
-        ResourceInfo.FreeFunction = NULL;
-        ResourceInfo.AllocatedResourceMemory = &Engine->Resource.AllocatedGamepadReferenceMemory;
-        ResourceInfo.NumberOfResources = &Engine->Resource.NumberOfGamepadReferences;
-        ResourceInfo.IsPointerArray = true;
-        CleanupResourcePool(ResourceInfo,Engine);
+        ResourceInfo RSRCSounds = 
+        {
+            &Engine->Sounds,
+            sizeof(Sound),
+            &SoundFreeFunction,
+            &Engine->Resource.AllocatedSoundMemory,
+            &Engine->Resource.NumberOfSounds,
+            false
+        };
+        ResourceInfo RSRCSoundRefs = 
+        {
+            &Engine->SoundReferences,
+            sizeof(Sound*),
+            NULL,
+            &Engine->Resource.AllocatedSoundReferenceMemory,
+            &Engine->Resource.NumberOfSoundReferences,
+            true
+        };
 
+        ResourceInfo RSRCMusics = 
+        {
+            &Engine->Musics,
+            sizeof(Music),
+            &MusicFreeFunction,
+            &Engine->Resource.AllocatedMusicMemory,
+            &Engine->Resource.NumberOfMusics,
+            false
+        };
+        ResourceInfo RSRCMusicRefs = 
+        {
+            &Engine->MusicReferences,
+            sizeof(Music*),
+            NULL,
+            &Engine->Resource.AllocatedMusicReferenceMemory,
+            &Engine->Resource.NumberOfMusicReferences,
+            true
+        };
+
+        ResourceInfo RSRCTextures = 
+        {
+            &Engine->Textures,
+            sizeof(Texture),
+            &TextureFreeFunction,
+            &Engine->Resource.AllocatedTextureMemory,
+            &Engine->Resource.NumberOfTextures,
+            false
+        };
+        ResourceInfo RSRCTextureRefs = 
+        {
+            &Engine->TextureReferences,
+            sizeof(Texture*),
+            NULL,
+            &Engine->Resource.AllocatedTextureReferenceMemory,
+            &Engine->Resource.NumberOfTextureReferences,
+            true
+        };
+
+        ResourceInfo RSRCSprites = 
+        {
+            &Engine->Sprites,
+            sizeof(Sprite),
+            &SpriteFreeFunction,
+            &Engine->Resource.AllocatedSpriteMemory,
+            &Engine->Resource.NumberOfSprites,
+            false
+        };
+        ResourceInfo RSRCSpriteRefs = 
+        {
+            &Engine->SpriteReferences,
+            sizeof(Sprite*),
+            NULL,
+            &Engine->Resource.AllocatedSpriteReferenceMemory,
+            &Engine->Resource.NumberOfSpriteReferences,
+            true
+        };
+
+        ResourceInfo RSRCActors = 
+        {
+            &Engine->Actors,
+            sizeof(Actor),
+            &ActorFreeFunction,
+            &Engine->Resource.AllocatedActorMemory,
+            &Engine->Resource.NumberOfActors,
+            false
+        };
+        ResourceInfo RSRCActorRefs = 
+        {
+            &Engine->ActorReferences,
+            sizeof(Actor*),
+            NULL,
+            &Engine->Resource.AllocatedActorReferenceMemory,
+            &Engine->Resource.NumberOfActorReferences,
+            true
+        };
+
+        ResourceInfo RSRCGamepads = 
+        {
+            &Engine->Input.Gamepads,
+            sizeof(Gamepad),
+            &GamepadFreeFunction,
+            &Engine->Resource.AllocatedGamepadMemory,
+            &Engine->Resource.NumberOfGamepads,
+            false
+        };
+        ResourceInfo RSRCGamepadRefs = 
+        {
+            &Engine->Input.GamepadReferences,
+            sizeof(Gamepad*),
+            NULL,
+            &Engine->Resource.AllocatedGamepadReferenceMemory,
+            &Engine->Resource.NumberOfGamepadReferences,
+            true
+        };
+
+        ResourceInfo RSRCTimers = 
+        {
+            &Engine->Timers,
+            sizeof(Timer),
+            NULL,
+            &Engine->Resource.AllocatedTimerMemory,
+            &Engine->Resource.NumberOfTimers,
+            false
+        };
+        ResourceInfo RSRCTimerRefs = 
+        {
+            &Engine->TimerReferences,
+            sizeof(Timer*),
+            NULL,
+            &Engine->Resource.AllocatedTimerReferenceMemory,
+            &Engine->Resource.NumberOfTimerReferences,
+            true
+        };
+
+        if(Engine->Config.Audiate)
+        {
+            CleanupResourcePool(RSRCSounds,Engine);
+            CleanupResourcePool(RSRCSoundRefs,Engine);
+            CleanupResourcePool(RSRCMusics,Engine);
+            CleanupResourcePool(RSRCMusicRefs,Engine);
+        }
+        if(Engine->Config.Render)
+        {
+            CleanupResourcePool(RSRCTextures,Engine);
+            CleanupResourcePool(RSRCTextureRefs,Engine);
+        }
+        CleanupResourcePool(RSRCActors,Engine);
+        CleanupResourcePool(RSRCActorRefs,Engine);
+        CleanupResourcePool(RSRCSprites,Engine);
+        CleanupResourcePool(RSRCSpriteRefs,Engine);
+        CleanupResourcePool(RSRCTimers,Engine);
+        CleanupResourcePool(RSRCTimerRefs,Engine);
+        CleanupResourcePool(RSRCGamepads,Engine);
+        CleanupResourcePool(RSRCGamepadRefs,Engine);
+        
+        CleanupVideo(Engine);
         memset(Engine,0,sizeof(struct Engine));
         return(RETURN_SUCCESS);
     }
     return(ERROR_INVALID_ENGINE);
 }
-
