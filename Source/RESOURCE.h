@@ -2,7 +2,6 @@
 #define RESOURCE_H
 
 #include "TYPES.h"
-//#include "OBJECTS.h"
 
 typedef struct Object Object;
 typedef struct Sound Sound;
@@ -20,7 +19,7 @@ typedef struct Texture Texture;
 
 typedef struct ResourceInfo {
 	void* Pointer;
-	uint16 SizeOfResource;
+	size_t SizeOfResource;
 	void (*FreeFunction)(void*);
 	uint32* AllocatedResourceMemory;
 	uint32* NumberOfResources;
@@ -66,6 +65,23 @@ typedef struct Resource {
 	uint32 AllocatedGamepadReferenceMemory;
 } Resource;
 
+enum ResourceTypes {
+	RSRC_ACT = 		0b00000001,
+	RSRC_ACT_REF = 	0b10000001,
+	RSRC_SPR = 		0b00000010,
+	RSRC_SPR_REF = 	0b10000010,
+	RSRC_TXTR = 	0b00000011,
+	RSRC_TXTR_REF =	0b10000011,
+	RSRC_SND = 		0b00000100,
+	RSRC_SND_REF =	0b10000100,
+	RSRC_MUS = 		0b00000101,
+	RSRC_MUS_REF =	0b10000101,
+	RSRC_TMR = 		0b00000110,
+	RSRC_TMR_REF = 	0b10000110,
+	RSRC_GP = 		0b00000111,
+	RSRC_GP_REF =	0b10000111
+};
+
 //misc
 void* OSMemoryAllocate(size_t Size);
 void OSMemoryFree(void* Pointer, size_t Size);
@@ -80,6 +96,9 @@ int8 InitResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
 int8 ExtendResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
 int8 ShrinkResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
 int8 CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine);
+
+//populate
+ResourceInfo* PopulateResourceInfo(uint8 ResourceType, ResourceInfo* ResourceInfo, Engine* Engine);
 
 //create
 void* CreateObject(ResourceInfo Objects, ResourceInfo References, Engine* Engine);
@@ -110,12 +129,24 @@ void DestroyTimer(Timer* DTimer, Engine* Engine);
 void DestroyGamepad(Gamepad* DGamepad, Engine* Engine);
 
 //find
+uint32 GetObjectByProperty(void* MemberValue, size_t MemberOffset, size_t MemberSize, ResourceInfo Objects);
+uint32 GetSoundByName(char* Name, Engine* Engine);
+uint32 GetSoundByID(uint64 ID, Engine* Engine);
+uint32 GetSoundByFile(char* File, Engine* Engine);
+uint32 GetMusicByName(char* Name, Engine* Engine);
+uint32 GetMusicByID(uint64 ID, Engine* Engine);
+uint32 GetMusicByFile(char* File, Engine* Engine);
+uint32 GetTextureByName(char* Name, Engine* Engine);
+uint32 GetTextureByID(uint64 ID, Engine* Engine);
+uint32 GetTextureByFile(char* File, Engine* Engine);
 uint32 GetSpriteByName(char* Name, Engine* Engine);
 uint32 GetSpriteByID(uint64 ID, Engine* Engine);
-uint32 GetSpriteByProperty(void* Property, uint32 Offset, uint32 Size, Engine* Engine);
+uint32 GetSpriteByProperty(void* MemberValue, size_t MemberOffset, size_t MemberSize, Engine* Engine);
 uint32 GetActorByName(char* Name, Engine* Engine);
 uint32 GetActorByID(Uint64 ID, Engine* Engine);
-uint32 GetActorByProperty(void* Property, uint32 Offset, uint32 Size, Engine* Engine);
-uint32 GetTextureByName(char* Name, Engine* Engine);
+uint32 GetActorByProperty(void* MemberValue, size_t MemberOffset, size_t MemberSize, Engine* Engine);
+uint32 GetTimerByName(char* Name, Engine* Engine);
+uint32 GetTimerByID(uint64 ID, Engine* Engine);
+uint32 GetTimerByProperty(void* MemberValue, size_t MemberOffset, size_t MemberSize, Engine* Engine);
 
 #endif

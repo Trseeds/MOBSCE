@@ -298,6 +298,161 @@ int8 CleanupResourcePool(ResourceInfo ResourceInfo, Engine* Engine)
     return(ERROR_INVALID_ENGINE);
 }
 
+//populate ============================================================================================================================================================================================================
+ResourceInfo* PopulateResourceInfo(uint8 ResourceType, ResourceInfo* ResourceInfo, Engine* Engine)
+{
+    switch(ResourceType)
+    {
+        case RSRC_SND:
+        {
+            ResourceInfo->Pointer = &Engine->Sounds;
+            ResourceInfo->SizeOfResource = sizeof(struct Sound);
+            ResourceInfo->FreeFunction = &SoundFreeFunction;
+            ResourceInfo->AllocatedResourceMemory = &Engine->Resource.AllocatedSoundMemory;
+            ResourceInfo->NumberOfResources= &Engine->Resource.NumberOfSounds;
+            ResourceInfo->IsPointerArray = false;
+            break;
+        }
+        case RSRC_SND_REF:
+        {
+            ResourceInfo->Pointer = &Engine->SoundReferences;
+            ResourceInfo->SizeOfResource = sizeof(struct Sound*);
+            ResourceInfo->FreeFunction = NULL;
+            ResourceInfo->AllocatedResourceMemory = &Engine->Resource.AllocatedSoundReferenceMemory;
+            ResourceInfo->NumberOfResources= &Engine->Resource.NumberOfSoundReferences;
+            ResourceInfo->IsPointerArray = true;
+            break;
+        }
+
+        case RSRC_MUS:
+        {
+            ResourceInfo->Pointer = &Engine->Musics;
+            ResourceInfo->SizeOfResource = sizeof(struct Music);
+            ResourceInfo->FreeFunction = &MusicFreeFunction;
+            ResourceInfo->AllocatedResourceMemory = &Engine->Resource.AllocatedMusicMemory;
+            ResourceInfo->NumberOfResources= &Engine->Resource.NumberOfMusics;
+            ResourceInfo->IsPointerArray = false;
+            break;
+        }
+        case RSRC_MUS_REF:
+        {
+            ResourceInfo->Pointer = &Engine->MusicReferences;
+            ResourceInfo->SizeOfResource = sizeof(struct Music*);
+            ResourceInfo->FreeFunction = NULL;
+            ResourceInfo->AllocatedResourceMemory = &Engine->Resource.AllocatedMusicReferenceMemory;
+            ResourceInfo->NumberOfResources= &Engine->Resource.NumberOfMusicReferences;
+            ResourceInfo->IsPointerArray = true;
+            break;
+        }
+
+        case RSRC_TXTR:
+        {
+            ResourceInfo->Pointer = &Engine->Textures;
+            ResourceInfo->SizeOfResource = sizeof(struct Texture);
+            ResourceInfo->FreeFunction = &TextureFreeFunction;
+            ResourceInfo->AllocatedResourceMemory = &Engine->Resource.AllocatedTextureMemory;
+            ResourceInfo->NumberOfResources= &Engine->Resource.NumberOfTextures;
+            ResourceInfo->IsPointerArray = false;
+            break;
+        }
+        case RSRC_TXTR_REF:
+        {
+            ResourceInfo->Pointer = &Engine->TextureReferences;
+            ResourceInfo->SizeOfResource = sizeof(struct Texture*);
+            ResourceInfo->FreeFunction = NULL;
+            ResourceInfo->AllocatedResourceMemory = &Engine->Resource.AllocatedTextureReferenceMemory;
+            ResourceInfo->NumberOfResources= &Engine->Resource.NumberOfTextureReferences;
+            ResourceInfo->IsPointerArray = true;
+            break;
+        }
+
+        case RSRC_SPR:
+        {
+            ResourceInfo->Pointer = &Engine->Sprites;
+            ResourceInfo->SizeOfResource = sizeof(struct Sprite);
+            ResourceInfo->FreeFunction = &SpriteFreeFunction;
+            ResourceInfo->AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteMemory;
+            ResourceInfo->NumberOfResources= &Engine->Resource.NumberOfSprites;
+            ResourceInfo->IsPointerArray = false;
+            break;
+        }
+        case RSRC_SPR_REF:
+        {
+            ResourceInfo->Pointer = &Engine->SpriteReferences;
+            ResourceInfo->SizeOfResource = sizeof(struct Sprite*);
+            ResourceInfo->FreeFunction = NULL;
+            ResourceInfo->AllocatedResourceMemory = &Engine->Resource.AllocatedSpriteReferenceMemory;
+            ResourceInfo->NumberOfResources= &Engine->Resource.NumberOfSpriteReferences;
+            ResourceInfo->IsPointerArray = true;
+            break;
+        }
+
+        case RSRC_ACT:
+        {
+            ResourceInfo->Pointer = &Engine->Actors;
+            ResourceInfo->SizeOfResource = sizeof(struct Actor);
+            ResourceInfo->FreeFunction = &ActorFreeFunction;
+            ResourceInfo->AllocatedResourceMemory = &Engine->Resource.AllocatedActorMemory;
+            ResourceInfo->NumberOfResources= &Engine->Resource.NumberOfActors;
+            ResourceInfo->IsPointerArray = false;
+            break;
+        }
+        case RSRC_ACT_REF:
+        {
+            ResourceInfo->Pointer = &Engine->ActorReferences;
+            ResourceInfo->SizeOfResource = sizeof(struct Actor*);
+            ResourceInfo->FreeFunction = NULL;
+            ResourceInfo->AllocatedResourceMemory = &Engine->Resource.AllocatedActorReferenceMemory;
+            ResourceInfo->NumberOfResources= &Engine->Resource.NumberOfActorReferences;
+            ResourceInfo->IsPointerArray = true;
+            break;
+        }
+
+        case RSRC_TMR:
+        {
+            ResourceInfo->Pointer = &Engine->Timers;
+            ResourceInfo->SizeOfResource = sizeof(struct Timer);
+            ResourceInfo->FreeFunction = NULL;
+            ResourceInfo->AllocatedResourceMemory = &Engine->Resource.AllocatedTimerMemory;
+            ResourceInfo->NumberOfResources= &Engine->Resource.NumberOfTimers;
+            ResourceInfo->IsPointerArray = false;
+            break;
+        }
+        case RSRC_TMR_REF:
+        {
+            ResourceInfo->Pointer = &Engine->TimerReferences;
+            ResourceInfo->SizeOfResource = sizeof(struct Timer*);
+            ResourceInfo->FreeFunction = NULL;
+            ResourceInfo->AllocatedResourceMemory = &Engine->Resource.AllocatedTimerReferenceMemory;
+            ResourceInfo->NumberOfResources= &Engine->Resource.NumberOfTimerReferences;
+            ResourceInfo->IsPointerArray = true;
+            break;
+        }
+
+        case RSRC_GP:
+        {
+            ResourceInfo->Pointer = &Engine->Input.Gamepads;
+            ResourceInfo->SizeOfResource = sizeof(struct Gamepad);
+            ResourceInfo->FreeFunction = &GamepadFreeFunction;
+            ResourceInfo->AllocatedResourceMemory = &Engine->Resource.AllocatedGamepadMemory;
+            ResourceInfo->NumberOfResources= &Engine->Resource.NumberOfGamepads;
+            ResourceInfo->IsPointerArray = false;
+            break;
+        }
+        case RSRC_GP_REF:
+        {
+            ResourceInfo->Pointer = &Engine->Input.GamepadReferences;
+            ResourceInfo->SizeOfResource = sizeof(struct Gamepad*);
+            ResourceInfo->FreeFunction = NULL;
+            ResourceInfo->AllocatedResourceMemory = &Engine->Resource.AllocatedGamepadReferenceMemory;
+            ResourceInfo->NumberOfResources= &Engine->Resource.NumberOfGamepadReferences;
+            ResourceInfo->IsPointerArray = true;
+            break;
+        }
+    }
+    return(ResourceInfo);
+}
+
 //create ==============================================================================================================================================================================================================
 void* CreateObject(ResourceInfo Objects, ResourceInfo References, Engine* Engine)
 {
@@ -338,8 +493,10 @@ uint32 CreateSound(char* File, char* Name, Engine* Engine)
             return(SENTINEL_OBJECT);
         }
 
-        ResourceInfo Objects = {&Engine->Sounds,sizeof(struct Sound),&SoundFreeFunction,&Engine->Resource.AllocatedSoundMemory,&Engine->Resource.NumberOfSounds,false};
-        ResourceInfo References = {&Engine->SoundReferences,sizeof(Sound*),NULL,&Engine->Resource.AllocatedSoundReferenceMemory,&Engine->Resource.NumberOfSoundReferences,true};
+        ResourceInfo Objects;
+        ResourceInfo References;
+        PopulateResourceInfo(RSRC_SND,&Objects,Engine);
+        PopulateResourceInfo(RSRC_SND_REF,&References,Engine);
         Sound* S = CreateObject(Objects,References,Engine);
         S->Sound = SoundT;
         strncpy(S->Name,Name,OBJECT_NAME_SIZE);
@@ -364,8 +521,10 @@ uint32 CreateMusic(char* File, char* Name, Engine* Engine)
             return(SENTINEL_OBJECT);
         }
 
-        ResourceInfo Objects = {&Engine->Musics,sizeof(struct Music),&MusicFreeFunction,&Engine->Resource.AllocatedMusicMemory,&Engine->Resource.NumberOfMusics,false};
-        ResourceInfo References = {&Engine->MusicReferences,sizeof(Music*),NULL,&Engine->Resource.AllocatedMusicReferenceMemory,&Engine->Resource.NumberOfMusicReferences,true};
+        ResourceInfo Objects;
+        ResourceInfo References;
+        PopulateResourceInfo(RSRC_MUS,&Objects,Engine);
+        PopulateResourceInfo(RSRC_MUS_REF,&References,Engine);
         Music* M = CreateObject(Objects,References,Engine);
         M->Music = MusicT;
         strncpy(M->Name,Name,OBJECT_NAME_SIZE);
@@ -400,8 +559,10 @@ uint32 CreateTexture(char* File, char* Name, Engine* Engine)
             return(SENTINEL_OBJECT);
         }
 
-        ResourceInfo Objects = {&Engine->Textures,sizeof(struct Texture),&TextureFreeFunction,&Engine->Resource.AllocatedTextureMemory,&Engine->Resource.NumberOfTextures,false};
-        ResourceInfo References = {&Engine->TextureReferences,sizeof(Texture*),NULL,&Engine->Resource.AllocatedTextureReferenceMemory,&Engine->Resource.NumberOfTextureReferences,true};
+        ResourceInfo Objects;
+        ResourceInfo References;
+        PopulateResourceInfo(RSRC_TXTR,&Objects,Engine);
+        PopulateResourceInfo(RSRC_TXTR_REF,&References,Engine);
         Texture* T = CreateObject(Objects,References,Engine);
         T->Texture = TextureT;
         strncpy(T->Name,Name,OBJECT_NAME_SIZE);
@@ -415,8 +576,10 @@ uint32 CreateSprite(char* Name, Vector3 Position, Vector4 Origin, Vector2 Dimens
 {
     if(Engine)
     {
-        ResourceInfo Objects = {&Engine->Sprites,sizeof(struct Sprite),&SpriteFreeFunction,&Engine->Resource.AllocatedSpriteMemory,&Engine->Resource.NumberOfSprites,false};
-        ResourceInfo References = {&Engine->SpriteReferences,sizeof(Sprite*),NULL,&Engine->Resource.AllocatedSpriteReferenceMemory,&Engine->Resource.NumberOfSpriteReferences,true};
+        ResourceInfo Objects;
+        ResourceInfo References;
+        PopulateResourceInfo(RSRC_SPR,&Objects,Engine);
+        PopulateResourceInfo(RSRC_SPR_REF,&References,Engine);
         Sprite* S = CreateObject(Objects,References,Engine);
         S->CustomData = CustomData;
         S->Routine = Routine;
@@ -454,8 +617,10 @@ uint32 CreateActor(char* Name, Vector2 Position, Vector2 Dimensions, uint32 Voic
 {
     if(Engine)
     {
-        ResourceInfo Objects = {&Engine->Actors,sizeof(struct Actor),&ActorFreeFunction,&Engine->Resource.AllocatedActorMemory,&Engine->Resource.NumberOfActors,false};
-        ResourceInfo References = {&Engine->ActorReferences,sizeof(Actor*),NULL,&Engine->Resource.AllocatedActorReferenceMemory,&Engine->Resource.NumberOfActorReferences,true};
+        ResourceInfo Objects;
+        ResourceInfo References;
+        PopulateResourceInfo(RSRC_ACT,&Objects,Engine);
+        PopulateResourceInfo(RSRC_ACT_REF,&References,Engine);
         Actor* A = CreateObject(Objects,References,Engine);
         A->Position.X = Position.X; A->Position.Y = Position.Y;
         A->Dimensions.X = Dimensions.X; A->Dimensions.Y = Dimensions.Y;
@@ -474,8 +639,10 @@ uint32 CreateTimer(char* Name, uint8 TimerType, uint8 UnitType, uint64 StopAt, E
 {
     if(Engine)
     {
-        ResourceInfo Objects = {&Engine->Timers,sizeof(struct Timer),NULL,&Engine->Resource.AllocatedTimerMemory,&Engine->Resource.NumberOfTimers,false};
-        ResourceInfo References = {&Engine->TimerReferences,sizeof(Timer*),NULL,&Engine->Resource.AllocatedTimerReferenceMemory,&Engine->Resource.NumberOfTimerReferences,true};
+        ResourceInfo Objects;
+        ResourceInfo References;
+        PopulateResourceInfo(RSRC_TMR,&Objects,Engine);
+        PopulateResourceInfo(RSRC_TMR_REF,&References,Engine);
         Timer* T = CreateObject(Objects,References,Engine);   
         strncpy(T->Name,Name,OBJECT_NAME_SIZE);
         T->Name[OBJECT_NAME_SIZE-1] = '\0';
@@ -509,8 +676,10 @@ uint32 CreateGamepad(SDL_GameController* Controller, Engine* Engine)
 {
     if(Engine)
     {
-        ResourceInfo Objects = {&Engine->Input.Gamepads,sizeof(struct Gamepad),NULL,&Engine->Resource.AllocatedGamepadMemory,&Engine->Resource.NumberOfGamepads,false};
-        ResourceInfo References = {&Engine->Input.GamepadReferences,sizeof(Gamepad*),NULL,&Engine->Resource.AllocatedGamepadReferenceMemory,&Engine->Resource.NumberOfGamepadReferences,true};
+        ResourceInfo Objects;
+        ResourceInfo References;
+        PopulateResourceInfo(RSRC_GP,&Objects,Engine);
+        PopulateResourceInfo(RSRC_GP_REF,&References,Engine);
         Gamepad* G = CreateObject(Objects,References,Engine);   
         G->Gamepad = Controller;
         return(G->ReferenceIndex);
@@ -581,7 +750,7 @@ void DestroyObject(ResourceInfo Objects, ResourceInfo References, Object* Object
                 }
 
                 Objects.FreeFunction(Object);
-                memset(Object,0,sizeof(struct Object)); //clears the header, not the actual object. dead objects are beheaded, not cremated.
+                memset(Object,0,sizeof(struct Object)); //clears the header, not the actual object. objects are beheaded, not cremated.
                 return;
             }
         }
@@ -599,8 +768,10 @@ void DestroySprite(Sprite* DSprite, Engine* Engine)
     {
         if(DSprite)
         {   
-            ResourceInfo Objects = {&Engine->Sprites,sizeof(struct Sprite),&SpriteFreeFunction,&Engine->Resource.AllocatedSpriteMemory,&Engine->Resource.NumberOfSprites,false};
-            ResourceInfo References = {&Engine->SpriteReferences,sizeof(Sprite*),NULL,&Engine->Resource.AllocatedSpriteReferenceMemory,&Engine->Resource.NumberOfSpriteReferences,true};
+            ResourceInfo Objects;
+            ResourceInfo References;
+            PopulateResourceInfo(RSRC_SPR,&Objects,Engine);
+            PopulateResourceInfo(RSRC_SPR_REF,&References,Engine);
             DestroyObject(Objects,References,(void*)DSprite,Engine);
             return;
         }
@@ -618,8 +789,10 @@ void DestroyActor(Actor* DActor, Engine* Engine)
     {
         if(DActor)
         {   
-            ResourceInfo Objects = {&Engine->Actors,sizeof(struct Actor),&ActorFreeFunction,&Engine->Resource.AllocatedActorMemory,&Engine->Resource.NumberOfActors,false};
-            ResourceInfo References = {&Engine->ActorReferences,sizeof(Actor*),NULL,&Engine->Resource.AllocatedActorReferenceMemory,&Engine->Resource.NumberOfActorReferences,true};
+            ResourceInfo Objects;
+            ResourceInfo References;
+            PopulateResourceInfo(RSRC_ACT,&Objects,Engine);
+            PopulateResourceInfo(RSRC_ACT_REF,&References,Engine);
             DestroyObject(Objects,References,(void*)DActor,Engine);
             return;
         }
@@ -637,8 +810,10 @@ void DestroyTimer(Timer* DTimer, Engine* Engine)
     {
         if(DTimer)
         {   
-            ResourceInfo Objects = {&Engine->Timers,sizeof(struct Timer),NULL,&Engine->Resource.AllocatedTimerMemory,&Engine->Resource.NumberOfTimers,false};
-            ResourceInfo References = {&Engine->TimerReferences,sizeof(Timer*),NULL,&Engine->Resource.AllocatedTimerReferenceMemory,&Engine->Resource.NumberOfTimerReferences,true};
+            ResourceInfo Objects;
+            ResourceInfo References;
+            PopulateResourceInfo(RSRC_TMR,&Objects,Engine);
+            PopulateResourceInfo(RSRC_TMR_REF,&References,Engine);
             DestroyObject(Objects,References,(void*)DTimer,Engine);
             return;
         }
@@ -656,8 +831,10 @@ void DestroyGamepad(Gamepad* DGamepad, Engine* Engine)
     {
         if(DGamepad)
         {   
-            ResourceInfo Objects = {&Engine->Input.Gamepads,sizeof(struct Gamepad),&GamepadFreeFunction,&Engine->Resource.AllocatedGamepadMemory,&Engine->Resource.NumberOfGamepads,false};
-            ResourceInfo References = {&Engine->Input.GamepadReferences,sizeof(Gamepad*),NULL,&Engine->Resource.AllocatedGamepadReferenceMemory,&Engine->Resource.NumberOfGamepadReferences,true};
+            ResourceInfo Objects;
+            ResourceInfo References;
+            PopulateResourceInfo(RSRC_GP,&Objects,Engine);
+            PopulateResourceInfo(RSRC_GP_REF,&References,Engine);
             DestroyObject(Objects,References,(void*)DGamepad,Engine);
             return;
         }
@@ -675,8 +852,10 @@ void DestroyTexture(Texture* DTexture, Engine* Engine)
     {
         if(DTexture)
         {   
-            ResourceInfo Objects = {&Engine->Textures,sizeof(struct Texture),&TextureFreeFunction,&Engine->Resource.AllocatedTextureMemory,&Engine->Resource.NumberOfTextures,false};
-            ResourceInfo References = {&Engine->TextureReferences,sizeof(Texture*),NULL,&Engine->Resource.AllocatedTextureReferenceMemory,&Engine->Resource.NumberOfTextureReferences,true};
+            ResourceInfo Objects;
+            ResourceInfo References;
+            PopulateResourceInfo(RSRC_TXTR,&Objects,Engine);
+            PopulateResourceInfo(RSRC_TXTR_REF,&References,Engine);
             DestroyObject(Objects,References,(void*)DTexture,Engine);
             return;
         }
@@ -694,8 +873,10 @@ void DestroyMusic(Music* DMusic, Engine* Engine)
     {
         if(DMusic)
         {   
-            ResourceInfo Objects = {&Engine->Musics,sizeof(struct Music),&MusicFreeFunction,&Engine->Resource.AllocatedMusicMemory,&Engine->Resource.NumberOfMusics,false};
-            ResourceInfo References = {&Engine->MusicReferences,sizeof(Music*),NULL,&Engine->Resource.AllocatedMusicReferenceMemory,&Engine->Resource.NumberOfMusicReferences,true};
+            ResourceInfo Objects;
+            ResourceInfo References;
+            PopulateResourceInfo(RSRC_MUS,&Objects,Engine);
+            PopulateResourceInfo(RSRC_MUS_REF,&References,Engine);
             DestroyObject(Objects,References,(void*)DMusic,Engine);
             return;
         }
@@ -713,8 +894,10 @@ void DestroySound(Sound* DSound, Engine* Engine)
     {
         if(DSound)
         {   
-            ResourceInfo Objects = {&Engine->Sounds,sizeof(struct Sound),&SoundFreeFunction,&Engine->Resource.AllocatedSoundMemory,&Engine->Resource.NumberOfSounds,false};
-            ResourceInfo References = {&Engine->SoundReferences,sizeof(Sound*),NULL,&Engine->Resource.AllocatedSoundReferenceMemory,&Engine->Resource.NumberOfSoundReferences,true};
+            ResourceInfo Objects;
+            ResourceInfo References;
+            PopulateResourceInfo(RSRC_SND,&Objects,Engine);
+            PopulateResourceInfo(RSRC_SND_REF,&References,Engine);
             DestroyObject(Objects,References,(void*)DSound,Engine);
             return;
         }
@@ -726,212 +909,239 @@ void DestroySound(Sound* DSound, Engine* Engine)
 }
 
 //find =================================================================================================================================================================================================================
-uint32 GetSpriteByName(char* Name, Engine* Engine)
+uint32 GetObjectByProperty(void* MemberValue, size_t MemberOffset, size_t MemberSize, ResourceInfo Objects)
 {
-    const char Parameters[] = "(char* Name: %s, Engine* Engine: 0x%p)";
-    if(Engine)
+    size_t SOR = Objects.SizeOfResource;
+    uint32 ARM = *Objects.AllocatedResourceMemory;
+    bytepointer BP = *(bytepointer*)Objects.Pointer;
+    for(uint32 i = 0; i < ARM; i++)
     {
-        int ASM = Engine->Resource.AllocatedSpriteMemory;
-        Sprite* S = Engine->Sprites;
-        if(S)
+        size_t Offset = i * SOR;
+        Object* O = (Object*)(BP+Offset);
+        if(O->IsUsed)
         {
-            for(int i = 0; i < ASM; i++)
+            void* Member = ((bytepointer)(O))+MemberOffset;
+            if(!memcmp(Member,MemberValue,MemberSize))
             {
-                if(S[i].IsUsed)
-                {
-                    if(!strcmp(S[i].Name,Name))
-                    {
-                        return(S[i].ReferenceIndex);
-                    }
-                }
+                return(O->ReferenceIndex);
             }
-            Error Error = {WARNING_INVALID_PARAMETER,"GetSpriteByName","Could not find sprite.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Name,Engine);
-            snprintf(Error.Description,STRING_BUFFER_SIZE,"Could not find a sprite with name \"%s\".",Name);
-            ThrowWarning(&Error,Engine);
-            return(SENTINEL_OBJECT);
         }
     }
     return(SENTINEL_OBJECT);
 }
 
-uint32 GetSpriteByID(Uint64 ID, Engine* Engine)
+uint32 GetSoundByName(char* Name, Engine* Engine)
 {
-    const char Parameters[] = "(int ID: %d, Engine* Engine: 0x%p)";
     if(Engine)
     {
-        Sprite* S = Engine->Sprites;
-        int ASM = Engine->Resource.AllocatedSpriteMemory;
-        if(S)
-        {
-            for(int i = 0; i < ASM; i++)
-            {
-                if(S[i].IsUsed)
-                {
-                    if(S[i].ID == ID)
-                    {
-                        return(S[i].ReferenceIndex);
-                    }
-                }
-            }
-            Error Error = {WARNING_INVALID_PARAMETER,"GetSpriteByID","Could not find sprite.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,ID,Engine);
-            snprintf(Error.Description,STRING_BUFFER_SIZE,"Could not find a sprite with ID %d.",ID);
-            ThrowWarning(&Error,Engine);
-            return(SENTINEL_OBJECT);
-        }
+        ResourceInfo ResourceInfo;
+        char RealName[OBJECT_NAME_SIZE] = "\0";
+        memcpy(RealName,Name,strlen(Name));
+        PopulateResourceInfo(RSRC_SND,&ResourceInfo,Engine);
+        return(GetObjectByProperty(RealName,offsetof(struct Sound,Name),OBJECT_NAME_SIZE,ResourceInfo));
     }
     return(SENTINEL_OBJECT);
 }
 
-uint32 GetSpriteByProperty(void* Property, uint32 Offset, uint32 Size, Engine* Engine)
+uint32 GetSoundByID(uint64 ID, Engine* Engine)
 {
-    const char Parameters[] = "(void* Property: 0x%p, uint32 Offset: %d, uint32 Size: %d, Engine* Engine: 0x%p)";
     if(Engine)
     {
-        Sprite* S = Engine->Sprites;
-        int ASM = Engine->Resource.AllocatedSpriteMemory;
-        if(S)
-        {
-            for(int i = 0; i < ASM; i++)
-            {
-                if(S[i].IsUsed)
-                {
-                    if(!memcmp((bytepointer)(&S[i])+Offset,Property,Size))
-                    {
-                        return(S[i].ReferenceIndex);
-                    }
-                }
-            }
-            Error Error = {WARNING_INVALID_PARAMETER,"GetSpriteByProperty","Could not find sprite.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Property,Offset,Size,Engine);
-            snprintf(Error.Description,STRING_BUFFER_SIZE,"Could not find a sprite with property defined at 0x%p.",Property);
-            ThrowWarning(&Error,Engine);
-            return(SENTINEL_OBJECT);
-        }
+        ResourceInfo ResourceInfo;
+        PopulateResourceInfo(RSRC_SND,&ResourceInfo,Engine);
+        return(GetObjectByProperty(&ID,offsetof(struct Sound,ID),sizeof(uint64),ResourceInfo));
     }
     return(SENTINEL_OBJECT);
 }
 
-uint32 GetActorByName(char* Name, Engine* Engine)
+uint32 GetSoundByFile(char* File, Engine* Engine)
 {
-    const char Parameters[] = "(char* Name: %s, Engine* Engine: 0x%p)";
     if(Engine)
     {
-        Actor* A = Engine->Actors;
-        int AAM = Engine->Resource.AllocatedActorMemory;
-        if(A)
-        {
-            for(int i = 0; i < AAM; i++)
-            {
-                if(A[i].IsUsed)
-                {
-                    if(!strcmp(A[i].Name,Name))
-                    {
-                        return(A[i].ReferenceIndex);
-                    }
-                }
-            }
-            Error Error = {WARNING_INVALID_PARAMETER,"GetActorByName","Could not find Actor.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Name,Engine);
-            snprintf(Error.Description,STRING_BUFFER_SIZE,"Could not find an actor with name \"%s\".",Name);
-            ThrowWarning(&Error,Engine);
-            return(SENTINEL_OBJECT);
-        }
+        ResourceInfo ResourceInfo;
+        char RealFile[STRING_BUFFER_SIZE] = "\0";
+        memcpy(RealFile,File,STRING_BUFFER_SIZE);
+        PopulateResourceInfo(RSRC_SND,&ResourceInfo,Engine);
+        return(GetObjectByProperty(RealFile,offsetof(struct Sound,File),STRING_BUFFER_SIZE,ResourceInfo));
     }
     return(SENTINEL_OBJECT);
 }
 
-uint32 GetActorByID(Uint64 ID, Engine* Engine)
+uint32 GetMusicByName(char* Name, Engine* Engine)
 {
-    const char Parameters[] = "(int ID: %d, Engine* Engine: 0x%p)";
     if(Engine)
     {
-        Actor* A = Engine->Actors;
-        int AAM = Engine->Resource.AllocatedActorMemory;
-        if(A)
-        {
-            for(int i = 0; i < AAM; i++)
-            {
-                if(A[i].IsUsed)
-                {
-                    if(A[i].ID == ID)
-                    {
-                        return(A[i].ReferenceIndex);
-                    }
-                }
-            }
-            Error Error = {WARNING_INVALID_PARAMETER,"GetActorByID","Could not find actor.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,ID,Engine);
-            snprintf(Error.Description,STRING_BUFFER_SIZE,"Could not find an actor with ID %d.",ID);
-            ThrowWarning(&Error,Engine);
-            return(SENTINEL_OBJECT);
-        }
+        ResourceInfo ResourceInfo;
+        char RealName[OBJECT_NAME_SIZE] = "\0";
+        memcpy(RealName,Name,strlen(Name));
+        PopulateResourceInfo(RSRC_MUS,&ResourceInfo,Engine);
+        return(GetObjectByProperty(RealName,offsetof(struct Music,Name),OBJECT_NAME_SIZE,ResourceInfo));
     }
     return(SENTINEL_OBJECT);
 }
 
-uint32 GetActorByProperty(void* Property, uint32 Offset, uint32 Size, Engine* Engine)
+uint32 GetMusicByID(uint64 ID, Engine* Engine)
 {
-    const char Parameters[] = "(void* Property: 0x%p, uint32 Offset: %d, uint32 Size: %d, Engine* Engine: 0x%p)";
     if(Engine)
     {
-        Actor* A = Engine->Actors;
-        int AAM = Engine->Resource.AllocatedActorMemory;
-        if(A)
-        {
-            for(int i = 0; i < AAM; i++)
-            {
-                if(A[i].IsUsed)
-                {
-                    // printf("\"");
-                    // for(int j = 0; j < sizeof(struct Actor); j++)
-                    // {
-                    //     char* c = (char*)(&A[i]);
-                    //     printf("%c",*(c+j));
-                    // }
-                    // printf("\"\n");
-                    if(!memcmp((bytepointer)(&A[i])+Offset,Property,Size))
-                    {
-                        return(A[i].ReferenceIndex);
-                    }
-                }
-            }
-            Error Error = {WARNING_INVALID_PARAMETER,"GetActorByProperty","Could not find actor.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Property,Offset,Size,Engine);
-            snprintf(Error.Description,STRING_BUFFER_SIZE,"Could not find an actor with property defined at 0x%p.",Property);
-            ThrowWarning(&Error,Engine);
-            return(SENTINEL_OBJECT);
-        }
+        ResourceInfo ResourceInfo;
+        PopulateResourceInfo(RSRC_MUS,&ResourceInfo,Engine);
+        return(GetObjectByProperty(&ID,offsetof(struct Music,ID),sizeof(uint64),ResourceInfo));
+    }
+    return(SENTINEL_OBJECT);
+}
+
+uint32 GetMusicByFile(char* File, Engine* Engine)
+{
+    if(Engine)
+    {
+        ResourceInfo ResourceInfo;
+        char RealFile[STRING_BUFFER_SIZE] = "\0";
+        memcpy(RealFile,File,strlen(File));
+        PopulateResourceInfo(RSRC_MUS,&ResourceInfo,Engine);
+        return(GetObjectByProperty(RealFile,offsetof(struct Music,File),STRING_BUFFER_SIZE,ResourceInfo));
     }
     return(SENTINEL_OBJECT);
 }
 
 uint32 GetTextureByName(char* Name, Engine* Engine)
 {
-    const char Parameters[] = "(char* Name: %s, Engine* Engine: 0x%p)";
     if(Engine)
     {
-        Texture* T = Engine->Textures;
-        int ATM = Engine->Resource.AllocatedTextureMemory;
-        if(T)
-        {
-            for(int i = 0; i < ATM; i++)
-            {
-                if(T[i].IsUsed)
-                {
-                    if(!strcmp(T[i].Name,Name))
-                    {
-                        return(T[i].ReferenceIndex);
-                    }
-                }
-            }
-            Error Error = {WARNING_INVALID_PARAMETER,"GetTextureByName","Could not find texture.","\0","\0"};
-            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Name,Engine);
-            snprintf(Error.Description,STRING_BUFFER_SIZE,"Could not find a texture with name \"%s\".",Name);
-            ThrowWarning(&Error,Engine);
-            return(SENTINEL_OBJECT);
-        }
+        ResourceInfo ResourceInfo;
+        char RealName[OBJECT_NAME_SIZE] = "\0";
+        memcpy(RealName,Name,strlen(Name));
+        PopulateResourceInfo(RSRC_TXTR,&ResourceInfo,Engine);
+        return(GetObjectByProperty(RealName,offsetof(struct Texture,Name),OBJECT_NAME_SIZE,ResourceInfo));
+    }
+    return(SENTINEL_OBJECT);
+}
+
+uint32 GetTextureByID(uint64 ID, Engine* Engine)
+{
+    if(Engine)
+    {
+        ResourceInfo ResourceInfo;
+        PopulateResourceInfo(RSRC_TXTR,&ResourceInfo,Engine);
+        return(GetObjectByProperty(&ID,offsetof(struct Texture,ID),sizeof(uint64),ResourceInfo));
+    }
+    return(SENTINEL_OBJECT);
+}
+
+uint32 GetTextureByFile(char* File, Engine* Engine)
+{
+    if(Engine)
+    {
+        ResourceInfo ResourceInfo;
+        char RealFile[STRING_BUFFER_SIZE] = "\0";
+        memcpy(RealFile,File,strlen(File));
+        PopulateResourceInfo(RSRC_TXTR,&ResourceInfo,Engine);
+        return(GetObjectByProperty(RealFile,offsetof(struct Texture,File),STRING_BUFFER_SIZE,ResourceInfo));
+    }
+    return(SENTINEL_OBJECT);
+}
+
+uint32 GetSpriteByName(char* Name, Engine* Engine)
+{
+    if(Engine)
+    {
+        ResourceInfo ResourceInfo;
+        char RealName[OBJECT_NAME_SIZE] = "\0";
+        memcpy(RealName,Name,strlen(Name));
+        PopulateResourceInfo(RSRC_SPR,&ResourceInfo,Engine);
+        return(GetObjectByProperty(RealName,offsetof(struct Sprite,Name),OBJECT_NAME_SIZE,ResourceInfo));
+    }
+    return(SENTINEL_OBJECT);
+}
+
+uint32 GetSpriteByID(uint64 ID, Engine* Engine)
+{
+    if(Engine)
+    {
+        ResourceInfo ResourceInfo;
+        PopulateResourceInfo(RSRC_SPR,&ResourceInfo,Engine);
+        return(GetObjectByProperty(&ID,offsetof(struct Sprite,ID),sizeof(uint64),ResourceInfo));
+    }
+    return(SENTINEL_OBJECT);
+}
+
+uint32 GetSpriteByProperty(void* MemberValue, size_t MemberOffset, size_t MemberSize, Engine* Engine)
+{
+    if(Engine)
+    {
+        ResourceInfo ResourceInfo;
+        PopulateResourceInfo(RSRC_SPR,&ResourceInfo,Engine);
+        return(GetObjectByProperty(MemberValue,MemberOffset,MemberSize,ResourceInfo));
+    }
+    return(SENTINEL_OBJECT);
+}
+
+uint32 GetActorByName(char* Name, Engine* Engine)
+{
+    if(Engine)
+    {
+        ResourceInfo ResourceInfo;
+        char RealName[OBJECT_NAME_SIZE] = "\0";
+        memcpy(RealName,Name,strlen(Name));
+        PopulateResourceInfo(RSRC_ACT,&ResourceInfo,Engine);
+        return(GetObjectByProperty(RealName,offsetof(struct Actor,Name),OBJECT_NAME_SIZE,ResourceInfo));
+    }
+    return(SENTINEL_OBJECT);
+}
+
+uint32 GetActorByID(Uint64 ID, Engine* Engine)
+{
+    if(Engine)
+    {
+        ResourceInfo ResourceInfo;
+        PopulateResourceInfo(RSRC_ACT,&ResourceInfo,Engine);
+        return(GetObjectByProperty(&ID,offsetof(struct Actor,ID),sizeof(uint64),ResourceInfo));
+    }
+    return(SENTINEL_OBJECT);
+}
+
+uint32 GetActorByProperty(void* MemberValue, size_t MemberOffset, size_t MemberSize, Engine* Engine)
+{
+    if(Engine)
+    {
+        ResourceInfo ResourceInfo;
+        PopulateResourceInfo(RSRC_ACT,&ResourceInfo,Engine);
+        return(GetObjectByProperty(MemberValue,MemberOffset,MemberSize,ResourceInfo));
+    }
+    return(SENTINEL_OBJECT);
+}
+
+uint32 GetTimerByName(char* Name, Engine* Engine)
+{
+    if(Engine)
+    {
+        ResourceInfo ResourceInfo;
+        char RealName[OBJECT_NAME_SIZE] = "\0";
+        memcpy(RealName,Name,strlen(Name));
+        PopulateResourceInfo(RSRC_TMR,&ResourceInfo,Engine);
+        return(GetObjectByProperty(RealName,offsetof(struct Timer,Name),OBJECT_NAME_SIZE,ResourceInfo));
+    }
+    return(SENTINEL_OBJECT);
+}
+
+uint32 GetTimerByID(uint64 ID, Engine* Engine)
+{
+    if(Engine)
+    {
+        ResourceInfo ResourceInfo;
+        PopulateResourceInfo(RSRC_TMR,&ResourceInfo,Engine);
+        return(GetObjectByProperty(&ID,offsetof(struct Timer,ID),sizeof(uint64),ResourceInfo));
+    }
+    return(SENTINEL_OBJECT);
+}
+
+uint32 GetTimerByProperty(void* MemberValue, size_t MemberOffset, size_t MemberSize, Engine* Engine)
+{
+    if(Engine)
+    {
+        ResourceInfo ResourceInfo;
+        PopulateResourceInfo(RSRC_TMR,&ResourceInfo,Engine);
+        return(GetObjectByProperty(MemberValue,MemberOffset,MemberSize,ResourceInfo));
     }
     return(SENTINEL_OBJECT);
 }

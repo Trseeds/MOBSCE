@@ -225,161 +225,57 @@ Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, in
     LoadEngineConfig(NewEngine);
     InitSDL(NewEngine);
 
-    ResourceInfo RSRCSounds = 
-    {
-        &NewEngine->Sounds,
-        sizeof(Sound),
-        &SoundFreeFunction,
-        &NewEngine->Resource.AllocatedSoundMemory,
-        &NewEngine->Resource.NumberOfSounds,
-        false
-    };
-    ResourceInfo RSRCSoundRefs = 
-    {
-        &NewEngine->SoundReferences,
-        sizeof(Sound*),
-        NULL,
-        &NewEngine->Resource.AllocatedSoundReferenceMemory,
-        &NewEngine->Resource.NumberOfSoundReferences,
-        true
-    };
-
-    ResourceInfo RSRCMusics = 
-    {
-        &NewEngine->Musics,
-        sizeof(Music),
-        &MusicFreeFunction,
-        &NewEngine->Resource.AllocatedMusicMemory,
-        &NewEngine->Resource.NumberOfMusics,
-        false
-    };
-    ResourceInfo RSRCMusicRefs = 
-    {
-        &NewEngine->MusicReferences,
-        sizeof(Music*),
-        NULL,
-        &NewEngine->Resource.AllocatedMusicReferenceMemory,
-        &NewEngine->Resource.NumberOfMusicReferences,
-        true
-    };
-
-    ResourceInfo RSRCTextures = 
-    {
-        &NewEngine->Textures,
-        sizeof(Texture),
-        &TextureFreeFunction,
-        &NewEngine->Resource.AllocatedTextureMemory,
-        &NewEngine->Resource.NumberOfTextures,
-        false
-    };
-    ResourceInfo RSRCTextureRefs = 
-    {
-        &NewEngine->TextureReferences,
-        sizeof(Texture*),
-        NULL,
-        &NewEngine->Resource.AllocatedTextureReferenceMemory,
-        &NewEngine->Resource.NumberOfTextureReferences,
-        true
-    };
-
-    ResourceInfo RSRCSprites = 
-    {
-        &NewEngine->Sprites,
-        sizeof(Sprite),
-        &SpriteFreeFunction,
-        &NewEngine->Resource.AllocatedSpriteMemory,
-        &NewEngine->Resource.NumberOfSprites,
-        false
-    };
-    ResourceInfo RSRCSpriteRefs = 
-    {
-        &NewEngine->SpriteReferences,
-        sizeof(Sprite*),
-        NULL,
-        &NewEngine->Resource.AllocatedSpriteReferenceMemory,
-        &NewEngine->Resource.NumberOfSpriteReferences,
-        true
-    };
-
-    ResourceInfo RSRCActors = 
-    {
-        &NewEngine->Actors,
-        sizeof(Actor),
-        &ActorFreeFunction,
-        &NewEngine->Resource.AllocatedActorMemory,
-        &NewEngine->Resource.NumberOfActors,
-        false
-    };
-    ResourceInfo RSRCActorRefs = 
-    {
-        &NewEngine->ActorReferences,
-        sizeof(Actor*),
-        NULL,
-        &NewEngine->Resource.AllocatedActorReferenceMemory,
-        &NewEngine->Resource.NumberOfActorReferences,
-        true
-    };
-
-    ResourceInfo RSRCGamepads = 
-    {
-        &NewEngine->Input.Gamepads,
-        sizeof(Gamepad),
-        &GamepadFreeFunction,
-        &NewEngine->Resource.AllocatedGamepadMemory,
-        &NewEngine->Resource.NumberOfGamepads,
-        false
-    };
-    ResourceInfo RSRCGamepadRefs = 
-    {
-        &NewEngine->Input.GamepadReferences,
-        sizeof(Gamepad*),
-        NULL,
-        &NewEngine->Resource.AllocatedGamepadReferenceMemory,
-        &NewEngine->Resource.NumberOfGamepadReferences,
-        true
-    };
-
-    ResourceInfo RSRCTimers = 
-    {
-        &NewEngine->Timers,
-        sizeof(Timer),
-        NULL,
-        &NewEngine->Resource.AllocatedTimerMemory,
-        &NewEngine->Resource.NumberOfTimerReferences,
-        false
-    };
-    ResourceInfo RSRCTimerRefs = 
-    {
-        &NewEngine->TimerReferences,
-        sizeof(Timer*),
-        NULL,
-        &NewEngine->Resource.AllocatedTimerReferenceMemory,
-        &NewEngine->Resource.NumberOfTimerReferences,
-        true
-    };
+    ResourceInfo S;
+    PopulateResourceInfo(RSRC_SND,&S,NewEngine);
+    ResourceInfo SR;
+    PopulateResourceInfo(RSRC_SND_REF,&SR,NewEngine);
+    ResourceInfo M;
+    PopulateResourceInfo(RSRC_MUS,&M,NewEngine);
+    ResourceInfo MR;
+    PopulateResourceInfo(RSRC_MUS_REF,&MR,NewEngine);
+    ResourceInfo T;
+    PopulateResourceInfo(RSRC_TXTR,&T,NewEngine);
+    ResourceInfo TR;
+    PopulateResourceInfo(RSRC_TXTR_REF,&TR,NewEngine);
+    ResourceInfo SPR;
+    PopulateResourceInfo(RSRC_SPR,&SPR,NewEngine);
+    ResourceInfo SPRR;
+    PopulateResourceInfo(RSRC_SPR_REF,&SPRR,NewEngine);
+    ResourceInfo A;
+    PopulateResourceInfo(RSRC_ACT,&A,NewEngine);
+    ResourceInfo AR;
+    PopulateResourceInfo(RSRC_ACT_REF,&AR,NewEngine);
+    ResourceInfo G;
+    PopulateResourceInfo(RSRC_GP,&G,NewEngine);
+    ResourceInfo GR;
+    PopulateResourceInfo(RSRC_GP_REF,&GR,NewEngine);
+    ResourceInfo TM;
+    PopulateResourceInfo(RSRC_TMR,&TM,NewEngine);
+    ResourceInfo TMR;
+    PopulateResourceInfo(RSRC_TMR_REF,&TMR,NewEngine);
 
     if(NewEngine->Config.Audiate)
     {
         InitAudio(NewEngine);
-        InitResourcePool(RSRCSounds,NewEngine);
-        InitResourcePool(RSRCSoundRefs,NewEngine);
-        InitResourcePool(RSRCMusics,NewEngine);
-        InitResourcePool(RSRCMusicRefs,NewEngine);
+        InitResourcePool(S,NewEngine);
+        InitResourcePool(SR,NewEngine);
+        InitResourcePool(M,NewEngine);
+        InitResourcePool(MR,NewEngine);
     }
     if(NewEngine->Config.Render)
     {
         InitVideo(NewEngine);
-        InitResourcePool(RSRCTextures,NewEngine);
-        InitResourcePool(RSRCTextureRefs,NewEngine);
+        InitResourcePool(T,NewEngine);
+        InitResourcePool(TR,NewEngine);
     }
-    InitResourcePool(RSRCSprites,NewEngine);
-    InitResourcePool(RSRCSpriteRefs,NewEngine);
-    InitResourcePool(RSRCActors,NewEngine);
-    InitResourcePool(RSRCActorRefs,NewEngine);
-    InitResourcePool(RSRCTimers,NewEngine);
-    InitResourcePool(RSRCTimerRefs,NewEngine);
-    InitResourcePool(RSRCGamepads,NewEngine);
-    InitResourcePool(RSRCGamepadRefs,NewEngine);
+    InitResourcePool(SPR,NewEngine);
+    InitResourcePool(SPRR,NewEngine);
+    InitResourcePool(A,NewEngine);
+    InitResourcePool(AR,NewEngine);
+    InitResourcePool(TM,NewEngine);
+    InitResourcePool(TMR,NewEngine);
+    InitResourcePool(G,NewEngine);
+    InitResourcePool(GR,NewEngine);
 
     NewEngine->Running = true;
     return(NewEngine);
@@ -432,159 +328,55 @@ int8 CleanupEngine(Engine* Engine)
 {
     if(Engine)
     {
-        ResourceInfo RSRCSounds = 
-        {
-            &Engine->Sounds,
-            sizeof(Sound),
-            &SoundFreeFunction,
-            &Engine->Resource.AllocatedSoundMemory,
-            &Engine->Resource.NumberOfSounds,
-            false
-        };
-        ResourceInfo RSRCSoundRefs = 
-        {
-            &Engine->SoundReferences,
-            sizeof(Sound*),
-            NULL,
-            &Engine->Resource.AllocatedSoundReferenceMemory,
-            &Engine->Resource.NumberOfSoundReferences,
-            true
-        };
-
-        ResourceInfo RSRCMusics = 
-        {
-            &Engine->Musics,
-            sizeof(Music),
-            &MusicFreeFunction,
-            &Engine->Resource.AllocatedMusicMemory,
-            &Engine->Resource.NumberOfMusics,
-            false
-        };
-        ResourceInfo RSRCMusicRefs = 
-        {
-            &Engine->MusicReferences,
-            sizeof(Music*),
-            NULL,
-            &Engine->Resource.AllocatedMusicReferenceMemory,
-            &Engine->Resource.NumberOfMusicReferences,
-            true
-        };
-
-        ResourceInfo RSRCTextures = 
-        {
-            &Engine->Textures,
-            sizeof(Texture),
-            &TextureFreeFunction,
-            &Engine->Resource.AllocatedTextureMemory,
-            &Engine->Resource.NumberOfTextures,
-            false
-        };
-        ResourceInfo RSRCTextureRefs = 
-        {
-            &Engine->TextureReferences,
-            sizeof(Texture*),
-            NULL,
-            &Engine->Resource.AllocatedTextureReferenceMemory,
-            &Engine->Resource.NumberOfTextureReferences,
-            true
-        };
-
-        ResourceInfo RSRCSprites = 
-        {
-            &Engine->Sprites,
-            sizeof(Sprite),
-            &SpriteFreeFunction,
-            &Engine->Resource.AllocatedSpriteMemory,
-            &Engine->Resource.NumberOfSprites,
-            false
-        };
-        ResourceInfo RSRCSpriteRefs = 
-        {
-            &Engine->SpriteReferences,
-            sizeof(Sprite*),
-            NULL,
-            &Engine->Resource.AllocatedSpriteReferenceMemory,
-            &Engine->Resource.NumberOfSpriteReferences,
-            true
-        };
-
-        ResourceInfo RSRCActors = 
-        {
-            &Engine->Actors,
-            sizeof(Actor),
-            &ActorFreeFunction,
-            &Engine->Resource.AllocatedActorMemory,
-            &Engine->Resource.NumberOfActors,
-            false
-        };
-        ResourceInfo RSRCActorRefs = 
-        {
-            &Engine->ActorReferences,
-            sizeof(Actor*),
-            NULL,
-            &Engine->Resource.AllocatedActorReferenceMemory,
-            &Engine->Resource.NumberOfActorReferences,
-            true
-        };
-
-        ResourceInfo RSRCGamepads = 
-        {
-            &Engine->Input.Gamepads,
-            sizeof(Gamepad),
-            &GamepadFreeFunction,
-            &Engine->Resource.AllocatedGamepadMemory,
-            &Engine->Resource.NumberOfGamepads,
-            false
-        };
-        ResourceInfo RSRCGamepadRefs = 
-        {
-            &Engine->Input.GamepadReferences,
-            sizeof(Gamepad*),
-            NULL,
-            &Engine->Resource.AllocatedGamepadReferenceMemory,
-            &Engine->Resource.NumberOfGamepadReferences,
-            true
-        };
-
-        ResourceInfo RSRCTimers = 
-        {
-            &Engine->Timers,
-            sizeof(Timer),
-            NULL,
-            &Engine->Resource.AllocatedTimerMemory,
-            &Engine->Resource.NumberOfTimers,
-            false
-        };
-        ResourceInfo RSRCTimerRefs = 
-        {
-            &Engine->TimerReferences,
-            sizeof(Timer*),
-            NULL,
-            &Engine->Resource.AllocatedTimerReferenceMemory,
-            &Engine->Resource.NumberOfTimerReferences,
-            true
-        };
+        ResourceInfo S;
+        PopulateResourceInfo(RSRC_SND,&S,Engine);
+        ResourceInfo SR;
+        PopulateResourceInfo(RSRC_SND_REF,&SR,Engine);
+        ResourceInfo M;
+        PopulateResourceInfo(RSRC_MUS,&M,Engine);
+        ResourceInfo MR;
+        PopulateResourceInfo(RSRC_MUS_REF,&MR,Engine);
+        ResourceInfo T;
+        PopulateResourceInfo(RSRC_TXTR,&T,Engine);
+        ResourceInfo TR;
+        PopulateResourceInfo(RSRC_TXTR_REF,&TR,Engine);
+        ResourceInfo SPR;
+        PopulateResourceInfo(RSRC_SPR,&SPR,Engine);
+        ResourceInfo SPRR;
+        PopulateResourceInfo(RSRC_SPR_REF,&SPRR,Engine);
+        ResourceInfo A;
+        PopulateResourceInfo(RSRC_ACT,&A,Engine);
+        ResourceInfo AR;
+        PopulateResourceInfo(RSRC_ACT_REF,&AR,Engine);
+        ResourceInfo G;
+        PopulateResourceInfo(RSRC_GP,&G,Engine);
+        ResourceInfo GR;
+        PopulateResourceInfo(RSRC_GP_REF,&GR,Engine);
+        ResourceInfo TM;
+        PopulateResourceInfo(RSRC_TMR,&TM,Engine);
+        ResourceInfo TMR;
+        PopulateResourceInfo(RSRC_TMR_REF,&TMR,Engine);
 
         if(Engine->Config.Audiate)
         {
-            CleanupResourcePool(RSRCSounds,Engine);
-            CleanupResourcePool(RSRCSoundRefs,Engine);
-            CleanupResourcePool(RSRCMusics,Engine);
-            CleanupResourcePool(RSRCMusicRefs,Engine);
+            CleanupResourcePool(S,Engine);
+            CleanupResourcePool(SR,Engine);
+            CleanupResourcePool(M,Engine);
+            CleanupResourcePool(MR,Engine);
         }
         if(Engine->Config.Render)
         {
-            CleanupResourcePool(RSRCTextures,Engine);
-            CleanupResourcePool(RSRCTextureRefs,Engine);
+            CleanupResourcePool(T,Engine);
+            CleanupResourcePool(TR,Engine);
         }
-        CleanupResourcePool(RSRCActors,Engine);
-        CleanupResourcePool(RSRCActorRefs,Engine);
-        CleanupResourcePool(RSRCSprites,Engine);
-        CleanupResourcePool(RSRCSpriteRefs,Engine);
-        CleanupResourcePool(RSRCTimers,Engine);
-        CleanupResourcePool(RSRCTimerRefs,Engine);
-        CleanupResourcePool(RSRCGamepads,Engine);
-        CleanupResourcePool(RSRCGamepadRefs,Engine);
+        CleanupResourcePool(A,Engine);
+        CleanupResourcePool(AR,Engine);
+        CleanupResourcePool(SPR,Engine);
+        CleanupResourcePool(SPRR,Engine);
+        CleanupResourcePool(TM,Engine);
+        CleanupResourcePool(TMR,Engine);
+        CleanupResourcePool(G,Engine);
+        CleanupResourcePool(GR,Engine);
         
         CleanupVideo(Engine);
         memset(Engine,0,sizeof(struct Engine));

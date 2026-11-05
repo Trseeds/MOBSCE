@@ -25,9 +25,9 @@ typedef struct Engine Engine;
 #include "CLOCK.h"
 
 #define MOBSCE_VERSION_RELEASE 0
-#define MOBSCE_VERSION_FEATURE 28
+#define MOBSCE_VERSION_FEATURE 29
 #define MOBSCE_VERSION_PATCH 0
-#define MOBSCE_VERSION "0.28.0"
+#define MOBSCE_VERSION "0.29.0"
 
 #define EVENT_QUEUE_SIZE 512
 

@@ -129,7 +129,7 @@ void GodRoutine(Actor* God, Engine* Engine)
         PlayMusic(Engine->MusicReferences[S->Musics[MUS_TRACK01]]->Music,-1,Engine);
     }
 
-    if((Engine->Input.KeysDown[K_RIGHTCONTROL] || Engine->Input.KeysDown[K_LEFTCONTROL]) && Engine->Input.KeysUp[K_S])
+    if((Engine->Input.KeysDown[K_RIGHTCONTROL] || Engine->Input.KeysDown[K_LEFTCONTROL]) && Engine->Input.KeysDown[K_S])
     {
         for(int i = 0; i < 1000; i++)
         {
