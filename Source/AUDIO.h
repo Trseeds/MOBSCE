@@ -17,7 +17,7 @@ typedef struct Audio {
 int8 InitAudio(Engine* Engine);
 uint8 ScreenPan(int32 X, uint32 EdgeDistance, Engine* Engine);
 uint8 ScreenVolume(int32 X, uint32 EdgeDistance, Engine* Engine);
-int8 PlaySound(Mix_Chunk* Sound, int32 Voice, uint8 Volume, uint8 Pan, Engine* Engine); //change panning logic to be 0-100 with 0 being hard left and 100 being hard right.
+int8 PlaySound(Mix_Chunk* Sound, int32 Voice, uint8 Volume, uint8 Pan, Engine* Engine);
 int8 MixMusicVolume(Engine* Engine);
 int8 PlayMusic(Mix_Music* Music, int8 Loops, Engine* Engine);
 

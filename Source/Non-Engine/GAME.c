@@ -131,7 +131,7 @@ void GodRoutine(Actor* God, Engine* Engine)
 
     if((Engine->Input.KeysDown[K_RIGHTCONTROL] || Engine->Input.KeysDown[K_LEFTCONTROL]) && Engine->Input.KeysDown[K_S])
     {
-        for(int i = 0; i < 1000; i++)
+        for(int i = 0; i < MIN_ALLOCATE; i++)
         {
             CreateMonsterGame(GR,Engine);
         }
@@ -551,7 +551,7 @@ uint32 InitGame(Engine* Engine)
 
 int main(int argc, char* argv[])
 {
-    Engine* Engine = InitEngine("Config.ini","MOBSCE Demo","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL,1000,true,true,NULL);
+    Engine* Engine = InitEngine("Config.ini","MOBSCE Demo","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL,100,true,true,NULL);
     uint32 GodRef = InitGame(Engine);
 
     while(Engine->Running)
@@ -578,14 +578,14 @@ int main(int argc, char* argv[])
             ResetScene(Engine);
             CleanupEngine(Engine);
             OSMemoryFree(Engine,sizeof(struct Engine));
-            Engine = InitEngine("Config.ini","MOBSCE Demo","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL,1000,true,true,NULL);
+            Engine = InitEngine("Config.ini","MOBSCE Demo","Assets/Images/Icon.png",ERROR_SHOW_ALL,WARNING_SHOW_ALL,100,true,true,NULL);
             InitGame(Engine);
         }
-        if(Engine->Input.KeysUp[K_T])
+        if(Engine->Input.KeysUp[K_T]) //trigger testing stuffs
         {
-            PrintActorPool((Object*)Engine->Actors,Engine->Resource.AllocatedActorMemory);
-            // char P[OBJECT_NAME_SIZE] = "Player";
-            // GetActorByProperty(&P,offsetof(struct Actor, Name),OBJECT_NAME_SIZE,Engine);
+            //PrintActorPool((Object*)Engine->Actors,Engine->Resource.AllocatedActorMemory);
+            ResourceInfo R;
+            InitResourcePool(R,Engine);
         }
         if(Engine->Clock.TotalTicks && (int)(Engine->Clock.FrameRate))
         {

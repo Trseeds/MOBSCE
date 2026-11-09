@@ -2,13 +2,15 @@
 
 int8 InitVideo(Engine* Engine)
 {
+    const char Name[] = "InitVideo";
     const char Parameters[] = "(Engine* Engine: 0x%p)";
     if(Engine)
     {
         Engine->Video.Window = SDL_CreateWindow(Engine->Video.WindowTitle,SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,Engine->Video.LogicalDimensions.X*Engine->Video.WindowScale,Engine->Video.LogicalDimensions.Y*Engine->Video.WindowScale,Engine->Video.WindowFlags);
         if(!Engine->Video.Window)
         {
-            Error Error = {ERROR_SDL_FAILURE,"InitVideo","Failed to create window!","\0","\0"};
+            Error Error = {ERROR_SDL_FAILURE,"\0","Failed to create window!","\0","\0"};
+            snprintf(Error.Thrower,STRING_BUFFER_SIZE,"%s",Name);
             snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Engine);
             snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_CreateWindow failed and returned 0x%p",Engine->Video.Window);
             ThrowError(&Error,Engine);
@@ -18,7 +20,8 @@ int8 InitVideo(Engine* Engine)
         Engine->Video.Renderer = SDL_CreateRenderer(Engine->Video.Window,-1,Engine->Video.RendererFlags);
         if(!Engine->Video.Renderer)
         {
-            Error Error = {ERROR_SDL_FAILURE,"InitVideo","Failed to create renderer!","\0","\0"};
+            Error Error = {ERROR_SDL_FAILURE,"\0","Failed to create renderer!","\0","\0"};
+            snprintf(Error.Thrower,STRING_BUFFER_SIZE,"%s",Name);
             snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Engine);
             snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_CreateRenderer failed and returned 0x%p",Engine->Video.Renderer);
             ThrowError(&Error,Engine);
@@ -28,7 +31,8 @@ int8 InitVideo(Engine* Engine)
         SDL_Surface* Icon = IMG_Load(Engine->Video.WindowIconPath);
         if(!Icon)
         {
-            Error Error = {WARNING_SDL_FAILURE,"InitVideo","Failed to create window icon.","\0","\0"};
+            Error Error = {WARNING_SDL_FAILURE,"\0","Failed to create window icon.","\0","\0"};
+            snprintf(Error.Thrower,STRING_BUFFER_SIZE,"%s",Name);
             snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Engine);
             snprintf(Error.Description,STRING_BUFFER_SIZE,"IMG_Load failed and returned 0x%p",Icon);
             ThrowWarning(&Error,Engine);
@@ -66,12 +70,14 @@ int8 CleanupVideo(Engine* Engine)
 
 int8 DrawSprite(Sprite* Sprite, Engine* Engine)
 {
+    const char Name[] = "DrawSprite";
     const char Parameters[] = "(Sprite* Sprite: 0x%p, Engine* Engine: 0x%p)";
     if(Engine)
     {
         if(!Sprite)
         {
-            Error Error = {WARNING_INVALID_PARAMETER,"DrawSprite","Invalid sprite.","\0","\0"};
+            Error Error = {WARNING_INVALID_PARAMETER,"\0","Invalid sprite.","\0","\0"};
+            snprintf(Error.Thrower,STRING_BUFFER_SIZE,"%s",Name);
             snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Sprite,Engine);
             snprintf(Error.Description,STRING_BUFFER_SIZE,"Sprite is NULL.");
             ThrowWarning(&Error,Engine);
@@ -103,7 +109,7 @@ int8 DrawSprite(Sprite* Sprite, Engine* Engine)
             RP->Flip);
         if(ResultR != 0)
         {
-            Error Error = {WARNING_SDL_FAILURE,"DrawSprite","Could not draw sprite.","\0","\0"};
+            Error Error = {WARNING_SDL_FAILURE,"\0","Could not draw sprite.","\0","\0"};
             snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Sprite,Engine);
             snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_RenderCopyEX failed and returned %d.",ResultR);
             ThrowWarning(&Error,Engine);
@@ -111,7 +117,8 @@ int8 DrawSprite(Sprite* Sprite, Engine* Engine)
         }
         if(ResultA != 0 || ResultC != 0)
         {
-            Error Error = {WARNING_SDL_FAILURE,"DrawSprite","Special sprite effects failed to render.","\0","\0"};
+            Error Error = {WARNING_SDL_FAILURE,"\0","Special sprite effects failed to render.","\0","\0"};
+            snprintf(Error.Thrower,STRING_BUFFER_SIZE,"%s",Name);
             snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Sprite,Engine);
             snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_SetTextureAlphaMod returned %d and SDL_SetTextureColorMod returned %d.",ResultA,ResultC);
             ThrowWarning(&Error,Engine);

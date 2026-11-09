@@ -1,9 +1,5 @@
 MOBSCE Planned Updates:
 
-Feature - Add destruction of textures, sounds, and musics.
-Implementation - Treat these things like actual objects instead of just pointers to assets.
-API Impact - Probably optional. (it was not optional)
-
 Feature - Move ResourceInfo clutter into pools themselves.
 Implementation - Retain Engine->blahblahblah but internally use (PoolHeader*)(Pool)->blahblahblah.
 API Impact - Optional.

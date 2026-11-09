@@ -25,11 +25,26 @@ typedef struct Engine Engine;
 #include "CLOCK.h"
 
 #define MOBSCE_VERSION_RELEASE 0
-#define MOBSCE_VERSION_FEATURE 29
+#define MOBSCE_VERSION_FEATURE 30
 #define MOBSCE_VERSION_PATCH 0
-#define MOBSCE_VERSION "0.29.0"
+#define MOBSCE_VERSION "0.30.0"
 
 #define EVENT_QUEUE_SIZE 512
+
+enum Warnings {
+	WARNING_SDL_FAILURE = 21,
+	WARNING_INVALID_PARAMETER = 22,
+	WARNING_INIH_FAILURE = 23,
+	WARNING_IGNORABLE_FAILURE = 24,
+};
+
+enum Errors {
+	ERROR_INVALID_ENGINE = -1,
+	ERROR_SDL_FAILURE = 11,
+	ERROR_MEMORY = 12,
+	ERROR_INVALID_PARAMETER = 13,
+	ERROR_TIME_FAILURE = 14,
+};
 
 #define ERROR_SHOW_ALL 2
 #define ERROR_SHOW_MESSAGE 1
@@ -39,16 +54,6 @@ typedef struct Engine Engine;
 #define WARNING_SHOW_MESSAGE 1
 #define WARNING_DISABLE 0
 
-#define ERROR_INVALID_ENGINE -1
-#define ERROR_SDL_FAILURE 11
-#define ERROR_MEMORY 12
-#define ERROR_INVALID_PARAMETER 13
-#define ERROR_TIME_FAILURE 14
-#define WARNING_SDL_FAILURE 21
-#define WARNING_INVALID_PARAMETER 22
-#define WARNING_INIH_FAILURE 23
-#define WARNING_IGNORABLE_FAILURE 24
-#define WARNING_NULL NULL
 #define RETURN_SUCCESS 0
 #define SENTINEL_OBJECT (uint32)(0-1)
 #define SENTINEL_ID 0
@@ -89,11 +94,9 @@ typedef struct Engine {
 	uint8 SpriteZResortNeeded;
 	int8 ERROR_LEVEL;
 	int8 WARNING_LEVEL;
-	bool RandSeeded;
 	bool Running;
 } Engine;
 
-bool IsZero(void* Pointer, int32 Size);
 void ThrowError(Error* Error, Engine* Engine);
 void ThrowWarning(Error* Warning, Engine* Engine);
 uint64 GetNewObjectID(Engine* Engine);

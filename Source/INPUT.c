@@ -224,6 +224,7 @@ int8 GetInput(Engine* Engine)
 
 int8 RumbleGamepad(Gamepad* Gamepad, uint8 Strength, uint32 Duration, Engine* Engine)
 {
+    const char Name[] = "RumbleGamepad";
     const char Parameters[] = "(Gamepad* Gamepad: 0x%p, uint8 Strength: %d, uint32 Duration: %d, Engine* Engine: 0x%p)";
     if(Engine)
     {
@@ -240,7 +241,8 @@ int8 RumbleGamepad(Gamepad* Gamepad, uint8 Strength, uint32 Duration, Engine* En
                 int Result = SDL_GameControllerRumble(Gamepad->Gamepad,RealStrength,RealStrength,Duration);
                 if(Result < 0)
                 {
-                    Error Error = {WARNING_SDL_FAILURE,"RumbleGamepad","Controller does not support rumble.","\0","\0"};
+                    Error Error = {WARNING_SDL_FAILURE,"\0","Controller does not support rumble.","\0","\0"};
+                    snprintf(Error.Thrower,STRING_BUFFER_SIZE,"%s",Name);
                     snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Strength,Duration,Engine);
                     snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_GameControllerRumber failed and returned %d.",Result);
                     ThrowWarning(&Error,Engine);

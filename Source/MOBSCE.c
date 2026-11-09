@@ -1,17 +1,5 @@
 #include "MOBSCE.h"
 
-bool IsZero(void* Pointer, int32 Size)
-{
-    for(int i = 0; i < Size; i++)
-    {
-        if(*(bytepointer)(Pointer+i))
-        {
-            return(false);
-        }
-    }
-    return(true);
-}
-
 void ThrowError(Error* Error, Engine* Engine)
 {
     char BoxErrorMessage[STRING_BUFFER_SIZE];
@@ -64,21 +52,21 @@ int64 LinearMap(int64 Number, int64 DomainMin, int64 DomainMax, int64 RangeMin, 
 void SeedRNG(Engine* Engine)
 {
     srand(Engine->Clock.RealTimeMS);
-    Engine->RandSeeded = true;
 }
 
 int64 GetRandomNumber(int64 Min, int64 Max)
 {
-    return(Min+(rand()%(Max-Min)));
+    return(LinearMap(rand(),0,RAND_MAX,Min,Max));
 }
 
 int8 InitSDL(Engine* Engine)
 {
+    const char Name[] = "InitSDL";
     const char Parameters[] = "(Engine* Engine: 0x%p)";
     int Result = SDL_Init(SDL_INIT_EVERYTHING);
     if(Result != 0)
     {
-        Error Error = {ERROR_SDL_FAILURE,"InitSDL","Failed to start SDL!","\0", "\0"};
+        Error Error = {ERROR_SDL_FAILURE,"\0","Failed to start SDL!","\0", "\0"};
         snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Engine);
         snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_Init failed and returned %d.",Result);
         ThrowError(&Error,Engine);
@@ -90,10 +78,11 @@ int8 InitSDL(Engine* Engine)
         Result = IMG_Init(Engine->Video.Formats);
         if(Result != Engine->Video.Formats)
         {
-            Error Warning = {WARNING_SDL_FAILURE,"InitSDL","Failed to start SDL IMG.","\0", "\0"};
-            snprintf(Warning.Parameters,STRING_BUFFER_SIZE,Parameters,Engine);
-            snprintf(Warning.Description,STRING_BUFFER_SIZE,"IMG_Init failed and returned %d.",Result);
-            ThrowWarning(&Warning,Engine);
+            Error Error = {WARNING_SDL_FAILURE,"\0","Failed to start SDL IMG.","\0", "\0"};
+            snprintf(Error.Thrower,STRING_BUFFER_SIZE,"%s",Name);
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Engine);
+            snprintf(Error.Description,STRING_BUFFER_SIZE,"IMG_Init failed and returned %d.",Result);
+            ThrowWarning(&Error,Engine);
             return(WARNING_SDL_FAILURE);
         }
     }
@@ -103,10 +92,11 @@ int8 InitSDL(Engine* Engine)
         Result = Mix_Init(Engine->Audio.Codecs);
         if(Result != Engine->Audio.Codecs || Result == 0)
         {
-            Error Warning = {WARNING_SDL_FAILURE,"InitSDL","Failed to start SDL Mixer.","\0", "\0"};
-            snprintf(Warning.Parameters,STRING_BUFFER_SIZE,Parameters,Engine);
-            snprintf(Warning.Description,STRING_BUFFER_SIZE,"Mix_Init failed and returned %d.",Result);
-            ThrowWarning(&Warning,Engine);
+            Error Error = {WARNING_SDL_FAILURE,"\0","Failed to start SDL Mixer.","\0", "\0"};
+            snprintf(Error.Thrower,STRING_BUFFER_SIZE,"%s",Name);
+            snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Engine);
+            snprintf(Error.Description,STRING_BUFFER_SIZE,"Mix_Init failed and returned %d.",Result);
+            ThrowWarning(&Error,Engine);
             return(WARNING_SDL_FAILURE);
         }
     }
@@ -144,13 +134,15 @@ int8 GetSDLEvents(Engine* Engine)
 
 int8 GetBasePath(Engine* Engine)
 {
+    const char Name[] = "GetBasePath";
     const char Parameters[] = "(Engine* Engine: 0x%p)";
     if(Engine)
     {
         char* Result = SDL_GetBasePath();
         if(!Result)
         {
-            Error Error = {WARNING_SDL_FAILURE,"GetBasePath","Failed to get base path!","\0", "\0"};
+            Error Error = {WARNING_SDL_FAILURE,"\0","Failed to get base path!","\0", "\0"};
+            snprintf(Error.Thrower,STRING_BUFFER_SIZE,"%s",Name);
             snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,Engine);
             snprintf(Error.Description,STRING_BUFFER_SIZE,"SDL_GetbasePath failed and returned %d.",Result);
             ThrowError(&Error,Engine);
@@ -181,17 +173,18 @@ char* GetAssetPath(char* Asset, char* Output, Engine* Engine)
         strncpy(Output,Path,STRING_BUFFER_SIZE);
         return(Output);
     }
-    return(WARNING_NULL);
+    return(NULL);
 }
 
 Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, int8 ERROR_LEVEL, int8 WARNING_LEVEL, uint32 AllocationThreshold, bool Render, bool Audiate, Config* Config)
 {
+    const char Name[] = "InitEngine";
     const char Parameters[] = "(char* ConfigFile: %s, char* WindowTitle: %s, char* WindowIconpath: %s, int ERROR_LEVEL: %d, int WARNING_LEVEL: %d, bool Render: %d, bool Audiate: %d, Config* Config: 0x%p)";
     Engine* NewEngine = (Engine*)OSMemoryAllocate(sizeof(Engine));
-    NewEngine->RandSeeded = false;
     if(!NewEngine)
     {
-        Error Error = {ERROR_MEMORY,"InitEngine","Failed to allocate memory!","\0", "\0"};
+        Error Error = {ERROR_MEMORY,"\0","Failed to allocate memory!","\0", "\0"};
+        snprintf(Error.Thrower,STRING_BUFFER_SIZE,"%s",Name);
         snprintf(Error.Parameters,STRING_BUFFER_SIZE,Parameters,ConfigFile,WindowTitle,WindowIconPath,ERROR_LEVEL,WARNING_LEVEL,Render,Audiate,Config);
         snprintf(Error.Description,STRING_BUFFER_SIZE,"OSMemoryAllocate failed and returned: 0x%p",NewEngine);
         ThrowError(&Error,NewEngine);
@@ -277,6 +270,8 @@ Engine* InitEngine(char* ConfigFile, char* WindowTitle, char* WindowIconPath, in
     InitResourcePool(G,NewEngine);
     InitResourcePool(GR,NewEngine);
 
+    KeepTime(NewEngine);
+    SeedRNG(NewEngine);
     NewEngine->Running = true;
     return(NewEngine);
 }
